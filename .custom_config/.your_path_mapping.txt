@@ -1,0 +1,1 @@
+{"data_path":"/workspaces/digital-twin-framework-camps/cardiac-data/meta_data/","results_path":"/workspaces/digital-twin-framework-camps/cardiac-data/meta_data/results_test/"}

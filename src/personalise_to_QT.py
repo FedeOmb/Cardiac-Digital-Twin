@@ -737,7 +737,7 @@ if __name__ == '__main__':
 
     ## -----------------------------------
     ## CONFIGURAZIONE SEMPLIFICATA TEST ##
-    population_size = 32
+    population_size = 16
     max_mcmc_steps = 10
     ## ----------------    
 
@@ -793,7 +793,7 @@ if __name__ == '__main__':
     # Step 13: Run the inference process.
     print('Step 13: Run the inference process.')
     desired_discrepancy = 2.  # used to be 0.1 # This value needs to be changed with respect of what discrepancy metric you want to use.  # this value is for the DTW metric was 0.35  # After several tests was found good with the latest discrepancy metric strategy
-    max_process_alive_time = 0.1  # 20.  # hours, in Supercomputers, usually there is a maximum 24 hour limit on any job that you submit.
+    max_process_alive_time = 0.5  # 20.  # hours, in Supercomputers, usually there is a maximum 24 hour limit on any job that you submit.
     visualisation_count = 10 # 10  # Minimum of 1 to avoid division by zero
     # Save geometry as a check point
     geometry = inference_method.evaluator.simulator.electrophysiology_model.propagation_model.geometry

@@ -10,8 +10,8 @@ from datetime import datetime
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        anatomy_subject_name = 'DTI032'
-        ecg_subject_name = 'DTI032'  # Allows using a different ECG for the personalisation than for the anatomy
+        anatomy_subject_name = 'DTI004'
+        ecg_subject_name = 'DTI004'  # Allows using a different ECG for the personalisation than for the anatomy
     else:
         anatomy_subject_name = sys.argv[1]
         ecg_subject_name = sys.argv[1]
@@ -121,7 +121,7 @@ if __name__ == '__main__':
     assert os.path.exists(results_dir_part_qrs)  # Path should already exist from running the QRS inference
     results_dir_part = None     # Clear Arguments to prevent Argument recycling
     # Use date to name the result folder to preserve some history of results
-    current_month_text = 'Jun'#datetime.now().strftime('%h')  # e.g., Feb
+    current_month_text = datetime.now().strftime('%h')  # e.g., Feb
     current_year_full = datetime.now().strftime('%Y')  # e.g., 2024
     date_str = current_month_text + '_' + current_year_full
     results_dir_twave = results_dir_part_twave + date_str + '_fixed_filter/'
@@ -667,6 +667,13 @@ if __name__ == '__main__':
     # it is an approximate chance of choosing "random updates" over the particle information
     retain_ratio = 0.5  # original value in Brodie's code
     max_root_node_jiggle_rate = 0.1
+
+    ## -----------------------------------
+    ## CONFIGURAZIONE SEMPLIFICATA TEST ##
+    population_size = 32
+    max_mcmc_steps = 10
+    ## ----------------   
+    #  
     keep_fraction = max((population_size - 2 * multiprocessing.cpu_count()) / population_size,  0.5)  # 0.75)   # without the max() function it can go negative when the population size is smaller than the number of threads
     if verbose:
         print('multiprocessing.cpu_count() ', multiprocessing.cpu_count())
@@ -713,6 +720,13 @@ if __name__ == '__main__':
     desired_discrepancy = 0.5 #0.5  # used to be 0.1 # This value needs to be changed with respect of what discrepancy metric you want to use.  # this value is for the DTW metric was 0.35  # After several tests was found good with the latest discrepancy metric strategy
     max_process_alive_time = 20.  # hours, in Supercomputers, usually there is a maximum 24 hour limit on any job that you submit.
     visualisation_count = 5     # Minimum of 1 to avoid division by zero
+
+    ## -----------------------------------
+    ## CONFIGURAZIONE SEMPLIFICATA TEST ##
+    desired_discrepancy = 2.0 
+    max_process_alive_time = 1.0
+    visualisation_count = 5   
+    ## ----------------
     # Save geometry as a check point
     geometry = inference_method.evaluator.simulator.electrophysiology_model.propagation_model.geometry
     # geometry.node_xyz = geometry.get_node_xyz() - np.amin(geometry.get_node_xyz(), axis=0)

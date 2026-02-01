@@ -29,8 +29,8 @@ def get_server_config():
 
 if __name__ == '__main__':
     # path mappings in JSON:
-    path_mapping_json = '{"data_path":"/workspaces/digital-twin-framework-camps/cardiac-data/meta_data/",' \
-                        '"results_path":"/workspaces/digital-twin-framework-camps/cardiac-data/meta_data/results_test/"}'
+    path_mapping_json = '{"data_path":"/workspaces/cardiac-digital-twin/cardiac-data/meta_data/",' \
+                        '"results_path":"/workspaces/cardiac-digital-twin/cardiac-data/meta_data/results_test/"}'
     set_path_mapping(path_mapping_json)
     server_config_json = '{"python_path":"/p/project/icei-prace-2022-0003/camps1/miniconda3/envs/penv/bin/python3",' \
                          '"code_path":"/p/project/icei-prace-2022-0003/camps1/Cardiac_Personalisation/src/"}'

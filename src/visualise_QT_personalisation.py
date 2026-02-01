@@ -11,7 +11,7 @@ from datetime import datetime
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        anatomy_subject_name = 'rodero_13'  # 'rodero_13' # 'rodero_13'  # 'DTI004'  # 'UKB_1000532' #'UKB_1000268'
+        anatomy_subject_name = 'DTI004'  # 'rodero_13' # 'rodero_13'  # 'DTI004'  # 'UKB_1000532' #'UKB_1000268'
         ecg_subject_name = 'DTI004'  # 'DTI004'  # 'UKB_1000532' # 'UKB_1000268'  # Allows using a different ECG for the personalisation than for the anatomy
         # anatomy_subject_name = 'UKB_1008115'  # 'DTI004'  # 'UKB_1000532' #'UKB_1000268'
         # ecg_subject_name = 'UKB_1008115'  # 'DTI004'  # 'UKB_1000532' # 'UKB_1000268'  # Allows using a different ECG for the personalisation than for the anatomy
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     working_directory = None
     ####################################################################################################################
     # LOAD FUNCTIONS AFTER DEFINING THE WORKING DIRECTORY
-    from conduction_system import DjikstraConductionSystemVC, EmptyConductionSystem
+    from conduction_system import DjikstraConductionSystemVC, EmptyConductionSystem, PurkinjeSystemVC
     from ecg_functions import PseudoEcgTetFromVM
     from geometry_functions import EikonalGeometry, RawEmptyCardiacGeoTet
     from propagation_models import EikonalDjikstraTet
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     from path_config import get_path_mapping
     from io_functions import write_geometry_to_ensight_with_fields, read_dictionary, save_ecg_to_csv, \
     export_ensight_timeseries_case, save_pandas, save_csv_file, read_ecg_from_csv, read_csv_file
-    from utils import map_indexes, remap_pandas_from_row_index, get_qt_dur_name, \
+    from utils import map_indexes, remap_pandas_from_row_index, get_qtc_dur_name, \
     get_t_pe_name, get_t_peak_name, get_tpeak_dispersion_name, get_qtpeak_dur_name, \
     get_t_polarity_name
     from postprocess_functions import generate_repolarisation_map, visualise_ecg
@@ -84,7 +84,9 @@ if __name__ == '__main__':
     results_dir_root = path_dict["results_path"]
     # Intermediate Paths: # e.g., results from the QRS inference
     experiment_type = 'personalisation'
-    ep_model = 'GKs5_GKr0.6_tjca60'
+    #ep_model = 'GKs5_GKr0.6_tjca60'
+    ep_model = 'GKs5_GKr0.5_tjca60_CL_1250'
+   
     gradient_ion_channel_list = ['sf_IKs']
     gradient_ion_channel_str = '_'.join(gradient_ion_channel_list)
     # Use date to name the result folder to preserve some history of results
@@ -133,7 +135,7 @@ if __name__ == '__main__':
     # Read hyperparameters
     clinical_data_filename = hyperparameter_dict['clinical_data_filename']
     clinical_data_filename_path = data_dir + clinical_data_filename
-    clinical_qrs_offset = hyperparameter_dict['clinical_qrs_offset']
+    ### clinical_qrs_offset = hyperparameter_dict['clinical_qrs_offset']
     # qrs_lat_prescribed_filename = hyperparameter_dict['qrs_lat_prescribed_filename']
     # qrs_lat_prescribed_filename_path = results_dir_root + qrs_lat_prescribed_filename
     # Clear Arguments to prevent Argument recycling
@@ -206,7 +208,7 @@ if __name__ == '__main__':
         print('Step 3: Generate a cardiac geometry.')
         # Argument setup: (in Alphabetical order)
         # Read hyperparameters
-        vc_ab_name = hyperparameter_dict['vc_ab_name']
+        # vc_ab_name = hyperparameter_dict['vc_ab_name']
         vc_ab_cut_name = hyperparameter_dict['vc_ab_cut_name']
         vc_aprt_name = hyperparameter_dict['vc_aprt_name']
         vc_rt_name = hyperparameter_dict['vc_rt_name']
@@ -215,7 +217,7 @@ if __name__ == '__main__':
         vc_tm_name = hyperparameter_dict['vc_tm_name']
         # vc_tv_name = hyperparameter_dict['vc_aprt_name']
         endo_celltype_name = hyperparameter_dict['endo_celltype_name']  # TODO is this necessary?
-        epi_celltype_name = hyperparameter_dict['epi_celltype_name']  # TODO is this necessary?
+        # epi_celltype_name = hyperparameter_dict['epi_celltype_name']  # TODO is this necessary? (NON VIENE SALVATO IN HYPERPARAMETER.txt)
         celltype_vc_info = hyperparameter_dict['celltype_vc_info']
         # print('celltype_vc_info ', celltype_vc_info)
         vc_name_list = hyperparameter_dict['vc_name_list']
@@ -242,10 +244,17 @@ if __name__ == '__main__':
         lv_inter_root_node_distance = hyperparameter_dict['lv_inter_root_node_distance']
         rv_inter_root_node_distance = hyperparameter_dict['rv_inter_root_node_distance']
         # Create conduction system
+        ''' codice originale non funziona
         conduction_system = DjikstraConductionSystemVC(
             approx_djikstra_purkinje_max_path_len=approx_djikstra_purkinje_max_path_len, geometry=geometry,
             lv_candidate_root_node_meta_index=, rv_candidate_root_node_meta_index=, purkinje_max_ab_cut_threshold=,
             vc_ab_cut_name=vc_ab_cut_name, vc_rt_name=vc_rt_name, verbose=verbose)
+        '''
+        # Create conduction system (come in visualise_QRS)
+        conduction_system = PurkinjeSystemVC(
+            approx_djikstra_purkinje_max_path_len=approx_djikstra_purkinje_max_path_len, geometry=geometry,
+            lv_inter_root_node_distance=lv_inter_root_node_distance, rv_inter_root_node_distance=rv_inter_root_node_distance,
+            verbose=verbose)
         # Assign conduction_system to its geometry
         geometry.set_conduction_system(conduction_system)
         # Clear Arguments to prevent Argument recycling
@@ -294,7 +303,7 @@ if __name__ == '__main__':
             nb_speed_parameters=nb_speed_parameters, normal_speed_name=normal_speed_name,
             parameter_name_list_in_order=propagation_parameter_name_list_in_order,
             purkinje_speed_name=purkinje_speed_name,
-            transmural_speed_name=transmural_speed_name, verbose=verbose)
+            sheet_speed_name=transmural_speed_name, verbose=verbose)
         # Clear Arguments to prevent Argument recycling
         nb_speed_parameters = None
         ####################################################################################################################
@@ -309,7 +318,8 @@ if __name__ == '__main__':
         g_vc_tm_name = hyperparameter_dict['g_vc_tm_name']
         electrophysiology_parameter_name_list_in_order = hyperparameter_dict['electrophysiology_parameter_name_list_in_order']
         # Spatial and temporal smoothing parameters:
-        smoothing_count = hyperparameter_dict['smoothing_count']
+        #smoothing_count = hyperparameter_dict['smoothing_count']
+        smoothing_dt = hyperparameter_dict['smoothing_dt']
         smoothing_past_present_window = hyperparameter_dict['smoothing_past_present_window']
         full_smoothing_time_index = hyperparameter_dict['full_smoothing_time_index']
         electrophysiology_model = ElectrophysiologyAPDmap(apd_max_name=apd_max_name, apd_min_name=apd_min_name,
@@ -321,7 +331,7 @@ if __name__ == '__main__':
                                                       parameter_name_list_in_order=electrophysiology_parameter_name_list_in_order,
                                                       propagation_model=propagation_model,
                                                       sheet_speed_name=transmural_speed_name,
-                                                      smoothing_count=smoothing_count,
+                                                      smoothing_dt=smoothing_dt,
                                                       smoothing_ghost_distance_to_self=smoothing_ghost_distance_to_self,
                                                       smoothing_past_present_window=np.asarray(
                                                           smoothing_past_present_window),
@@ -349,9 +359,14 @@ if __name__ == '__main__':
         low_freq_cut = hyperparameter_dict['low_freq_cut']
         high_freq_cut = hyperparameter_dict['high_freq_cut']
         # Read clinical data
-        untrimmed_clinical_ecg_raw = np.genfromtxt(clinical_data_filename_path, delimiter=',')
+        '''untrimmed_clinical_ecg_raw = np.genfromtxt(clinical_data_filename_path, delimiter=',')
         clinical_ecg_raw = untrimmed_clinical_ecg_raw[:, clinical_qrs_offset:]
         untrimmed_clinical_ecg_raw = None   # Clear Arguments to prevent Argument recycling
+        '''
+        # codice come presente in personalise_to_qt
+        clinical_ecg_raw = np.genfromtxt(clinical_data_filename_path, delimiter=',')
+        print('clinical_ecg_raw ', clinical_ecg_raw.shape)
+
         # Create ECG model
         ecg_model = PseudoEcgTetFromVM(electrode_positions=geometry.get_electrode_xyz(), filtering=filtering,
                                        frequency=frequency, high_freq_cut=high_freq_cut, lead_names=lead_names,
@@ -639,7 +654,7 @@ if __name__ == '__main__':
     print('Step 19: Calcualte ECG metrics for the final population.')
     # Arguments for history simulation and biomarkers calculation:
     # Biomarker names and initialisation
-    qt_dur_name = get_qt_dur_name()
+    qt_dur_name = get_qtc_dur_name()
     t_pe_name = get_t_pe_name()
     t_peak_name = get_t_peak_name()
     tpeak_dispersion_name = get_tpeak_dispersion_name()

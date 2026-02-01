@@ -57,7 +57,7 @@ if __name__ == '__main__':
     geometric_data_dir = data_dir + 'geometric_data/'
     # Intermediate Paths: # e.g., results from the QRS inference
     experiment_type = 'personalisation'
-    ep_model = 'GKs5_GKr0.6_tjca60'
+    ep_model = 'GKs5_GKr0.5_tjca60'
     gradient_ion_channel_list = ['sf_IKs']
     gradient_ion_channel_str = '_'.join(gradient_ion_channel_list)
     results_dir = results_dir_root + experiment_type + '_data/' + anatomy_subject_name + '/twave_' \

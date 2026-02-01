@@ -53,7 +53,7 @@ if __name__ == '__main__':
     from path_config import get_path_mapping
     from io_functions import write_geometry_to_ensight_with_fields, read_dictionary, save_ecg_to_csv, \
     export_ensight_timeseries_case, save_pandas, save_csv_file, read_ecg_from_csv, read_csv_file
-    from utils import map_indexes, remap_pandas_from_row_index, get_qt_dur_name, \
+    from utils import map_indexes, remap_pandas_from_row_index, get_qtc_dur_name, \
     get_t_pe_name, get_t_peak_name, get_tpeak_dispersion_name, get_qtpeak_dur_name, \
     get_t_polarity_name
     from postprocess_functions import generate_repolarisation_map, visualise_ecg
@@ -104,7 +104,9 @@ if __name__ == '__main__':
     current_month_text = datetime.now().strftime('%h')  # e.g., Feb
     current_year_full = datetime.now().strftime('%Y')  # e.g., 2024
     date_str = current_month_text + '_' + current_year_full
-    results_dir_twave = results_dir_part_twave + date_str + '/'
+    #results_dir_twave = results_dir_part_twave + date_str + '/'
+    results_dir_twave = results_dir_part_twave + date_str + '_fixed_filter/' #path usato in personalise_to_twave
+
     assert os.path.exists(results_dir_twave)  # Path should already exist from running the Twave inference
     results_dir_part_twave = None  # Clear Arguments to prevent Argument recycling
     # Read hyperparamter dictionary
@@ -120,7 +122,7 @@ if __name__ == '__main__':
     assert os.path.exists(results_dir_qrs)  # Path should already exist from running the QRS inference
     results_dir_part_qrs = None  # Clear Arguments to prevent Argument recycling
     qrs_lat_prescribed_filename = hyperparameter_dict['qrs_lat_prescribed_filename']
-    qrs_lat_prescribed_filename_path = results_dir_qrs + qrs_lat_prescribed_filename
+    qrs_lat_prescribed_filename_path = results_dir_qrs + 'best_discrepancy/' + qrs_lat_prescribed_filename
     results_dir_qrs = None  # Clear Arguments to prevent Argument recycling
     if not os.path.isfile(qrs_lat_prescribed_filename_path):
         print('qrs_lat_prescribed_filename_path: ', qrs_lat_prescribed_filename_path)
@@ -165,7 +167,7 @@ if __name__ == '__main__':
     # Read hyperparameters
     clinical_data_filename = hyperparameter_dict['clinical_data_filename']
     clinical_data_filename_path = data_dir + clinical_data_filename
-    clinical_qrs_offset = hyperparameter_dict['clinical_qrs_offset']
+    #clinical_qrs_offset = hyperparameter_dict['clinical_qrs_offset']
     # Clear Arguments to prevent Argument recycling
     clinical_data_filename = None
     data_dir = None
@@ -210,13 +212,18 @@ if __name__ == '__main__':
             cellular_stim_amp) + '_' + gradient_ion_channel_str + '_' + ep_model_twave_name + '/'
         apd_max_max = hyperparameter_dict['apd_max_max']
         apd_min_min = hyperparameter_dict['apd_min_min']
-        apd_resolution = hyperparameter_dict['apd_resolution']
-        cycle_length = hyperparameter_dict['cycle_length']
-        vm_max = hyperparameter_dict['vm_max']
-        vm_min = hyperparameter_dict['vm_min']
+        ## PARAMETRI SPOSTATI SOTTO PRESENTI SOLO SE ep_model=MitchellChafferEP
+        #apd_resolution = hyperparameter_dict['apd_resolution']
+        #cycle_length = hyperparameter_dict['cycle_length']
+        #vm_max = hyperparameter_dict['vm_max']
+        #vm_min = hyperparameter_dict['vm_min']
         # Create cellular model instance.
         print('ep_model ', ep_model_twave_name)
         if ep_model_twave_name == 'MitchellSchaefferEP':
+            apd_resolution = hyperparameter_dict['apd_resolution']
+            cycle_length = hyperparameter_dict['cycle_length']
+            vm_max = hyperparameter_dict['vm_max']
+            vm_min = hyperparameter_dict['vm_min']
             cellular_model = MitchellSchaefferAPDdictionary(apd_max=apd_max_max, apd_min=apd_min_min,
                                                             apd_resolution=apd_resolution, cycle_length=500,
                                                             list_celltype_name=list_celltype_name, verbose=verbose,
@@ -258,9 +265,9 @@ if __name__ == '__main__':
         # endo_celltype_name = hyperparameter_dict['endo_celltype_name']  # TODO is this necessary?
         # epi_celltype_name = hyperparameter_dict['epi_celltype_name']  # TODO is this necessary?
         celltype_vc_info = hyperparameter_dict['celltype_vc_info']
-        # print('celltype_vc_info ', celltype_vc_info)
+        print('celltype_vc_info ', celltype_vc_info)
         vc_name_list = hyperparameter_dict['vc_name_list']
-        # print('vc_name_list ', vc_name_list)
+        print('vc_name_list ', vc_name_list)
         # Create geometry with a dummy conduction system to allow initialising the geometry.
         geometry = EikonalGeometry(cellular_model=cellular_model, celltype_vc_info=celltype_vc_info,
                                    conduction_system=EmptyConductionSystem(verbose=verbose),
@@ -589,8 +596,8 @@ if __name__ == '__main__':
         node_apd90 = node_biomarker[biomarker_apd90_name]
         node_celltype_str = node_biomarker[biomarker_celltype_name]
         node_celltype = np.zeros(node_apd90.shape)
-        node_celltype[node_celltype_str == endo_celltype_name] = 1  # TODO Is this something that gets used by Alya? if Yes, then define in utils.py
-        node_celltype[node_celltype_str == epi_celltype_name] = 3   # TODO Is this something that gets used by Alya? if Yes, then define in utils.py
+        #node_celltype[node_celltype_str == endo_celltype_name] = 1  # TODO Is this something that gets used by Alya? if Yes, then define in utils.py
+        #node_celltype[node_celltype_str == epi_celltype_name] = 3   # TODO Is this something that gets used by Alya? if Yes, then define in utils.py
         node_transmural = geometry.node_vc[vc_tm_name]
         node_rvlv = geometry.node_vc[vc_rvlv_name]
         write_geometry_to_ensight_with_fields(
@@ -662,7 +669,7 @@ if __name__ == '__main__':
     print('Step 18: Calcualte ECG metrics for the final population.')
     # Arguments for history simulation and biomarkers calculation:
     # Biomarker names and initialisation
-    qt_dur_name = get_qt_dur_name()
+    qt_dur_name = get_qtc_dur_name()
     t_pe_name = get_t_pe_name()
     t_peak_name = get_t_peak_name()
     tpeak_dispersion_name = get_tpeak_dispersion_name()

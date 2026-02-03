@@ -95,6 +95,7 @@ if __name__ == '__main__':
         heart_rate = 74
     cycle_length = get_cycle_length(heart_rate=heart_rate)
     cycle_length_str = str(int(cycle_length))
+    print('cycle_length ', cycle_length)
     ep_model_twave_name = 'GKs5_GKr0.5_tjca60_CL_' + cycle_length_str
     #     ep_model_twave_name = 'GKs5_GKr0.5_tjca60_CL_909'
     # elif anatomy_subject_name == 'DTI032':
@@ -166,6 +167,7 @@ if __name__ == '__main__':
     #     os.remove(unfinished_theta_result_file_name)
     # if os.path.isfile(unfinished_parameter_result_file_name):
     #     os.remove(unfinished_parameter_result_file_name)
+
     # APD dictionary configuration:
     cellular_stim_amp = 11
     cellular_model_convergence = 'not_converged'
@@ -328,8 +330,7 @@ if __name__ == '__main__':
     # Step 4: Prepare smoothing configuration to resemble diffusion effects
     print('Step 4: Prepare smoothing configuration to resemble diffusion effects.')
     # Define the speeds used during the fibre-based smoothing
-    warn(
-        'Inference from QT can, but does NOT, update the speeds in the smoothing function!\nAlso, it requires some initial fixed values!')
+    warn('Inference from QT can, but does NOT, update the speeds in the smoothing function!\nAlso, it requires some initial fixed values!')
     # TODO in the case of doing the inference sequentially, first the QRS and later the T wave, we could use the inferred speed values in here!!
     fibre_speed = 0.065  # Taggart et al. (2000) https://doi.org/10.1006/jmcc.2000.1105
     #TODO What should be transmural and what should be sheet? These two words mean different things?

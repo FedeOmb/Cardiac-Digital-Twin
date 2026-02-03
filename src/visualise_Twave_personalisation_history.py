@@ -10,7 +10,8 @@ from matplotlib import pyplot as plt
 from datetime import datetime
 
 if __name__ == '__main__':
-    anatomy_subject_name_list = ['DTI024', 'DTI004', 'DTI032']
+    #anatomy_subject_name_list = ['DTI024', 'DTI004', 'DTI032']
+    anatomy_subject_name_list = ['DTI004']
     for anatomy_subject_name in anatomy_subject_name_list:
         if len(sys.argv) < 2:
             anatomy_subject_name = anatomy_subject_name
@@ -116,7 +117,7 @@ if __name__ == '__main__':
         results_dir_part_twave = results_dir_part + 'twave_' + gradient_ion_channel_str + '_' + ep_model_twave_name + '/'
         assert os.path.exists(results_dir_part_twave)  # Path should already exist from running the Twave inference
         # Use date to name the result folder to preserve some history of results
-        current_month_text = 'Jun'  # datetime.now().strftime('%h')  # e.g., Feb
+        current_month_text = 'Jan'  # datetime.now().strftime('%h')  # e.g., Feb
         current_year_full = datetime.now().strftime('%Y')  # e.g., 2024
         date_str = current_month_text + '_' + current_year_full
         results_dir_twave = results_dir_part_twave + date_str + '_fixed_filter/'
@@ -141,8 +142,7 @@ if __name__ == '__main__':
         results_dir_qrs = None  # Clear Arguments to prevent Argument recycling
         if not os.path.isfile(qrs_lat_prescribed_filename_path):
             print('qrs_lat_prescribed_filename_path: ', qrs_lat_prescribed_filename_path)
-            raise Exception(
-                "This inference needs to be run after the QRS inference and need the correct path with those results.")
+            raise Exception("This inference needs to be run after the QRS inference and need the correct path with those results.")
         # Continue defining results paths and configuration
         result_tag = hyperparameter_dict['result_tag']
         # History dir

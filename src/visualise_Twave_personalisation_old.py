@@ -258,8 +258,29 @@ if __name__ == '__main__':
         print('Step 3: Generate a cardiac geometry that cannot run the Eikonal.')
         # Argument setup: (in Alphabetical order)
         # Read hyperparameters
-
-        # MODIFICATO CODICE COME IN visualise_Twave_personalisation_history.py
+        ''' EDIT NON FUNZIONANTE
+        vc_aprt_name = hyperparameter_dict['vc_aprt_name']
+        # vc_rt_name = hyperparameter_dict['vc_rt_name']
+        vc_rvlv_name = hyperparameter_dict['vc_rvlv_name']
+        # vc_sep_name = hyperparameter_dict['vc_sep_name']
+        vc_tm_name = hyperparameter_dict['vc_tm_name']
+        # vc_tv_name = hyperparameter_dict['vc_aprt_name']
+        # endo_celltype_name = hyperparameter_dict['endo_celltype_name']  # TODO is this necessary?
+        # epi_celltype_name = hyperparameter_dict['epi_celltype_name']  # TODO is this necessary?
+        celltype_vc_info = hyperparameter_dict['celltype_vc_info']
+        print('celltype_vc_info ', celltype_vc_info)
+        vc_name_list = hyperparameter_dict['vc_name_list']
+        print('vc_name_list ', vc_name_list)
+        # Create geometry with a dummy conduction system to allow initialising the geometry.
+        geometry = EikonalGeometry(cellular_model=cellular_model, celltype_vc_info=celltype_vc_info,
+                                   conduction_system=EmptyConductionSystem(verbose=verbose),
+                                   geometric_data_dir=geometric_data_dir, resolution=source_resolution,
+                                   subject_name=anatomy_subject_name, vc_name_list=vc_name_list, verbose=verbose)
+        raw_geometry = RawEmptyCardiacGeoTet(conduction_system=EmptyConductionSystem(verbose=verbose),
+                                             geometric_data_dir=geometric_data_dir, resolution=target_resolution,
+                                             subject_name=anatomy_subject_name, verbose=verbose)
+        '''
+        # CODICE COME IN visualise_Twave_personalisation_history.py
         # Read hyperparameters
         vc_ab_cut_name = hyperparameter_dict['vc_ab_cut_name']
         vc_aprt_name = hyperparameter_dict['vc_aprt_name']
@@ -323,7 +344,29 @@ if __name__ == '__main__':
         g_vc_tm_name = hyperparameter_dict['g_vc_tm_name']
         electrophysiology_parameter_name_list_in_order = hyperparameter_dict['electrophysiology_parameter_name_list_in_order']
         # Spatial and temporal smoothing parameters:
-        ## EDIT MODIFICATO CODICE come in visualise_Twave_personalisation_history.py
+        '''EDIT CODICE NON FUNZIONANTE
+        smoothing_count = hyperparameter_dict['smoothing_count']
+        smoothing_past_present_window = hyperparameter_dict['smoothing_past_present_window']
+        full_smoothing_time_index = hyperparameter_dict['full_smoothing_time_index']
+        # fibre_speed_name = hyperparameter_dict['fibre_speed_name']
+        # sheet_speed_name = hyperparameter_dict['sheet_speed_name']
+        # normal_speed_name = hyperparameter_dict['normal_speed_name']
+        electrophysiology_model = ElectrophysiologyAPDmap(apd_max_name=apd_max_name, apd_min_name=apd_min_name,
+                                                          cellular_model=cellular_model,
+                                                          fibre_speed_name=fibre_speed_name,
+                                                          full_smoothing_time_index=full_smoothing_time_index,
+                                                          module_name=electrophysiology_module_name,
+                                                          normal_speed_name=normal_speed_name,
+                                                          parameter_name_list_in_order=electrophysiology_parameter_name_list_in_order,
+                                                          propagation_model=propagation_model,
+                                                          sheet_speed_name=transmural_speed_name,
+                                                          smoothing_count=smoothing_count,
+                                                          smoothing_ghost_distance_to_self=smoothing_ghost_distance_to_self,
+                                                          smoothing_past_present_window=np.asarray(
+                                                              smoothing_past_present_window),
+                                                          verbose=verbose)
+        '''
+        ## CODICE come in visualise_Twave_personalisation_history.py
         # Spatial and temporal smoothing parameters:
         smoothing_dt = hyperparameter_dict['smoothing_dt']
         print('smoothing_dt ', smoothing_dt)
@@ -356,15 +399,7 @@ if __name__ == '__main__':
         # Step 7: Create ECG calculation method.
         print('Step 7: Create ECG calculation method.')
         # Arguments for ECG calculation:
-        # EDIT MODIFICATO CODICE come in visualise_history
         # Read hyperparameters
-        lead_names = hyperparameter_dict['lead_names']
-        nb_leads = hyperparameter_dict['nb_leads']
-        v3_name = hyperparameter_dict['v3_name']
-        v5_name = hyperparameter_dict['v5_name']
-        lead_v3_i = lead_names.index(v3_name)
-        lead_v5_i = lead_names.index(v5_name)
-        assert nb_leads == len(lead_names)
         filtering = hyperparameter_dict['filtering']
         max_len_qrs = hyperparameter_dict['max_len_qrs']
         max_len_ecg = hyperparameter_dict['max_len_ecg']
@@ -396,15 +431,12 @@ if __name__ == '__main__':
         max_len_ecg = None
         max_len_qrs = None
         normalise = None
-        preprocessed_clinical_ecg_file_name = None
-        v3_name = None
-        v5_name = None
         zero_align = None
         ####################################################################################################################
         # Step 8: Define instance of the simulation method.
         print('Step 8: Define instance of the simulation method.')
         simulator_ecg = SimulateECG(ecg_model=ecg_model, electrophysiology_model=electrophysiology_model, verbose=verbose)
-        # simulator_ep = SimulateEP(electrophysiology_model=electrophysiology_model, verbose=verbose)    # Clear Arguments to prevent Argument recycling
+        simulator_ep = SimulateEP(electrophysiology_model=electrophysiology_model, verbose=verbose)    # Clear Arguments to prevent Argument recycling
         electrophysiology_model = None
         ecg_model = None
         ####################################################################################################################
@@ -462,6 +494,51 @@ if __name__ == '__main__':
         parameter_fixed_value_dict = None
         theta_name_list_in_order = None
 
+        # # Read hyperparameters
+        # apd_max_resolution = hyperparameter_dict['apd_max_resolution']
+        # apd_min_resolution = hyperparameter_dict['apd_min_resolution']
+        # destination_module_name_list_in_order = hyperparameter_dict['destination_module_name_list_in_order']
+        # # TODO make the following code into a for loop!!
+        # g_vc_ab_resolution = hyperparameter_dict['g_vc_ab_resolution']
+        # g_vc_aprt_resolution = hyperparameter_dict['g_vc_aprt_resolution']
+        # g_vc_rvlv_resolution = hyperparameter_dict['g_vc_rvlv_resolution']
+        # g_vc_tm_resolution = hyperparameter_dict['g_vc_tm_resolution']
+        # parameter_destination_module_dict = hyperparameter_dict['parameter_destination_module_dict']
+        # parameter_fixed_value_dict = hyperparameter_dict['parameter_fixed_value_dict']
+        # parameter_name_list_in_order = hyperparameter_dict['parameter_name_list_in_order']
+        # physiological_rules_larger_than_dict = hyperparameter_dict['physiological_rules_larger_than_dict']
+        # theta_name_list_in_order = hyperparameter_dict['theta_name_list_in_order']
+        # theta_adjust_function_list_in_order = [RoundTheta(resolution=apd_max_resolution),
+        #                                        RoundTheta(resolution=apd_min_resolution),
+        #                                        RoundTheta(resolution=g_vc_ab_resolution),
+        #                                        RoundTheta(resolution=g_vc_aprt_resolution),
+        #                                        RoundTheta(resolution=g_vc_rvlv_resolution),
+        #                                        # RoundTheta(resolution=g_vc_sep_resolution),
+        #                                        RoundTheta(resolution=g_vc_tm_resolution)]
+        # if len(theta_adjust_function_list_in_order) != len(theta_name_list_in_order):
+        #     print('theta_name_list_in_order ', len(theta_name_list_in_order))
+        #     print('theta_adjust_function_list_in_order ', len(theta_adjust_function_list_in_order))
+        #     raise Exception('Different number of adjusting functions and theta for the inference')
+        # # Create an adapter that can translate between theta and parameters
+        # adapter = AdapterThetaParams(destination_module_name_list_in_order=destination_module_name_list_in_order,
+        #                              parameter_fixed_value_dict=parameter_fixed_value_dict,
+        #                              parameter_name_list_in_order=parameter_name_list_in_order,
+        #                              parameter_destination_module_dict=parameter_destination_module_dict,
+        #                              theta_name_list_in_order=theta_name_list_in_order,
+        #                              physiological_rules_larger_than_dict=physiological_rules_larger_than_dict,
+        #                              theta_adjust_function_list_in_order=theta_adjust_function_list_in_order,
+        #                              verbose=verbose)
+        # nb_theta = len(theta_name_list_in_order)
+        # # Clear Arguments to prevent Argument recycling
+        # speed_parameter_name_list_in_order = None
+        # candidate_root_node_names = None
+        # fibre_speed_name = None
+        # transmural_speed_name = None
+        # normal_speed_name = None
+        # endo_dense_speed_name = None
+        # endo_sparse_speed_name = None
+        # parameter_fixed_value_dict = None
+        # theta_name_list_in_order = None
         ####################################################################################################################
         # Step 10: Create evaluator_ecg.
         print('Step 10: Create evaluator_ecg.')
@@ -475,11 +552,6 @@ if __name__ == '__main__':
         # Simulate the parameter population from the inference
         population_ecg = evaluator_ecg.simulate_parameter_population(parameter_population=parameter_population)
         save_ecg_to_csv(data=population_ecg, filename=ecg_population_file_name)
-        print('saved ecg population csv: ', ecg_population_file_name)
-        fig = evaluator_ecg.visualise_parameter_population(discrepancy_population=discrepancy_population,
-                                                       parameter_population=parameter_population)
-        fig.savefig(figure_result_file_name)
-        print('Saved ecg figure: ', figure_result_file_name)
         # Clear Arguments to prevent Argument recycling.
         evaluator_ecg = None
         pandas_parameter_population = None

@@ -508,8 +508,19 @@ if __name__ == '__main__':
             population_theta_past = population_theta_history[population_theta_i]
             if population_theta_past.shape[0] != population_ecg_past.shape[0]:
                 print('generating ecgs for ', population_theta_i)
-                population_ecg_past = evaluator_ecg.simulate_theta_population(theta_population=population_theta_past)
+                # population_ecg_past = evaluator_ecg.simulate_theta_population(theta_population=population_theta_past)
+                # Batch processing to avoid OOM (Out Of Memory)
+                batch_size = 8  # Process 4 particles at a time (~2.7 GB RAM)
+                population_size = population_theta_past.shape[0]
+                ecg_batches = []
+                for i in range(0, population_size, batch_size):
+                    theta_batch = population_theta_past[i:min(i + batch_size, population_size), :]
+                    print('Simulating batch ' + str(i) + ' to ' + str(min(i + batch_size, population_size)))
+                    ecg_batch = evaluator_ecg.simulate_theta_population(theta_population=theta_batch)
+                    ecg_batches.append(ecg_batch)
+                population_ecg_past = np.concatenate(ecg_batches, axis=0)                
                 save_ecg_to_csv(data=population_ecg_past, filename=iteration_history_ecg_filename)  # Save the ecgs for next time
+            
             population_ecg_history.append(population_ecg_past)
             # Check if the biomarker data for this iteration has already been saved
             iteration_history_biomarker_filename = history_precomputed_dir + history_biomarker_name_tag \

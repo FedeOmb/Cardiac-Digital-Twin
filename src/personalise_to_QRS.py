@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from datetime import datetime
+import personalise_to_Twave
 
 
 if __name__ == '__main__':
@@ -480,8 +481,8 @@ if __name__ == '__main__':
         nb_root_node_prior = [6, 1]  # [mean, std]
         
         ## CONFIG TEST SEMPLIFICATA ##
-        nb_root_nodes_range = [3, 5]
-        nb_root_node_prior = [4, 1]  
+        # nb_root_nodes_range = [3, 5]
+        # nb_root_node_prior = [4, 1]  
         ## ---------------------------
 
         # Aggregate ranges and priors
@@ -510,8 +511,8 @@ if __name__ == '__main__':
         
         ## -----------------------------------
         ## CONFIGURAZIONE SEMPLIFICATA TEST ##
-        population_size = 32
-        max_mcmc_steps = 10
+        population_size = 128
+        max_mcmc_steps = 100
         ## ----------------    
         
         keep_fraction = max((population_size - 2 * multiprocessing.cpu_count()) / population_size, 0.5)   # without the max() function it can go negative when the population size is smaller than the number of threads
@@ -571,10 +572,10 @@ if __name__ == '__main__':
         visualisation_count = 50  # Minimum of 1 to avoid division by zero
         
         ## CONFIGURAZIONE SEMPLIFICATA TEST ##
-        desired_discrepancy = 2.0
-        max_process_alive_time = 0.5 
-        unique_stopping_ratio = 0.3 
-        visualisation_count = 5       
+        desired_discrepancy = 0.5
+        max_process_alive_time = 2. 
+        unique_stopping_ratio = 0.5 
+        visualisation_count = 50     
         ## ----------------
         
         # Save geometry as a check point

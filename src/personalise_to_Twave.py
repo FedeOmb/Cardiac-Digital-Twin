@@ -671,8 +671,8 @@ if __name__ == '__main__':
 
     ## -----------------------------------
     ## CONFIGURAZIONE SEMPLIFICATA TEST ##
-    population_size = 32
-    max_mcmc_steps = 10
+    population_size = 120
+    max_mcmc_steps = 50
     ## ----------------   
     #  
     keep_fraction = max((population_size - 2 * multiprocessing.cpu_count()) / population_size,  0.5)  # 0.75)   # without the max() function it can go negative when the population size is smaller than the number of threads
@@ -725,7 +725,7 @@ if __name__ == '__main__':
     ## -----------------------------------
     ## CONFIGURAZIONE SEMPLIFICATA TEST ##
     desired_discrepancy = 2.0 
-    max_process_alive_time = 1.0
+    max_process_alive_time = 20.
     visualisation_count = 5   
     ## ----------------
     # Save geometry as a check point

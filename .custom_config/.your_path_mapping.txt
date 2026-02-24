@@ -1,1 +1,1 @@
-{"data_path":"/workspaces/Cardiac-Digital-Twin/cardiac-data/meta_data/","results_path":"/workspaces/Cardiac-Digital-Twin/cardiac-data/meta_data/results_test/"}
+{"data_path":"/home/federico/Cardiac-Digital-Twin/cardiac-data/meta_data/","results_path":"/home/federico/Cardiac-Digital-Twin/cardiac-data/meta_data/results_test/"}

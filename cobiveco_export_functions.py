@@ -14,19 +14,19 @@ def save_vtk_vtu_to_csv(anatomy_subject_name, geometric_data_dir, target_resolut
         else:
             reader = vtkUnstructuredGridReader()
         reader.SetFileName(input_dir + vtk_filename)
-        reader.ReadAllVectorsOn()
-        reader.ReadAllScalarsOn()
         if not vtk_filename.endswith('.vtu'):
             reader.ReadAllVectorsOn()
             reader.ReadAllScalarsOn()
         reader.Update()
         data = reader.GetOutput()
         unprocessed_node_xyz = VN.vtk_to_numpy(data.GetPoints().GetData())
+        print(unprocessed_node_xyz.shape)
         # Save node xyz coordinates
         np.savetxt( output_dir + anatomy_subject_name + '_'
                    + target_resolution + '_xyz.csv', unprocessed_node_xyz, delimiter=',')
         n_tetra = data.GetNumberOfCells()
         unprocessed_tetra = np.reshape(VN.vtk_to_numpy(data.GetCells().GetConnectivityArray()), [n_tetra, 4])
+        print(unprocessed_tetra.shape)
         # Save tetra
         np.savetxt(output_dir + anatomy_subject_name + '_' + target_resolution + '_tetra.csv', unprocessed_tetra, delimiter=',')
 

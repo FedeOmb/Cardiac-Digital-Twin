@@ -11,6 +11,48 @@ from utils import get_xyz_name_list
 geometric_data_dir = '/home/federico/Cardiac-Digital-Twin/cardiac-data/meta_data/geometric_data/'
 source_resolution = 'coarse2'
 
+def generate_dummy_fiber_files(subject_name, geometric_data_dir, resolution):
+    """Genera file dummy per fibre, sheet, normal e material se mancanti."""
+    mesh_dir = os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{resolution}")
+    file_prefix = f"{subject_name}_{resolution}"
+    
+    if not os.path.exists(mesh_dir):
+        print(f"Attenzione: La cartella {mesh_dir} non esiste.")
+        return
+
+    # 1. Leggi il numero di nodi dal file xyz
+    xyz_filename = os.path.join(mesh_dir, f"{file_prefix}_xyz.csv")
+    if not os.path.exists(xyz_filename):
+        print(f"Errore: File coordinate non trovato: {xyz_filename}")
+        return
+    
+    # Conta le righe (nodi)
+    with open(xyz_filename, 'r') as f:
+        n_nodes = sum(1 for _ in f)
+    
+    # 2. Genera file fibre (x, y, z unitari ortogonali) se mancanti
+    vectors = {'fibre': [1, 0, 0], 'sheet': [0, 1, 0], 'normal': [0, 0, 1]}
+    for name, vec in vectors.items():
+        path = os.path.join(mesh_dir, f"{file_prefix}_nodefield_{name}.csv")
+        if not os.path.exists(path):
+            print(f"Generazione file dummy {name}: {path}")
+            np.savetxt(path, np.tile(vec, (n_nodes, 1)), delimiter=',')
+
+    # 3. Genera file material (se manca) - Richiesto da RawVCFibreCardiacGeoTet
+    tetra_path = os.path.join(mesh_dir, f"{file_prefix}_tetra.csv")
+    material_path = os.path.join(mesh_dir, f"{file_prefix}_material_tetra.csv")
+    if os.path.exists(tetra_path) and not os.path.exists(material_path):
+        with open(tetra_path, 'r') as f:
+            n_tetra = sum(1 for _ in f)
+        print(f"Generazione file dummy material: {material_path}")
+        np.savetxt(material_path, np.ones((n_tetra, 1), dtype=int), delimiter=',', fmt='%d')
+
+    # 4. Genera file elettrodi (se manca) - Richiesto da SimpleCardiacGeoTet
+    electrode_path = os.path.join(geometric_data_dir, subject_name, f"{subject_name}_electrode_xyz.csv")
+    if not os.path.exists(electrode_path):
+        print(f"Generazione file dummy elettrodi: {electrode_path}")
+        np.savetxt(electrode_path, np.array([[0.0, 0.0, 0.0]]), delimiter=',')
+
 def generate_purkinje_network(subject_name, output_dir):
 
     output_dir = os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{source_resolution}", "simulation_files")
@@ -22,6 +64,10 @@ def generate_purkinje_network(subject_name, output_dir):
     cellular_model = StepFunctionUpstrokeEP(resting_vm_value=resting_vm_value, upstroke_vm_value=upstroke_vm_value,
                                                     verbose=verbose)
     celltype_vc_info = {}
+    
+    # Genera file ausiliari (fibre, materiali, elettrodi) se non esistono
+    generate_dummy_fiber_files(subject_name, geometric_data_dir, source_resolution)
+    
     geometry = EikonalGeometry(cellular_model=cellular_model, celltype_vc_info=celltype_vc_info,
                                    conduction_system=EmptyConductionSystem(verbose=verbose),
                                    geometric_data_dir=geometric_data_dir, resolution=source_resolution,

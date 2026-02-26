@@ -72,8 +72,10 @@ def save_endo_nodes_to_csv(anatomy_subject_name, geometric_data_dir, target_reso
     surface = mesh.extract_surface(pass_pointid=True, pass_cellid=True)
     
     # Controllo se il nome del tag esiste
-    if tag_array_name not in surface.cell_data:
-        print(f"ERRORE: Campo '{tag_array_name}' non trovato. Campi disponibili: {surface.cell_data.keys()}")
+    has_cell = tag_array_name in surface.cell_data
+    has_point = tag_array_name in surface.point_data
+    if not (has_cell or has_point):
+        print(f"ERRORE: Campo '{tag_array_name}' non trovato. Campi cell_data: {list(surface.cell_data.keys())}, point_data: {list(surface.point_data.keys())}")
         return
 
     # 2. Estrai LV
@@ -96,9 +98,10 @@ def save_endo_nodes_to_csv(anatomy_subject_name, geometric_data_dir, target_reso
 
 if __name__ == "__main__":
     geometric_data_dir = './cardiac-data/meta_data/geometric_data/'
-    subject_name = 'kaggle502'
-    target_resolution = 'subdiv2'
-    vtu_filename = 'kaggle502cobiveco.vtu'
-    save_vtk_vtu_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
-    save_vtu_arrays_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
-    save_endo_nodes_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename, lv_tag=4, rv_tag=2, tag_array_name='class')
+    subject_name = 'kaggle503'
+    target_resolution = 'coarse2'
+    vtu_filename = 'kaggle503.vtu'
+    #save_vtk_vtu_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
+    #save_vtu_arrays_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
+    vtu_filename = 'kaggle503_classes.vtu'
+    save_endo_nodes_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename, lv_tag=3, rv_tag=2, tag_array_name='surClass')

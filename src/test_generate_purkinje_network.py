@@ -8,10 +8,12 @@ from conduction_system import EmptyConductionSystem, PurkinjeSystemVC, select_ra
 from io_functions import write_purkinje_vtk, write_root_node_csv
 from utils import get_xyz_name_list
 
-geometric_data_dir = ''
-source_resolution = 'coarse'
+geometric_data_dir = '/home/federico/Cardiac-Digital-Twin/cardiac-data/meta_data/geometric_data/'
+source_resolution = 'coarse2'
 
 def generate_purkinje_network(subject_name, output_dir):
+
+    output_dir = os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{source_resolution}", "simulation_files")
     # 1. Carica la Geometria
     # Coordinate Cobiveco calcolate
     vc_name_list = ['ab', 'rt', 'tv']
@@ -45,6 +47,8 @@ def generate_purkinje_network(subject_name, output_dir):
 
     lv_candidate_purkinje_edge, rv__candidate_purkinje_edge = geometry.get_lv_rv_candidate_purkinje_edge()
     node_xyz = geometry.get_node_xyz()
+    print("Node xyz shape:", node_xyz.shape)
+    print("node example", node_xyz[:10])
     node_vc_list = [geometry.get_node_vc_field(vc_name=vc_name) for vc_name in vc_name_list]
     # 3. calcola le Purkinje Network e i Root Nodes (PMJ) candidati per entrambi i ventricoli
     # LV
@@ -83,8 +87,8 @@ def generate_purkinje_network(subject_name, output_dir):
 #
 #  generate_dataset_case('/path/to/mesh_folder/', 'Patient001', './output_dataset/')
 if __name__ == "__main__":
-    subject_name = 'kaggle502'
-    output_dir = './simulation_files/'
+    subject_name = 'kaggle503'
+    output_dir = 'simulation_files/'
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     generate_purkinje_network(subject_name=subject_name, output_dir=output_dir)

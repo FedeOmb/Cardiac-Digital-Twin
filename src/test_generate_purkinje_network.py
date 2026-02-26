@@ -9,7 +9,7 @@ from io_functions import write_purkinje_vtk, write_root_node_csv
 from utils import get_xyz_name_list
 
 geometric_data_dir = '/home/federico/Cardiac-Digital-Twin/cardiac-data/meta_data/geometric_data/'
-source_resolution = 'coarse2'
+source_resolution = 'coarse'
 
 def generate_dummy_fiber_files(subject_name, geometric_data_dir, resolution):
     """Genera file dummy per fibre, sheet, normal e material se mancanti."""
@@ -56,9 +56,11 @@ def generate_dummy_fiber_files(subject_name, geometric_data_dir, resolution):
 def generate_purkinje_network(subject_name, output_dir):
 
     output_dir = os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{source_resolution}", "simulation_files")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
     # 1. Carica la Geometria
     # Coordinate Cobiveco calcolate
-    vc_name_list = ['ab', 'rt', 'tv']
+    vc_name_list = ['ab_cut', 'rt']
     resting_vm_value = 0.
     upstroke_vm_value = 1.
     cellular_model = StepFunctionUpstrokeEP(resting_vm_value=resting_vm_value, upstroke_vm_value=upstroke_vm_value,
@@ -112,7 +114,7 @@ def generate_purkinje_network(subject_name, output_dir):
                     visualisation_dir=output_dir, xyz_name_list=get_xyz_name_list())
     
     # 4. Randomizzazione Attivazione root nodes
-    all_candidate_root_nodes_index = conduction_system.get_all_candidate_root_node_index()
+    all_candidate_root_nodes_index = conduction_system.get_candidate_root_node_index()
     total_candidate_root_nodes = len(all_candidate_root_nodes_index)
     random_active_percentage = np.random.uniform(0.5, 0.9)
     print(f"Attivando casualmente {random_active_percentage*100:.1f}% dei root nodes candidati ({total_candidate_root_nodes} totali)")
@@ -133,8 +135,6 @@ def generate_purkinje_network(subject_name, output_dir):
 #
 #  generate_dataset_case('/path/to/mesh_folder/', 'Patient001', './output_dataset/')
 if __name__ == "__main__":
-    subject_name = 'kaggle503'
+    subject_name = 'DTI004'
     output_dir = 'simulation_files/'
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
     generate_purkinje_network(subject_name=subject_name, output_dir=output_dir)

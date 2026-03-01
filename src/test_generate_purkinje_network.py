@@ -120,6 +120,7 @@ def generate_purkinje_network(subject_name, geometric_data_dir):
     
     # 4. Randomizzazione Attivazione root nodes
     all_candidate_root_nodes_index = conduction_system.get_candidate_root_node_index()
+    all_candidate_root_nodes_index = conduction_system.get_candidate_root_node_index()
     total_candidate_root_nodes = len(all_candidate_root_nodes_index)
     random_active_percentage = np.random.uniform(0.5, 0.9)
     print(f"Attivando casualmente {random_active_percentage*100:.1f}% dei root nodes candidati ({total_candidate_root_nodes} totali)")

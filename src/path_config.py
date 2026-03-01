@@ -12,8 +12,8 @@ def set_path_mapping(path_mapping_json):
         f.write(path_mapping_json)
 
 
-def get_path_mapping():
-    mapping_filename = '../.custom_config/.your_path_mapping.txt'
+def get_path_mapping(mapping_filename='../.custom_config/.your_path_mapping.txt'):
+    #mapping_filename = '../.custom_config/.your_path_mapping.txt'
     with open(mapping_filename, 'r') as f:
         path_mapping_json = f.read()
     # print(path_mapping_json)

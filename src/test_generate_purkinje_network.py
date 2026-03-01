@@ -6,9 +6,11 @@ from cellular_models import StepFunctionUpstrokeEP
 from geometry_functions import EikonalGeometry
 from conduction_system import EmptyConductionSystem, PurkinjeSystemVC, select_random_root_nodes
 from io_functions import write_purkinje_vtk, write_root_node_csv
+from path_config import get_path_mapping
 from utils import get_xyz_name_list
 
-geometric_data_dir = '/home/federico/Cardiac-Digital-Twin/cardiac-data/meta_data/geometric_data/'
+#geometric_data_dir = '/home/federico/Cardiac-Digital-Twin/cardiac-data/meta_data/geometric_data/'
+#geometric_data_dir = os.path.join(os.path.expanduser("~"), "Desktop", "digital-twin-framework-camps", "Cardiac-Digital-Twin", "cardiac-data", "meta_data", "geometric_data/")
 source_resolution = 'coarse2'
 
 def generate_dummy_fiber_files(subject_name, geometric_data_dir, resolution):
@@ -53,12 +55,17 @@ def generate_dummy_fiber_files(subject_name, geometric_data_dir, resolution):
         print(f"Generazione file dummy elettrodi: {electrode_path}")
         np.savetxt(electrode_path, np.array([[0.0, 0.0, 0.0]]), delimiter=',')
 
-def generate_purkinje_network(subject_name, output_dir):
+def generate_purkinje_network(subject_name, geometric_data_dir):
 
-    output_dir = os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{source_resolution}", "simulation_files")
+    output_dir = os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{source_resolution}", "purkinje/")
+    print(f"Output directory: {output_dir}")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)    
+    verbose = True
     # 1. Carica la Geometria
     # Coordinate Cobiveco calcolate
-    vc_name_list = ['ab', 'rt', 'tv']
+    #vc_name_list = ['ab_cut', 'rt']
+    vc_name_list = ['ab', 'rt']    
     resting_vm_value = 0.
     upstroke_vm_value = 1.
     cellular_model = StepFunctionUpstrokeEP(resting_vm_value=resting_vm_value, upstroke_vm_value=upstroke_vm_value,
@@ -112,12 +119,12 @@ def generate_purkinje_network(subject_name, output_dir):
                     visualisation_dir=output_dir, xyz_name_list=get_xyz_name_list())
     
     # 4. Randomizzazione Attivazione root nodes
-    all_candidate_root_nodes_index = conduction_system.get_all_candidate_root_node_index()
+    all_candidate_root_nodes_index = conduction_system.get_candidate_root_node_index()
     total_candidate_root_nodes = len(all_candidate_root_nodes_index)
     random_active_percentage = np.random.uniform(0.5, 0.9)
     print(f"Attivando casualmente {random_active_percentage*100:.1f}% dei root nodes candidati ({total_candidate_root_nodes} totali)")
     nb_active_nodes = int(total_candidate_root_nodes * random_active_percentage)
-    selection_mask = select_random_root_nodes(nb_active_nodes=nb_active_nodes, candidate_root_node_indexes=all_candidate_root_nodes_index)
+    selection_mask = select_random_root_nodes(nb_root_nodes=nb_active_nodes, candidate_root_node_indexes=all_candidate_root_nodes_index)
 
     active_root_nodes = all_candidate_root_nodes_index[selection_mask]
     lv_purkinje_edge, rv_purkinje_edge = geometry.get_lv_rv_selected_purkinje_edge(root_node_meta_index=selection_mask)
@@ -130,11 +137,24 @@ def generate_purkinje_network(subject_name, output_dir):
     np.savetxt(vtx_filename, active_root_nodes, fmt='%d')
     print(f"Generati {len(active_root_nodes)} root nodes e salvati per opencarp in {vtx_filename}")
 
-#
-#  generate_dataset_case('/path/to/mesh_folder/', 'Patient001', './output_dataset/')
 if __name__ == "__main__":
+
+    script_directory = os.path.dirname(os.path.realpath(__file__))
+    print('Script directory:', script_directory)
+    # Change the current working directory to the script dierctory
+    os.chdir(script_directory)
+    working_directory = os.getcwd()
+    print('Working directory:', working_directory)
+    if os.path.isfile('../.custom_config/.your_path_mapping_docker_vscode.txt'):
+        path_dict = get_path_mapping('../.custom_config/.your_path_mapping_docker_vscode.txt')
+    else:
+        raise 'Missing data and results configuration file at: ../.custom_config/.your_path_mapping.txt'    
+    
+    data_dir = path_dict["data_path"]
+    geometric_data_dir = data_dir + 'geometric_data/'
+
     subject_name = 'kaggle503'
-    output_dir = 'simulation_files/'
-    if not os.path.exists(output_dir):
-        os.makedirs(output_dir)
-    generate_purkinje_network(subject_name=subject_name, output_dir=output_dir)
+    # subject_name = 'DTI003'
+    output_dir = 'purkinje/'
+
+    generate_purkinje_network(subject_name=subject_name, geometric_data_dir=geometric_data_dir)

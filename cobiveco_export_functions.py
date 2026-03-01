@@ -8,6 +8,8 @@ from vtkmodules.util import numpy_support as VN
 def save_vtk_vtu_to_csv(anatomy_subject_name, geometric_data_dir, target_resolution, vtk_filename):
     input_dir = geometric_data_dir + anatomy_subject_name + '/'
     output_dir = geometric_data_dir + anatomy_subject_name + '/' + anatomy_subject_name + '_' + target_resolution + '/'
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
     if os.path.exists(input_dir + vtk_filename):
         reader = vtkUnstructuredGridReader()
         if vtk_filename.endswith('.vtu'):
@@ -100,8 +102,8 @@ if __name__ == "__main__":
     geometric_data_dir = './cardiac-data/meta_data/geometric_data/'
     subject_name = 'kaggle503'
     target_resolution = 'coarse2'
-    vtu_filename = 'kaggle503.vtu'
-    #save_vtk_vtu_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
-    #save_vtu_arrays_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
+    vtu_filename = 'kaggle503cobiveco.vtu'
+    save_vtk_vtu_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
+    save_vtu_arrays_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
     vtu_filename = 'kaggle503_classes.vtu'
     save_endo_nodes_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename, lv_tag=3, rv_tag=2, tag_array_name='surClass')

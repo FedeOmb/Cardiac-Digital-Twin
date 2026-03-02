@@ -156,26 +156,25 @@ def extract_ids_from_tagged_vtp(vtu_path, vtp_path, tag_array_name, target_tag_v
 
 if __name__ == "__main__":
     geometric_data_dir = './cardiac-data/meta_data/geometric_data/'
-    subject_name = 'kaggle503'
-    target_resolution = 'coarse2'
-    vtu_filename = 'kaggle503cobiveco.vtu'
+    subject_name = 'kaggle502'
+    target_resolution = 'coarse1500'
+    vtu_filename = 'kaggle502_coord.vtu'
     save_vtk_vtu_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
     save_vtu_arrays_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
 
-    vtu_filename = 'kaggle503_classes.vtu'
     input_dir = geometric_data_dir + subject_name + '/'
     vtu_path = input_dir + vtu_filename
     output_dir = geometric_data_dir + subject_name + '/' + subject_name + '_' + target_resolution + '/'
-    vtp_filename = 'kaggle503_surfaces.vtp'
+    vtp_filename = 'kaggle502_classes.vtp'
     vtp_path = input_dir + vtp_filename
     #save_endo_nodes_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename, lv_tag=3, rv_tag=2, tag_array_name='surClass')
 
     TAG_LV_ENDO = 3  # Valore per Endocardio LV
     TAG_RV_ENDO = 2  # Valore per Endocardio RV
-    TAG_ARRAY_NAME = 'surClass'
+    TAG_ARRAY_NAME = 'class'
 
     extract_ids_from_tagged_vtp(
-        vol_path=vtu_path,
+        vtu_path=vtu_path,
         vtp_path=vtp_path,
         tag_array_name=TAG_ARRAY_NAME,
         target_tag_value=TAG_LV_ENDO,
@@ -184,7 +183,7 @@ if __name__ == "__main__":
 
     # Genera file RV
     extract_ids_from_tagged_vtp(
-        vol_path=vtu_path,
+        vtu_path=vtu_path,
         vtp_path=vtp_path,
         tag_array_name=TAG_ARRAY_NAME,
         target_tag_value=TAG_RV_ENDO,

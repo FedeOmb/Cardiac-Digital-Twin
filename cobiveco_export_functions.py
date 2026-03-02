@@ -1,6 +1,7 @@
 import numpy as np
 import pyvista as pv
 import os
+from scipy.spatial import cKDTree
 from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridReader
 from vtkmodules.util import numpy_support as VN
@@ -98,6 +99,61 @@ def save_endo_nodes_to_csv(anatomy_subject_name, geometric_data_dir, target_reso
     else:
         print("Nessun nodo trovato per RV!")
 
+def extract_ids_from_tagged_vtp(vtu_path, vtp_path, tag_array_name, target_tag_value, output_csv):
+    """
+    1. Carica il VTP di superficie e il VTU volumetrico.
+    2. Filtra il VTP prendendo solo la parte con il 'target_tag_value' (es. LV).
+    3. Trova gli ID corrispondenti nella mesh volumetrica (VTU) basandosi sulla posizione.
+    """
+    print(f"--- Elaborazione Tag {target_tag_value} da {vtp_path} ---")
+    
+    # 1. Carica le mesh
+    vol_mesh = pv.read(vtu_path)  # Mesh volumetrica (senza tag)
+    surf_mesh_all = pv.read(vtp_path) # Mesh superficiale (con tag)
+    
+    # 2. Verifica che il nome del tag esista
+    # Pyvista gestisce i dati in point_data o cell_data
+    if tag_array_name not in surf_mesh_all.array_names:
+        print(f"ERRORE: Campo '{tag_array_name}' non trovato nel VTP.")
+        print(f"Campi disponibili: {surf_mesh_all.array_names}")
+        return
+
+    # 3. Estrai solo la superficie specifica (es. solo LV)
+    # threshold filtra le celle/punti che hanno quel valore specifico
+    specific_surf = surf_mesh_all.threshold(value=[target_tag_value, target_tag_value], 
+                                            scalars=tag_array_name, 
+                                            preference='cell') # O 'point' se i tag sono sui nodi
+    
+    if specific_surf.n_points == 0:
+        print(f"ATTENZIONE: Nessun punto trovato con Tag={target_tag_value}. Verifica i valori in Paraview.")
+        return
+
+    print(f"  Punti superficie estratti: {specific_surf.n_points}")
+    print(f"  Punti volume totale: {vol_mesh.n_points}")
+
+    # 4. Mapping Spaziale (KDTree)
+    # Costruiamo l'albero sui punti del volume (target degli ID)
+    tree = cKDTree(vol_mesh.points)
+    
+    # Cerchiamo i punti della superficie estratta dentro il volume
+    # tolerance=1e-4 assume che le mesh siano perfettamente allineate
+    dist, indices = tree.query(specific_surf.points, k=1)
+    
+    # Filtro di sicurezza (se i punti distano troppo, ignorali)
+    tolerance = 1e-4
+    valid_mask = dist < tolerance
+    final_indices = np.unique(indices[valid_mask])
+    
+    invalid_count = len(indices) - len(final_indices)
+    if invalid_count > 0:
+        print(f"  Nota: {invalid_count} punti scartati per tolleranza eccessiva.")
+
+    # 5. Salva CSV
+    np.savetxt(output_csv, final_indices, fmt='%d')
+    print(f"  SALVATO: {output_csv} con {len(final_indices)} nodi unici.\n")
+
+
+
 if __name__ == "__main__":
     geometric_data_dir = './cardiac-data/meta_data/geometric_data/'
     subject_name = 'kaggle503'
@@ -105,5 +161,32 @@ if __name__ == "__main__":
     vtu_filename = 'kaggle503cobiveco.vtu'
     save_vtk_vtu_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
     save_vtu_arrays_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
+
     vtu_filename = 'kaggle503_classes.vtu'
-    save_endo_nodes_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename, lv_tag=3, rv_tag=2, tag_array_name='surClass')
+    input_dir = geometric_data_dir + subject_name + '/'
+    vtu_path = input_dir + vtu_filename
+    output_dir = geometric_data_dir + subject_name + '/' + subject_name + '_' + target_resolution + '/'
+    vtp_filename = 'kaggle503_surfaces.vtp'
+    vtp_path = input_dir + vtp_filename
+    #save_endo_nodes_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename, lv_tag=3, rv_tag=2, tag_array_name='surClass')
+
+    TAG_LV_ENDO = 3  # Valore per Endocardio LV
+    TAG_RV_ENDO = 2  # Valore per Endocardio RV
+    TAG_ARRAY_NAME = 'surClass'
+
+    extract_ids_from_tagged_vtp(
+        vol_path=vtu_path,
+        vtp_path=vtp_path,
+        tag_array_name=TAG_ARRAY_NAME,
+        target_tag_value=TAG_LV_ENDO,
+        output_csv=os.path.join(output_dir, subject_name + '_' + target_resolution + '_boundarynodefield' + '_lvendo' + '.csv')
+    )
+
+    # Genera file RV
+    extract_ids_from_tagged_vtp(
+        vol_path=vtu_path,
+        vtp_path=vtp_path,
+        tag_array_name=TAG_ARRAY_NAME,
+        target_tag_value=TAG_RV_ENDO,
+        output_csv=os.path.join(output_dir, subject_name + '_' + target_resolution + '_boundarynodefield' + '_rvendo' + '.csv')
+    )

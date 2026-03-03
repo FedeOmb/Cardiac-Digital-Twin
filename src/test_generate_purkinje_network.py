@@ -198,7 +198,7 @@ if __name__ == "__main__":
     # subject_name = 'DTI003'
     output_dir = 'purkinje/'
     coarse_resolution = 'coarse1500'
-    fine_resolution = 'fine'
+    fine_resolution = 'fine500'
 
     geometry, lv_pk, rv_pk, roots = generate_purkinje_network(subject_name=subject_name, geometric_data_dir=geometric_data_dir, resolution=coarse_resolution)
     

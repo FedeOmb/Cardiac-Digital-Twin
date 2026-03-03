@@ -161,7 +161,11 @@ if __name__ == "__main__":
     vtu_filename = 'kaggle502_coord.vtu'
     save_vtk_vtu_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
     save_vtu_arrays_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
-
+    #export solo nodi e tetra per mesh fine
+    fine_resolution = 'fine500'
+    fine_vtk_filename = 'kaggle502_fine500.vtk'
+    save_vtk_vtu_to_csv(subject_name, geometric_data_dir, fine_resolution, fine_vtk_filename)
+    #export nodi endo rv e lv mesh coarse
     input_dir = geometric_data_dir + subject_name + '/'
     vtu_path = input_dir + vtu_filename
     output_dir = geometric_data_dir + subject_name + '/' + subject_name + '_' + target_resolution + '/'

@@ -105,16 +105,16 @@ def generate_purkinje_network(subject_name, geometric_data_dir, resolution):
     node_vc_list = [geometry.get_node_vc_field(vc_name=vc_name) for vc_name in vc_name_list]
     # 3. calcola le Purkinje Network e i Root Nodes (PMJ) candidati per entrambi i ventricoli
     # LV
-    write_purkinje_vtk(edge_list=lv_candidate_purkinje_edge, filename=subject_name + '_candidate_LV_Purkinje', node_xyz=node_xyz,
+    write_purkinje_vtk(edge_list=lv_candidate_purkinje_edge, filename=subject_name + '_' + resolution + '_candidate_LV_Purkinje', node_xyz=node_xyz,
                             verbose=verbose, visualisation_dir=output_dir)
     lv_candidate_root_node_index, rv_candidate_root_node_index = geometry.get_lv_rv_candidate_root_node_index()
-    write_root_node_csv(filename=subject_name + '_candidate_LV_root_nodes.csv', node_vc_list=node_vc_list, node_xyz=node_xyz,
+    write_root_node_csv(filename=subject_name + '_' + resolution + '_candidate_LV_root_nodes.csv', node_vc_list=node_vc_list, node_xyz=node_xyz,
                     root_node_index_list=lv_candidate_root_node_index, vc_name_list=vc_name_list, verbose=verbose,
                     visualisation_dir=output_dir, xyz_name_list=get_xyz_name_list())
     # RV
-    write_purkinje_vtk(edge_list=rv__candidate_purkinje_edge, filename=subject_name + '_candidate_RV_Purkinje', node_xyz=node_xyz,
+    write_purkinje_vtk(edge_list=rv__candidate_purkinje_edge, filename=subject_name + '_' + resolution + '_candidate_RV_Purkinje', node_xyz=node_xyz,
                             verbose=verbose, visualisation_dir=output_dir)
-    write_root_node_csv(filename=subject_name + '_candidate_RV_root_nodes.csv', node_vc_list=node_vc_list, node_xyz=node_xyz,
+    write_root_node_csv(filename=subject_name + '_' + resolution + '_candidate_RV_root_nodes.csv', node_vc_list=node_vc_list, node_xyz=node_xyz,
                     root_node_index_list=rv_candidate_root_node_index, vc_name_list=vc_name_list, verbose=verbose,
                     visualisation_dir=output_dir, xyz_name_list=get_xyz_name_list())
     
@@ -129,9 +129,9 @@ def generate_purkinje_network(subject_name, geometric_data_dir, resolution):
 
     active_root_nodes = all_candidate_root_nodes_index[selection_mask]
     lv_purkinje_edge, rv_purkinje_edge = geometry.get_lv_rv_selected_purkinje_edge(root_node_meta_index=selection_mask)
-    write_purkinje_vtk(edge_list=lv_purkinje_edge, filename=subject_name + '_selected_LV_Purkinje', node_xyz=node_xyz,
+    write_purkinje_vtk(edge_list=lv_purkinje_edge, filename=subject_name + '_' + resolution + '_selected_LV_Purkinje', node_xyz=node_xyz,
                             verbose=verbose, visualisation_dir=output_dir)
-    write_purkinje_vtk(edge_list=rv_purkinje_edge, filename=subject_name + '_selected_RV_Purkinje', node_xyz=node_xyz,
+    write_purkinje_vtk(edge_list=rv_purkinje_edge, filename=subject_name + '_' + resolution + '_selected_RV_Purkinje', node_xyz=node_xyz,
                             verbose=verbose, visualisation_dir=output_dir)
     # 5. Esportazione per openCARP (.vtx)
     vtx_filename = os.path.join(output_dir, f"{subject_name}_active_root_nodes.vtx")
@@ -170,9 +170,9 @@ def map_purkinje_to_fine(subject_name, geometric_data_dir, coarse_resolution, fi
         os.makedirs(output_dir)
         
     print(f"Salvataggio rete mappata in {output_dir}")
-    write_purkinje_vtk(edge_list=lv_pk_edge_fine, filename=subject_name + '_selected_LV_Purkinje_mapped', node_xyz=fine_node_xyz, verbose=True, visualisation_dir=output_dir)
-    write_purkinje_vtk(edge_list=rv_pk_edge_fine, filename=subject_name + '_selected_RV_Purkinje_mapped', node_xyz=fine_node_xyz, verbose=True, visualisation_dir=output_dir)
-    vtx_filename = os.path.join(output_dir, f"{subject_name}_active_root_nodes_mapped.vtx")
+    write_purkinje_vtk(edge_list=lv_pk_edge_fine, filename=subject_name + '_' + fine_resolution + '_selected_LV_Purkinje', node_xyz=fine_node_xyz, verbose=True, visualisation_dir=output_dir)
+    write_purkinje_vtk(edge_list=rv_pk_edge_fine, filename=subject_name + '_' + fine_resolution + '_selected_RV_Purkinje', node_xyz=fine_node_xyz, verbose=True, visualisation_dir=output_dir)
+    vtx_filename = os.path.join(output_dir, f"{subject_name}_{fine_resolution}_active_root_nodes.vtx")
     np.savetxt(vtx_filename, active_root_nodes_fine, fmt='%d')
     print(f"Salvati {len(active_root_nodes_fine)} root nodes mappati in {vtx_filename}")
 
@@ -198,10 +198,10 @@ if __name__ == "__main__":
     # subject_name = 'DTI003'
     output_dir = 'purkinje/'
     coarse_resolution = 'coarse1500'
-    fine_resolution = 'fine' # Sostituisci con il nome della tua risoluzione fine
+    fine_resolution = 'fine'
 
-    geometry, lv_pk, rv_pk, roots = generate_purkinje_network(subject_name=subject_name, geometric_data_dir=geometric_data_dir, resolution=target_resolution)
+    geometry, lv_pk, rv_pk, roots = generate_purkinje_network(subject_name=subject_name, geometric_data_dir=geometric_data_dir, resolution=coarse_resolution)
     
-    # Mappatura su fine se esiste
+    # Mappatura su fine
     if os.path.exists(os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{fine_resolution}")):
-        map_purkinje_to_fine(subject_name, geometric_data_dir, target_resolution, fine_resolution, geometry, lv_pk, rv_pk, roots)
+        map_purkinje_to_fine(subject_name, geometric_data_dir, coarse_resolution, fine_resolution, geometry, lv_pk, rv_pk, roots)

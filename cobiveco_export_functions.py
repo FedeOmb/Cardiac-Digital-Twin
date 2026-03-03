@@ -51,7 +51,7 @@ def save_vtu_arrays_to_csv(anatomy_subject_name, geometric_data_dir, target_reso
         array_name = point_data.GetArrayName(i)
         array = point_data.GetArray(i)
         np_array = VN.vtk_to_numpy(array)
-        np.savetxt(os.path.join(output_dir, anatomy_subject_name + '_' + target_resolution + '_nodefield_' + array_name + '.csv'), np_array, delimiter=',')
+        np.savetxt(os.path.join(output_dir, anatomy_subject_name + '_' + target_resolution + '_nodefield_' + array_name + '.csv'), np_array, delimiter=',', fmt='%.16f')
 
     # Cell Data
 """ cell_data = data.GetCellData()
@@ -170,7 +170,7 @@ if __name__ == "__main__":
     #save_endo_nodes_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename, lv_tag=3, rv_tag=2, tag_array_name='surClass')
 
     TAG_LV_ENDO = 3  # Valore per Endocardio LV
-    TAG_RV_ENDO = 2  # Valore per Endocardio RV
+    TAG_RV_ENDO = 4  # Valore per Endocardio RV
     TAG_ARRAY_NAME = 'class'
 
     extract_ids_from_tagged_vtp(

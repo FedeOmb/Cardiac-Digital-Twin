@@ -11,7 +11,7 @@ from utils import get_xyz_name_list
 
 #geometric_data_dir = '/home/federico/Cardiac-Digital-Twin/cardiac-data/meta_data/geometric_data/'
 #geometric_data_dir = os.path.join(os.path.expanduser("~"), "Desktop", "digital-twin-framework-camps", "Cardiac-Digital-Twin", "cardiac-data", "meta_data", "geometric_data/")
-source_resolution = 'coarse2'
+source_resolution = 'coarse1500'
 
 def generate_dummy_fiber_files(subject_name, geometric_data_dir, resolution):
     """Genera file dummy per fibre, sheet, normal e material se mancanti."""
@@ -64,8 +64,8 @@ def generate_purkinje_network(subject_name, geometric_data_dir):
     verbose = True
     # 1. Carica la Geometria
     # Coordinate Cobiveco calcolate
-    #vc_name_list = ['ab_cut', 'rt']
-    vc_name_list = ['ab', 'rt']    
+    vc_name_list = ['ab_cut', 'rt']
+    #vc_name_list = ['ab', 'rt']    
     resting_vm_value = 0.
     upstroke_vm_value = 1.
     cellular_model = StepFunctionUpstrokeEP(resting_vm_value=resting_vm_value, upstroke_vm_value=upstroke_vm_value,
@@ -146,15 +146,16 @@ if __name__ == "__main__":
     os.chdir(script_directory)
     working_directory = os.getcwd()
     print('Working directory:', working_directory)
-    if os.path.isfile('../.custom_config/.your_path_mapping_docker_vscode.txt'):
-        path_dict = get_path_mapping('../.custom_config/.your_path_mapping_docker_vscode.txt')
+    if os.path.isfile('../.custom_config/.your_path_mapping.txt'):
+        #path_dict = get_path_mapping('../.custom_config/.your_path_mapping_docker_vscode.txt')
+        path_dict = get_path_mapping()
     else:
         raise 'Missing data and results configuration file at: ../.custom_config/.your_path_mapping.txt'    
     
     data_dir = path_dict["data_path"]
     geometric_data_dir = data_dir + 'geometric_data/'
 
-    subject_name = 'kaggle503'
+    subject_name = 'kaggle502'
     # subject_name = 'DTI003'
     output_dir = 'purkinje/'
 

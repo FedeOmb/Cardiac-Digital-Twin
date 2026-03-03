@@ -5,13 +5,13 @@ import os
 from cellular_models import StepFunctionUpstrokeEP
 from geometry_functions import EikonalGeometry
 from conduction_system import EmptyConductionSystem, PurkinjeSystemVC, select_random_root_nodes
-from io_functions import write_purkinje_vtk, write_root_node_csv
+from io_functions import write_purkinje_vtk, write_root_node_csv, read_csv_file, get_node_xyz_filename
 from path_config import get_path_mapping
-from utils import get_xyz_name_list
+from utils import get_xyz_name_list, map_indexes
 
 #geometric_data_dir = '/home/federico/Cardiac-Digital-Twin/cardiac-data/meta_data/geometric_data/'
 #geometric_data_dir = os.path.join(os.path.expanduser("~"), "Desktop", "digital-twin-framework-camps", "Cardiac-Digital-Twin", "cardiac-data", "meta_data", "geometric_data/")
-source_resolution = 'coarse2'
+#source_resolution = 'coarse2'
 
 def generate_dummy_fiber_files(subject_name, geometric_data_dir, resolution):
     """Genera file dummy per fibre, sheet, normal e material se mancanti."""
@@ -55,9 +55,9 @@ def generate_dummy_fiber_files(subject_name, geometric_data_dir, resolution):
         print(f"Generazione file dummy elettrodi: {electrode_path}")
         np.savetxt(electrode_path, np.array([[0.0, 0.0, 0.0]]), delimiter=',')
 
-def generate_purkinje_network(subject_name, geometric_data_dir):
+def generate_purkinje_network(subject_name, geometric_data_dir, resolution):
 
-    output_dir = os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{source_resolution}", "purkinje/")
+    output_dir = os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{resolution}", "purkinje/")
     print(f"Output directory: {output_dir}")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)    
@@ -73,11 +73,11 @@ def generate_purkinje_network(subject_name, geometric_data_dir):
     celltype_vc_info = {}
     
     # Genera file ausiliari (fibre, materiali, elettrodi) se non esistono
-    generate_dummy_fiber_files(subject_name, geometric_data_dir, source_resolution)
+    generate_dummy_fiber_files(subject_name, geometric_data_dir, resolution)
     
     geometry = EikonalGeometry(cellular_model=cellular_model, celltype_vc_info=celltype_vc_info,
                                    conduction_system=EmptyConductionSystem(verbose=verbose),
-                                   geometric_data_dir=geometric_data_dir, resolution=source_resolution,
+                                   geometric_data_dir=geometric_data_dir, resolution=resolution,
                                    subject_name=subject_name, vc_name_list=vc_name_list, verbose=verbose)
 
     # 2. Genera la Rete di Purkinje (Candidate Network)
@@ -137,6 +137,45 @@ def generate_purkinje_network(subject_name, geometric_data_dir):
     vtx_filename = os.path.join(output_dir, f"{subject_name}_active_root_nodes.vtx")
     np.savetxt(vtx_filename, active_root_nodes, fmt='%d')
     print(f"Generati {len(active_root_nodes)} root nodes e salvati per opencarp in {vtx_filename}")
+    
+    return geometry, lv_purkinje_edge, rv_purkinje_edge, active_root_nodes
+
+def map_purkinje_to_fine(subject_name, geometric_data_dir, coarse_resolution, fine_resolution, 
+                         coarse_geometry, lv_pk_edge, rv_pk_edge, active_root_nodes):
+    print(f"Mappatura della rete di Purkinje da {coarse_resolution} a {fine_resolution}...")
+    
+    # 1. Carica i nodi della mesh fine
+    fine_xyz_filename = get_node_xyz_filename(subject_name, geometric_data_dir, fine_resolution)
+    if not os.path.exists(fine_xyz_filename):
+        print(f"Errore: File coordinate fine non trovato: {fine_xyz_filename}")
+        return
+
+    fine_node_xyz = read_csv_file(fine_xyz_filename)
+    coarse_node_xyz = coarse_geometry.get_node_xyz()
+    
+    # 2. Calcola la mappa degli indici (Coarse -> Fine)
+    print("Calcolo mapping nodi...")
+    coarse_to_fine_mapping = map_indexes(points_to_map_xyz=coarse_node_xyz, reference_points_xyz=fine_node_xyz)
+    
+    # 3. Mappa gli edges (connettività)
+    lv_pk_edge_fine = coarse_to_fine_mapping[lv_pk_edge]
+    rv_pk_edge_fine = coarse_to_fine_mapping[rv_pk_edge]
+    
+    # 4. Mappa i root nodes
+    active_root_nodes_fine = coarse_to_fine_mapping[active_root_nodes]
+    
+    # 5. Salva i risultati
+    output_dir = os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{fine_resolution}", "purkinje/")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        
+    print(f"Salvataggio rete mappata in {output_dir}")
+    write_purkinje_vtk(edge_list=lv_pk_edge_fine, filename=subject_name + '_selected_LV_Purkinje_mapped', node_xyz=fine_node_xyz, verbose=True, visualisation_dir=output_dir)
+    write_purkinje_vtk(edge_list=rv_pk_edge_fine, filename=subject_name + '_selected_RV_Purkinje_mapped', node_xyz=fine_node_xyz, verbose=True, visualisation_dir=output_dir)
+    vtx_filename = os.path.join(output_dir, f"{subject_name}_active_root_nodes_mapped.vtx")
+    np.savetxt(vtx_filename, active_root_nodes_fine, fmt='%d')
+    print(f"Salvati {len(active_root_nodes_fine)} root nodes mappati in {vtx_filename}")
+
 
 if __name__ == "__main__":
 
@@ -157,5 +196,11 @@ if __name__ == "__main__":
     subject_name = 'kaggle503'
     # subject_name = 'DTI003'
     output_dir = 'purkinje/'
+    coarse_resolution = 'coarse1500'
+    fine_resolution = 'fine' # Sostituisci con il nome della tua risoluzione fine
 
-    generate_purkinje_network(subject_name=subject_name, geometric_data_dir=geometric_data_dir)
+    geometry, lv_pk, rv_pk, roots = generate_purkinje_network(subject_name=subject_name, geometric_data_dir=geometric_data_dir, resolution=target_resolution)
+    
+    # Mappatura su fine se esiste
+    if os.path.exists(os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{fine_resolution}")):
+        map_purkinje_to_fine(subject_name, geometric_data_dir, target_resolution, fine_resolution, geometry, lv_pk, rv_pk, roots)

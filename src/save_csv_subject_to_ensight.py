@@ -9,7 +9,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 
-from src.cellular_models import MitchellSchaefferAPDdictionary
+from cellular_models import MitchellSchaefferAPDdictionary
 
 # import pymp
 

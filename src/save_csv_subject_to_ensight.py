@@ -1,4 +1,3 @@
-"""Run personalisation on the full 12-lead ECG beat recording"""
 import sys
 import multiprocessing
 import os
@@ -8,6 +7,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 from datetime import datetime
+import pyvista as pv
+import vtk
 
 from cellular_models import MitchellSchaefferAPDdictionary
 
@@ -103,6 +104,28 @@ if __name__ == '__main__':
                                           verbose=verbose,
                                           visualisation_dir=visualisation_dir)
     print('Saved geometry before inference in ', visualisation_dir)
+    
+    filename = anatomy_subject_name + '_' + resolution + '_checkpoint'
+    # Leggi il file EnSight (restituisce un MultiBlock)
+    reader = pv.get_reader(visualisation_dir + filename + '.ensi.case')
+    multiblock = reader.read()
+
+    # Fondi tutti i blocchi in un singolo UnstructuredGrid
+    mesh = multiblock.combine(merge_points=True)
+
+    print(f"Punti: {mesh.n_points}, Celle: {mesh.n_cells}")
+    print(f"Tipi di cella: {set(mesh.celltypes)}")  # verifica che siano tetraedri (10)
+
+    # Esporta in VTK legacy 4.2 compatibile con meshtool
+    writer = vtk.vtkUnstructuredGridWriter()
+    writer.SetInputData(mesh)
+    writer.SetFileName(visualisation_dir + filename + '.vtk')
+    writer.SetFileVersion(42)
+    writer.SetFileTypeToBinary()
+    writer.Write()
+
+    print("Conversione completata.")
+
     ####################################################################################################################
     print('END')
     plt.figure()

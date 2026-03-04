@@ -140,7 +140,7 @@ def generate_purkinje_network(subject_name, geometric_data_dir, resolution):
     
     return geometry, lv_purkinje_edge, rv_purkinje_edge, active_root_nodes
 
-def map_purkinje_to_fine(subject_name, geometric_data_dir, coarse_resolution, fine_resolution, 
+def map_purkinje_to_fine_old(subject_name, geometric_data_dir, coarse_resolution, fine_resolution, 
                          coarse_geometry, lv_pk_edge, rv_pk_edge, active_root_nodes):
     print(f"Mappatura della rete di Purkinje da {coarse_resolution} a {fine_resolution}...")
     
@@ -176,6 +176,58 @@ def map_purkinje_to_fine(subject_name, geometric_data_dir, coarse_resolution, fi
     np.savetxt(vtx_filename, active_root_nodes_fine, fmt='%d')
     print(f"Salvati {len(active_root_nodes_fine)} root nodes mappati in {vtx_filename}")
 
+def map_purkinje_to_fine(subject_name, geometric_data_dir, coarse_resolution, fine_resolution, 
+                         coarse_geometry, lv_pk_edge, rv_pk_edge, active_root_nodes):
+    print(f"Mappatura della rete di Purkinje da {coarse_resolution} a {fine_resolution}...")
+    
+    # 1. Carica i nodi della mesh fine
+    fine_xyz_filename = get_node_xyz_filename(subject_name, geometric_data_dir, fine_resolution)
+    if not os.path.exists(fine_xyz_filename):
+        print(f"Errore: File coordinate fine non trovato: {fine_xyz_filename}")
+        return
+
+    fine_node_xyz = read_csv_file(fine_xyz_filename)
+    coarse_node_xyz = coarse_geometry.get_node_xyz()
+    # Rilevamento scala mesh fine e conversione temporanea in cm per il mapping    
+    max_fine = np.max(np.abs(fine_node_xyz))
+    if max_fine > 5000: # Probabilmente micrometri (um) 
+        print("Mesh fine rilevata in micrometri (um). Converto temporaneamente in cm per il mapping.")
+        fine_to_cm_factor = 1e-4 # 1/10000           
+    elif max_fine > 50: # Probabilmente millimetri (mm)
+        print("Mesh fine rilevata in millimetri (mm). Converto temporaneamente in cm per il mapping.")
+        fine_to_cm_factor = 0.1    
+    else:
+        print("Mesh fine rilevata in centimetri (cm). Nessuna conversione necessaria.")
+        fine_to_cm_factor = 1.0
+    
+    fine_node_xyz_cm = fine_node_xyz * fine_to_cm_factor
+
+# 2. Calcola la mappa degli indici (Coarse -> Fine)
+    print("Calcolo mapping nodi...")
+# Usiamo la versione in cm della mesh fine per il calcolo della distanza
+    coarse_to_fine_mapping = map_indexes(points_to_map_xyz=coarse_node_xyz, reference_points_xyz=fine_node_xyz_cm)    
+    # 3. Mappa gli edges (connettività)
+    lv_pk_edge_fine = coarse_to_fine_mapping[lv_pk_edge]
+    rv_pk_edge_fine = coarse_to_fine_mapping[rv_pk_edge]
+    
+    # 4. Mappa i root nodes
+    active_root_nodes_fine = coarse_to_fine_mapping[active_root_nodes]
+    
+    # 5. Salva i risultati
+    output_dir = os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{fine_resolution}", "purkinje/")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+        
+    # Se la mesh fine non era in micrometri, salva una versione extra in um per visualizzazione con openCARP
+    if fine_to_cm_factor > 1e-4:
+        print("Generazione file VTK extra in micrometri per compatibilità visualizzazione openCARP...")
+        nodes_to_write_um = fine_node_xyz * (1e-4 / fine_to_cm_factor) # Converte in um
+        write_purkinje_vtk(edge_list=lv_pk_edge_fine, filename=subject_name + '_selected_LV_Purkinje_mapped_um', node_xyz=nodes_to_write_um, verbose=True, visualisation_dir=output_dir)
+        write_purkinje_vtk(edge_list=rv_pk_edge_fine, filename=subject_name + '_selected_RV_Purkinje_mapped_um', node_xyz=nodes_to_write_um, verbose=True, visualisation_dir=output_dir)    
+    
+    vtx_filename = os.path.join(output_dir, f"{subject_name}_{fine_resolution}_active_root_nodes.vtx")
+    np.savetxt(vtx_filename, active_root_nodes_fine, fmt='%d')
+    print(f"Salvati {len(active_root_nodes_fine)} root nodes mappati in {vtx_filename}")
 
 if __name__ == "__main__":
 

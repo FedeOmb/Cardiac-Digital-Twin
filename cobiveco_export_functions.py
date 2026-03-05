@@ -1,5 +1,6 @@
 import numpy as np
 import pyvista as pv
+import vtk
 import os
 from scipy.spatial import cKDTree
 from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
@@ -152,24 +153,64 @@ def extract_ids_from_tagged_vtp(vtu_path, vtp_path, tag_array_name, target_tag_v
     np.savetxt(output_csv, final_indices, fmt='%d')
     print(f"  SALVATO: {output_csv} con {len(final_indices)} nodi unici.\n")
 
+def scale_mesh_mantaining_point_data(input_vtk, output_vtk, scale):
+    # Leggi mesh originale con coordinate cobiveco
+    mesh_orig = pv.read(input_vtk)
+    print("Bounds mesh originale:", mesh_orig.bounds)
+    # Scala le coordinate geometriche
+    mesh_scaled = mesh_orig.copy()
+    mesh_scaled.points = mesh_orig.points * scale
 
+    print("Point data preservati:", list(mesh_scaled.point_data.keys()))
+    if output_vtk.endswith('.vtu') or output_vtk.endswith('.vtp'):
+        mesh_scaled.save(output_vtk)
+        print(f"Mesh scalata salvata in: {output_vtk}")
+        print("mesh scalata di un fattore:", scale)
+        print("Bounds mesh scalata:", mesh_scaled.bounds)
+    elif output_vtk.endswith('.vtk'):
+    # Esporta in VTK 4.2 compatibile con meshtool
+        writer = vtk.vtkUnstructuredGridWriter()
+        writer.SetInputData(mesh_scaled)
+        writer.SetFileName(output_vtk)
+        writer.SetFileVersion(42)
+        writer.SetFileTypeToBinary()
+        writer.Write()
+        print(f"Mesh scalata salvata in: {output_vtk}")
+        print("mesh scalata di un fattore:", scale)
+        print("Bounds mesh scalata:", mesh_scaled.bounds)
+    else:
+        print("Formato output non supportato")
+
+'''
+if __name__ == "__main__":
+    # Esempio di scaling (se necessario)
+    # scale_mesh_mantaining_point_data('kaggle502_coord.vtu', 'kaggle502_coord_scaled.vtk', scale=0.001)
+    geometric_data_dir = './cardiac-data/meta_data/geometric_data/'
+    subject_name = 'kaggle502'
+    input_filename = 'kaggle502_classes.vtp'
+    input_dir = geometric_data_dir + subject_name + '/'
+    input_path = input_dir + input_filename
+    out_filename = 'kaggle502_classes_cm.vtp'
+    out_path = input_dir + out_filename
+    scale_mesh_mantaining_point_data(input_path, out_path, scale=0.1)
+'''
 
 if __name__ == "__main__":
     geometric_data_dir = './cardiac-data/meta_data/geometric_data/'
     subject_name = 'kaggle502'
     target_resolution = 'coarse1500'
-    vtu_filename = 'kaggle502_coord.vtu'
+    vtu_filename = 'kaggle502_coarse1500_cm.vtu'
     save_vtk_vtu_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
     save_vtu_arrays_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
     #export solo nodi e tetra per mesh fine
     fine_resolution = 'fine500'
     fine_vtk_filename = 'kaggle502_fine500.vtk'
-    save_vtk_vtu_to_csv(subject_name, geometric_data_dir, fine_resolution, fine_vtk_filename)
+    #save_vtk_vtu_to_csv(subject_name, geometric_data_dir, fine_resolution, fine_vtk_filename)
     #export nodi endo rv e lv mesh coarse
     input_dir = geometric_data_dir + subject_name + '/'
     vtu_path = input_dir + vtu_filename
     output_dir = geometric_data_dir + subject_name + '/' + subject_name + '_' + target_resolution + '/'
-    vtp_filename = 'kaggle502_classes.vtp'
+    vtp_filename = 'kaggle502_classes_cm.vtp'
     vtp_path = input_dir + vtp_filename
     #save_endo_nodes_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename, lv_tag=3, rv_tag=2, tag_array_name='surClass')
 
@@ -184,7 +225,6 @@ if __name__ == "__main__":
         target_tag_value=TAG_LV_ENDO,
         output_csv=os.path.join(output_dir, subject_name + '_' + target_resolution + '_boundarynodefield' + '_lvendo' + '.csv')
     )
-
     # Genera file RV
     extract_ids_from_tagged_vtp(
         vtu_path=vtu_path,

@@ -120,26 +120,32 @@ def generate_purkinje_network(subject_name, geometric_data_dir, resolution):
     
     # 4. Randomizzazione Attivazione root nodes
     all_candidate_root_nodes_index = conduction_system.get_candidate_root_node_index()
-    all_candidate_root_nodes_index = conduction_system.get_candidate_root_node_index()
-    total_candidate_root_nodes = len(all_candidate_root_nodes_index)
-    random_active_percentage = np.random.uniform(0.5, 0.9)
-    print(f"Attivando casualmente {random_active_percentage*100:.1f}% dei root nodes candidati ({total_candidate_root_nodes} totali)")
-    nb_active_nodes = int(total_candidate_root_nodes * random_active_percentage)
-    selection_mask = select_random_root_nodes(nb_root_nodes=nb_active_nodes, candidate_root_node_indexes=all_candidate_root_nodes_index)
+    num_candidate_root_nodes = len(all_candidate_root_nodes_index)
+    #random_active_percentage = np.random.uniform(0.5, 0.9)
+    #print(f"Attivando casualmente {random_active_percentage*100:.1f}% dei root nodes candidati ({total_candidate_root_nodes} totali)")
+    #nb_active_nodes = int(num_candidate_root_nodes * random_active_percentage)
+    #selection_mask = select_random_root_nodes(nb_root_nodes=nb_active_nodes, candidate_root_node_indexes=all_candidate_root_nodes_index)
 
-    active_root_nodes = all_candidate_root_nodes_index[selection_mask]
-    lv_purkinje_edge, rv_purkinje_edge = geometry.get_lv_rv_selected_purkinje_edge(root_node_meta_index=selection_mask)
-    write_purkinje_vtk(edge_list=lv_purkinje_edge, filename=subject_name + '_' + resolution + '_selected_LV_Purkinje', node_xyz=node_xyz,
-                            verbose=verbose, visualisation_dir=output_dir)
-    write_purkinje_vtk(edge_list=rv_purkinje_edge, filename=subject_name + '_' + resolution + '_selected_RV_Purkinje', node_xyz=node_xyz,
-                            verbose=verbose, visualisation_dir=output_dir)
+    #active_root_nodes = all_candidate_root_nodes_index[selection_mask]
+    #lv_purkinje_edge, rv_purkinje_edge = geometry.get_lv_rv_selected_purkinje_edge(root_node_meta_index=selection_mask)
+    #write_purkinje_vtk(edge_list=lv_purkinje_edge, filename=subject_name + '_' + resolution + '_selected_LV_Purkinje', node_xyz=node_xyz,
+    #                        verbose=verbose, visualisation_dir=output_dir)
+    #write_purkinje_vtk(edge_list=rv_purkinje_edge, filename=subject_name + '_' + resolution + '_selected_RV_Purkinje', node_xyz=node_xyz,
+    #                        verbose=verbose, visualisation_dir=output_dir)
+    active_root_nodes = all_candidate_root_nodes_index #attivazione di tutti i root nodes
+    lv_purkinje_edge = lv_candidate_purkinje_edge
+    rv_purkinje_edge = rv__candidate_purkinje_edge
+    purkinje_speed = 0.2 #cm/ms
+    activation_times = conduction_system.get_candidate_root_node_time(purkinje_speed=purkinje_speed)
     # 5. Esportazione per openCARP (.vtx)
-    vtx_filename = os.path.join(output_dir, f"{subject_name}_active_root_nodes.vtx")
+    vtx_filename = os.path.join(output_dir, f"{subject_name}_candidate_root_nodes.vtx")
     np.savetxt(vtx_filename, active_root_nodes, fmt='%d')
+    times_filename = os.path.join(output_dir, f"{subject_name}_candidate_root_nodes_times.csv")
+    np.savetxt(times_filename, activation_times, fmt='%.4f', header="activation_time_ms", comments='')
     print(f"Generati {len(active_root_nodes)} root nodes e salvati per opencarp in {vtx_filename}")
     
     return geometry, lv_purkinje_edge, rv_purkinje_edge, active_root_nodes
-
+'''
 def map_purkinje_to_fine_old(subject_name, geometric_data_dir, coarse_resolution, fine_resolution, 
                          coarse_geometry, lv_pk_edge, rv_pk_edge, active_root_nodes):
     print(f"Mappatura della rete di Purkinje da {coarse_resolution} a {fine_resolution}...")
@@ -175,7 +181,7 @@ def map_purkinje_to_fine_old(subject_name, geometric_data_dir, coarse_resolution
     vtx_filename = os.path.join(output_dir, f"{subject_name}_{fine_resolution}_active_root_nodes.vtx")
     np.savetxt(vtx_filename, active_root_nodes_fine, fmt='%d')
     print(f"Salvati {len(active_root_nodes_fine)} root nodes mappati in {vtx_filename}")
-
+'''
 def map_purkinje_to_fine(subject_name, geometric_data_dir, coarse_resolution, fine_resolution, 
                          coarse_geometry, lv_pk_edge, rv_pk_edge, active_root_nodes):
     print(f"Mappatura della rete di Purkinje da {coarse_resolution} a {fine_resolution}...")
@@ -222,8 +228,8 @@ def map_purkinje_to_fine(subject_name, geometric_data_dir, coarse_resolution, fi
     if fine_to_cm_factor > 1e-4:
         print("Generazione file VTK extra in micrometri per compatibilità visualizzazione openCARP...")
         nodes_to_write_um = fine_node_xyz * (1e-4 / fine_to_cm_factor) # Converte in um
-        write_purkinje_vtk(edge_list=lv_pk_edge_fine, filename=subject_name + '_selected_LV_Purkinje_mapped_um', node_xyz=nodes_to_write_um, verbose=True, visualisation_dir=output_dir)
-        write_purkinje_vtk(edge_list=rv_pk_edge_fine, filename=subject_name + '_selected_RV_Purkinje_mapped_um', node_xyz=nodes_to_write_um, verbose=True, visualisation_dir=output_dir)    
+        write_purkinje_vtk(edge_list=lv_pk_edge_fine, filename=subject_name + '_candidate_LV_Purkinje_mapped_um', node_xyz=nodes_to_write_um, verbose=True, visualisation_dir=output_dir)
+        write_purkinje_vtk(edge_list=rv_pk_edge_fine, filename=subject_name + '_candidate_RV_Purkinje_mapped_um', node_xyz=nodes_to_write_um, verbose=True, visualisation_dir=output_dir)    
     
     vtx_filename = os.path.join(output_dir, f"{subject_name}_{fine_resolution}_active_root_nodes.vtx")
     np.savetxt(vtx_filename, active_root_nodes_fine, fmt='%d')
@@ -238,15 +244,15 @@ if __name__ == "__main__":
     working_directory = os.getcwd()
     print('Working directory:', working_directory)
     if os.path.isfile('../.custom_config/.your_path_mapping.txt'):
-        #path_dict = get_path_mapping('../.custom_config/.your_path_mapping_docker_vscode.txt')
-        path_dict = get_path_mapping()
+        path_dict = get_path_mapping('../.custom_config/.your_path_mapping_docker_vscode.txt')
+        #path_dict = get_path_mapping()
     else:
         raise 'Missing data and results configuration file at: ../.custom_config/.your_path_mapping.txt'    
     
     data_dir = path_dict["data_path"]
     geometric_data_dir = data_dir + 'geometric_data/'
 
-    subject_name = 'kaggle502'
+    subject_name = 'kaggle503'
     # subject_name = 'DTI003'
     output_dir = 'purkinje/'
     coarse_resolution = 'coarse1500'

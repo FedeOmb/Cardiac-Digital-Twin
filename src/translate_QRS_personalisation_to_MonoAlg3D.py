@@ -56,12 +56,12 @@ if __name__ == '__main__':
     from io_functions import write_geometry_to_ensight_with_fields, read_dictionary, save_ecg_to_csv, \
     export_ensight_timeseries_case, save_pandas, save_csv_file, read_ecg_from_csv, read_csv_file, write_purkinje_vtk, \
     write_root_node_csv
-    from utils import map_indexes, remap_pandas_from_row_index, get_qt_dur_name, \
+    from utils import map_indexes, remap_pandas_from_row_index, get_qtc_dur_name, \
     get_t_pe_name, get_t_peak_name, get_tpeak_dispersion_name, get_qtpeak_dur_name, \
     get_t_polarity_name, get_root_node_meta_index_population_from_pandas, translate_from_pandas_to_array, \
     get_purkinje_speed_name, initialise_pandas_dataframe, get_lat_biomarker_name
     from postprocess_functions import generate_repolarisation_map, visualise_ecg
-    from translate_QT_personalisation_to_MonoAlg3D import convert_from_monoalg3D_to_cm_and_translate
+    #from translate_QT_personalisation_to_MonoAlg3D import convert_from_monoalg3D_to_cm_and_translate
 
     print('All imports done!')
     ####################################################################################################################
@@ -95,7 +95,7 @@ if __name__ == '__main__':
     results_dir_part = results_dir_part + 'qrs_' + ep_model_qrs + '/'
     assert os.path.exists(results_dir_part)
     # Use date to name the result folder to preserve some history of results
-    current_month_text = 'Jun'  # datetime.now().strftime('%h')  # Feb
+    current_month_text = 'Jan'  # datetime.now().strftime('%h')  # Feb
     current_year_full = datetime.now().strftime('%Y')  # 2024
     results_dir = results_dir_part + current_month_text + '_' + current_year_full + '/'
     assert os.path.exists(results_dir)
@@ -185,6 +185,7 @@ if __name__ == '__main__':
                                                             geometric_data_dir=geometric_data_dir, resolution=monodomain_resolution,
                                                             subject_name=anatomy_subject_name, verbose=verbose)
     #TODO DELETE THE FOLLOWING CODE
+    '''
     warn('This should not be done in here!\nThis hack will only work for DTI... meshes, and should be done before calling the script in the futrure.')
     print('min max ', np.amin(raw_geometry_point_cloud.unprocessed_node_xyz), np.amax(raw_geometry_point_cloud.unprocessed_node_xyz))
     raw_geometry_point_cloud.unprocessed_node_xyz = convert_from_monoalg3D_to_cm_and_translate(monoalg3D_xyz=raw_geometry_point_cloud.get_node_xyz(), inference_xyz=geometry.get_node_xyz())
@@ -192,6 +193,7 @@ if __name__ == '__main__':
           np.amax(raw_geometry_point_cloud.unprocessed_node_xyz))
     print('geometry min max ', np.amin(geometry.get_node_xyz()),
           np.amax(geometry.get_node_xyz()))
+'''
     #TODO DELETE THE ABOVE CODE
     # # ####################################################################################################################
     # # Step 15: Interpolate simulation results to have the same indexing that the input data files.

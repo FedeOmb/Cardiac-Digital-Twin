@@ -1,0 +1,84 @@
+# ==========================================
+# 1. SETUP GENERALE E MESH
+# ==========================================
+simID                                   = ./test_monodomain
+meshname                                = ../503kaggle500_opencarpmesh/503kaggle500_opencarp
+tend                                    = 500.0   # 500 ms bastano per vedere un battito completo
+spacedt                                 = 1.0     # Salva l'output 3D ogni 1 ms
+timedt                                  = 1.0
+dt                                      = 20.0 
+
+bidomain                                = 0       # 0 = Monodominio
+parab_solve                             = 1
+mass_lumping                            = 0
+
+# Attiva il recupero del segnale nei punti specificati (PSEUDO ECG)
+phie_rec_ptf = electrodes_location_test.pts
+# Nome file di output
+phie_recovery_file = phie_recovery_test
+
+# ==========================================
+# 2. PROPRIETÀ DI CONDUZIONE (FIBRE)
+# ==========================================
+# Valori tipici di conduttività in S/m. 
+g_il                                    = 0.174
+g_it                                    = 0.019
+g_in                                    = 0.019
+
+# ==========================================
+# 3. ETEROGENEITÀ CELLULARE (ToRORd)
+# ==========================================
+num_imp_regions                         = 3
+
+# --- REGIONE 1: ENDOCARDIO ---
+imp_region[0].name                      = Endocardio
+imp_region[0].num_IDs                   = 1
+imp_region[0].ID[0]                     = 1       # tag per endo
+imp_region[0].im                        = ToRORd_dyn_chloride
+imp_region[0].im_param                  = "celltype=0"  # cellula endo in ToRORd
+
+# --- REGIONE 2: MID-MIOCARDIO (M-CELLS) ---
+imp_region[1].name                      = Mid_Miocardio
+imp_region[1].num_IDs                   = 1
+imp_region[1].ID[0]                     = 2       # Tag per mid-miocardio
+imp_region[1].im                        = ToRORd_dyn_chloride
+imp_region[1].im_param                  = "celltype=2"  # cellula M
+
+# --- REGIONE 3: EPICARDIO ---
+imp_region[2].name                      = Epicardio
+imp_region[2].num_IDs                   = 1
+imp_region[2].ID[0]                     = 3       # Tag per epicardio
+imp_region[2].im                        = ToRORd_dyn_chloride
+imp_region[2].im_param                  = "celltype=1"  # cellula epi
+
+# Tutte le regioni appartengono al dominio intracellulare
+num_phys_regions                        = 1
+phys_region[0].ptype                    = 2
+phys_region[0].name                     = "Intracellular domain"
+phys_region[0].num_IDs                  = 3
+phys_region[0].ID[0]                    = 1
+phys_region[0].ID[1]                    = 2
+phys_region[0].ID[2]                    = 3
+
+# ==========================================
+# 4. STIMOLAZIONE (ROOT NODES)
+# ==========================================
+num_stim                                = 2 
+
+# Root Node 1
+stim[0].name                            = PMJ_1
+stim[0].elec.vtx_file                   = ../activation_sites/root_1.vtx
+stim[0].ptcl.duration                   = 2.0
+stim[0].ptcl.npls                       = 1
+stim[0].ptcl.start                      = 2.5   # Delay time 
+stim[0].pulse.strength                  = 250.0 # Valore tipico per stimoli intracellulari
+
+# Root Node 2
+stim[1].name                            = PMJ_2
+stim[1].elec.vtx_file                   = ../activation_sites/root_2.vtx
+stim[1].ptcl.duration                   = 2.0
+stim[1].ptcl.npls                       = 1
+stim[1].ptcl.start                      = 4.1   
+stim[1].pulse.strength                  = 250.0 
+
+# ... aggiungi tutti gli altri root nodes ...

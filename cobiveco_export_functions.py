@@ -196,8 +196,8 @@ def tag_vol_region_from_tm(input_vtu, output_vtk):
     tags[(tm_cells >= 0.3) & (tm_cells <= 0.7)] = 2  # Mid-miocardio
     tags[tm_cells > 0.7] = 3                         # Epicardio
     # Salva i tag nella mesh come l'array attivo per le "scalars" (classi)
-    mesh.cell_data["class"] = tags
-    mesh.set_active_scalars("class")
+    mesh.cell_data["elemTag"] = tags
+    mesh.set_active_scalars("elemTag")
     writer = vtk.vtkUnstructuredGridWriter()
     writer.SetInputData(mesh)
     writer.SetFileName(output_vtk)

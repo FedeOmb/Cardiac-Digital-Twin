@@ -181,6 +181,32 @@ def scale_mesh_mantaining_point_data(input_vtk, output_vtk, scale):
     else:
         print("Formato output non supportato")
 
+def tag_vol_region_from_tm(input_vtu, output_vtk):
+    # carica la mesh volumetrica con le coord cobiveco
+    mesh = pv.read(input_vtu)
+    # estrai le coord transmurali dai nodi
+    tm_nodes = mesh.point_data["tm"] 
+    # Converti i dati dai nodi alle celle (calcola la media per ogni tetraedro)
+    mesh_cells = mesh.ptc() # Point-To-Cell data interpolation
+    tm_cells = mesh_cells.cell_data["tm"]
+    # Crea un nuovo array vuoto per i tag volumetrici (es. interi a 32 bit)
+    tags = np.zeros(mesh.n_cells, dtype=np.int32)
+    # Assegna i tag alle celle in base al valore transmurale (da 0 a 1)
+    tags[tm_cells < 0.3] = 1                         # Endocardio
+    tags[(tm_cells >= 0.3) & (tm_cells <= 0.7)] = 2  # Mid-miocardio
+    tags[tm_cells > 0.7] = 3                         # Epicardio
+    # Salva i tag nella mesh come l'array attivo per le "scalars" (classi)
+    mesh.cell_data["class"] = tags
+    mesh.set_active_scalars("class")
+    writer = vtk.vtkUnstructuredGridWriter()
+    writer.SetInputData(mesh)
+    writer.SetFileName(output_vtk)
+    writer.SetFileVersion(42)
+    writer.SetFileTypeToBinary()
+    writer.Write()
+    print(f"Mesh scalata salvata in: {output_vtk}")
+    print("Mesh taggata salvata con successo!")
+
 '''
 if __name__ == "__main__":
     # Esempio di scaling (se necessario)

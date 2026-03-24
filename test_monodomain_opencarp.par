@@ -1,8 +1,8 @@
 # ==========================================
 # 1. SETUP GENERALE E MESH
 # ==========================================
-simID                                   = ./test_monodomain
-meshname                                = ../503kaggle500_opencarpmesh/503kaggle500_opencarp
+simID                                   = test_monodomain
+meshname                                = ./503kaggle500_opencarpmesh/503kaggle500_opencarp
 tend                                    = 500.0   # 500 ms bastano per vedere un battito completo
 spacedt                                 = 1.0     # Salva l'output 3D ogni 1 ms
 timedt                                  = 1.0
@@ -13,17 +13,26 @@ parab_solve                             = 1
 mass_lumping                            = 0
 
 # Attiva il recupero del segnale nei punti specificati (PSEUDO ECG)
-phie_rec_ptf = electrodes_location_test.pts
+phie_rec_ptf = electrode_location_test.pts
 # Nome file di output
 phie_recovery_file = phie_recovery_test
 
 # ==========================================
-# 2. PROPRIETÀ DI CONDUZIONE (FIBRE)
+# 2. PROPRIETÀ DI CONDUZIONE
 # ==========================================
 # Valori tipici di conduttività in S/m. 
-g_il                                    = 0.174
-g_it                                    = 0.019
-g_in                                    = 0.019
+num_gregions                            = 1
+
+gregion[0].name                         = "Miocardio"
+gregion[0].num_IDs                      = 3
+gregion[0].ID[0]                        = 1
+gregion[0].ID[1]                        = 2
+gregion[0].ID[2]                        = 3
+
+# conduttività intracellulari
+gregion[0].g_il                         = 0.174
+gregion[0].g_it                         = 0.019
+gregion[0].g_in                         = 0.019
 
 # ==========================================
 # 3. ETEROGENEITÀ CELLULARE (ToRORd)
@@ -63,22 +72,153 @@ phys_region[0].ID[2]                    = 3
 # ==========================================
 # 4. STIMOLAZIONE (ROOT NODES)
 # ==========================================
-num_stim                                = 2 
+num_stim                                = 21
 
 # Root Node 1
-stim[0].name                            = PMJ_1
-stim[0].elec.vtx_file                   = ../activation_sites/root_1.vtx
+stim[0].name                            = RN1
+stim[0].elec.vtx_file                   = ./activation_sites/RN1.vtx
 stim[0].ptcl.duration                   = 2.0
 stim[0].ptcl.npls                       = 1
-stim[0].ptcl.start                      = 2.5   # Delay time 
+stim[0].ptcl.start                      = 45.0515   # Delay time 
 stim[0].pulse.strength                  = 250.0 # Valore tipico per stimoli intracellulari
 
 # Root Node 2
-stim[1].name                            = PMJ_2
-stim[1].elec.vtx_file                   = ../activation_sites/root_2.vtx
+stim[1].name                            = RN2
+stim[1].elec.vtx_file                   = ./activation_sites/RN2.vtx
 stim[1].ptcl.duration                   = 2.0
 stim[1].ptcl.npls                       = 1
-stim[1].ptcl.start                      = 4.1   
+stim[1].ptcl.start                      = 32.6600   
 stim[1].pulse.strength                  = 250.0 
 
-# ... aggiungi tutti gli altri root nodes ...
+stim[2].name                            = RN3
+stim[2].elec.vtx_file                   = ./activation_sites/RN3.vtx
+stim[2].ptcl.duration                   = 2.0
+stim[2].ptcl.npls                       = 1
+stim[2].ptcl.start                      = 29.0605   
+stim[2].pulse.strength                  = 250.0 
+
+stim[3].name                            = RN4
+stim[3].elec.vtx_file                   = ./activation_sites/RN4.vtx
+stim[3].ptcl.duration                   = 2.0
+stim[3].ptcl.npls                       = 1
+stim[3].ptcl.start                      = 60.4695
+stim[3].pulse.strength                  = 250.0 
+
+stim[4].name                            = RN5
+stim[4].elec.vtx_file                   = ./activation_sites/RN5.vtx
+stim[4].ptcl.duration                   = 2.0
+stim[4].ptcl.npls                       = 1
+stim[4].ptcl.start                      = 64.1650 
+stim[4].pulse.strength                  = 250.0 
+
+stim[5].name                            = RN6
+stim[5].elec.vtx_file                   = ./activation_sites/RN6.vtx
+stim[5].ptcl.duration                   = 2.0
+stim[5].ptcl.npls                       = 1
+stim[5].ptcl.start                      = 72.1970   
+stim[5].pulse.strength                  = 250.0 
+
+stim[6].name                            = RN7
+stim[6].elec.vtx_file                   = ./activation_sites/RN7.vtx
+stim[6].ptcl.duration                   = 2.0
+stim[6].ptcl.npls                       = 1
+stim[6].ptcl.start                      = 53.7315
+stim[6].pulse.strength                  = 250.0 
+
+stim[7].name                            = RN8
+stim[7].elec.vtx_file                   = ./activation_sites/RN8.vtx
+stim[7].ptcl.duration                   = 2.0
+stim[7].ptcl.npls                       = 1
+stim[7].ptcl.start                      = 55.0125
+stim[7].pulse.strength                  = 250.0 
+
+stim[8].name                            = RN9
+stim[8].elec.vtx_file                   = ./activation_sites/RN9.vtx
+stim[8].ptcl.duration                   = 2.0
+stim[8].ptcl.npls                       = 1
+stim[8].ptcl.start                      = 82.5955 
+stim[8].pulse.strength                  = 250.0 
+
+stim[9].name                            = RN10
+stim[9].elec.vtx_file                   = ./activation_sites/RN10.vtx
+stim[9].ptcl.duration                   = 2.0
+stim[9].ptcl.npls                       = 1
+stim[9].ptcl.start                      = 37.4860 
+stim[9].pulse.strength                  = 250.0 
+
+stim[10].name                            = RN11
+stim[10].elec.vtx_file                   = ./activation_sites/RN11.vtx
+stim[10].ptcl.duration                   = 2.0
+stim[10].ptcl.npls                       = 1
+stim[10].ptcl.start                      = 34.0565
+stim[10].pulse.strength                  = 250.0 
+
+stim[11].name                            = RN12
+stim[11].elec.vtx_file                   = ./activation_sites/RN12.vtx
+stim[11].ptcl.duration                   = 2.0
+stim[11].ptcl.npls                       = 1
+stim[11].ptcl.start                      = 45.4380
+stim[11].pulse.strength                  = 250.0 
+
+stim[12].name                            = RN13
+stim[12].elec.vtx_file                   = ./activation_sites/RN13.vtx
+stim[12].ptcl.duration                   = 2.0
+stim[12].ptcl.npls                       = 1
+stim[12].ptcl.start                      = 37.3355 
+stim[12].pulse.strength                  = 250.0 
+
+stim[13].name                            = RN14
+stim[13].elec.vtx_file                   = ./activation_sites/RN14.vtx
+stim[13].ptcl.duration                   = 2.0
+stim[13].ptcl.npls                       = 1
+stim[13].ptcl.start                      = 45.3215
+stim[13].pulse.strength                  = 250.0 
+
+stim[14].name                            = RN15
+stim[14].elec.vtx_file                   = ./activation_sites/RN15.vtx
+stim[14].ptcl.duration                   = 2.0
+stim[14].ptcl.npls                       = 1
+stim[14].ptcl.start                      = 54.9045 
+stim[14].pulse.strength                  = 250.0 
+
+stim[15].name                            = RN16
+stim[15].elec.vtx_file                   = ./activation_sites/RN16.vtx
+stim[15].ptcl.duration                   = 2.0
+stim[15].ptcl.npls                       = 1
+stim[15].ptcl.start                      = 65.4660 
+stim[15].pulse.strength                  = 250.0 
+
+stim[16].name                            = RN17
+stim[16].elec.vtx_file                   = ./activation_sites/RN17.vtx
+stim[16].ptcl.duration                   = 2.0
+stim[16].ptcl.npls                       = 1
+stim[16].ptcl.start                      = 45.8895
+stim[16].pulse.strength                  = 250.0 
+
+stim[17].name                            = RN18
+stim[17].elec.vtx_file                   = ./activation_sites/RN18.vtx
+stim[17].ptcl.duration                   = 2.0
+stim[17].ptcl.npls                       = 1
+stim[17].ptcl.start                      = 41.9835
+stim[17].pulse.strength                  = 250.0 
+
+stim[18].name                            = RN19
+stim[18].elec.vtx_file                   = ./activation_sites/RN19.vtx
+stim[18].ptcl.duration                   = 2.0
+stim[18].ptcl.npls                       = 1
+stim[18].ptcl.start                      = 58.7585
+stim[18].pulse.strength                  = 250.0 
+
+stim[19].name                            = RN20
+stim[19].elec.vtx_file                   = ./activation_sites/RN20.vtx
+stim[19].ptcl.duration                   = 2.0
+stim[19].ptcl.npls                       = 1
+stim[19].ptcl.start                      = 48.5110
+stim[19].pulse.strength                  = 250.0 
+
+stim[20].name                            = RN21
+stim[20].elec.vtx_file                   = ./activation_sites/RN21.vtx
+stim[20].ptcl.duration                   = 2.0
+stim[20].ptcl.npls                       = 1
+stim[20].ptcl.start                      = 47.8820
+stim[20].pulse.strength                  = 250.0 

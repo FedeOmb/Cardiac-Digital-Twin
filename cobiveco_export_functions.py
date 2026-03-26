@@ -198,11 +198,15 @@ def tag_vol_region_from_tm(input_vtu, output_vtk):
     # Salva i tag nella mesh come l'array attivo per le "scalars" (classi)
     mesh.cell_data["elemTag"] = tags
     mesh.set_active_scalars("elemTag")
+
+    mesh.cell_data["fibers"] = mesh.cell_data["Fiber"]
+    mesh.cell_data["sheet"] = mesh.cell_data["Sheet"]
+
     writer = vtk.vtkUnstructuredGridWriter()
     writer.SetInputData(mesh)
     writer.SetFileName(output_vtk)
     writer.SetFileVersion(42)
-    writer.SetFileTypeToBinary()
+    writer.SetFileTypeToASCII()
     writer.Write()
     print(f"Mesh scalata salvata in: {output_vtk}")
     print("Mesh taggata salvata con successo!")

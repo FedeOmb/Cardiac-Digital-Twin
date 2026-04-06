@@ -290,7 +290,7 @@ def pv_surface_to_o3d(pv_surface):
         search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2, max_nn=30)
     )
     # Orienta le normali in modo coerente (tutte verso l'esterno)
-    pcd.orient_normals_consistent_tangent_plane(k=15)    
+    #pcd.orient_normals_consistent_tangent_plane(k=15)    
     return pcd
 
 # PRE ALLINEAMENTO CON PCA
@@ -310,6 +310,7 @@ def coarse_alignment(source_pts, target_pts):
     return T_init
 
 def global_registration_fpfh(source_pcd, target_pcd, voxel_size):
+
     def preprocess_point_cloud(pcd, voxel_size):
         pcd_down = pcd.voxel_down_sample(voxel_size)
         radius_normal = voxel_size * 2
@@ -336,7 +337,7 @@ def global_registration_fpfh(source_pcd, target_pcd, voxel_size):
         mutual_filter=True,
         max_correspondence_distance=dist_threshold,
         estimation_method=o3d.pipelines.registration.TransformationEstimationPointToPoint(False),
-        ransac_n=4,
+        ransac_n=3,
         checkers=[
             o3d.pipelines.registration.CorrespondenceCheckerBasedOnEdgeLength(0.9),
             o3d.pipelines.registration.CorrespondenceCheckerBasedOnDistance(dist_threshold)
@@ -359,7 +360,7 @@ def global_registration_fpfh(source_pcd, target_pcd, voxel_size):
 if __name__ == "__main__":
     PATH_CARDIAC_MESH = os.path.join(".", "503kaggle500_meshes", "503kaggle500um_tagged.vtk")
     PATH_TORSO_MESH = os.path.join(".", "KCL_torso1", "KCL_torso1.vtk")
-    voxel_size = 3000  # in um 
+    voxel_size = 2000  # in um 
 
     torso = pv.read(PATH_TORSO_MESH)
 
@@ -377,11 +378,16 @@ if __name__ == "__main__":
     # Estrae solo gli elementi cardiaci (34=RV, 35=LV)
     heart_mask = np.isin(tags, [34, 35])
     heart_mesh = torso.extract_cells(np.where(heart_mask)[0])
-    
     # Estrae superficie del cuore (per registrazione ICP)
     heart_from_torso_surface = heart_mesh.extract_surface() 
-    heart_from_torso_surface_pts = np.array(heart_from_torso_surface.points)
-    heart_from_torso_surface.save("target_heart_surface_from_torso.vtk")
+    heart_from_torso_surface.save("heart_from_torso_surface.vtk")
+
+    long_axis_from_biv = get_long_axis_from_ab(biv_surface)
+    heart_from_torso_clipped = clip_mesh_given_axis(heart_mesh, long_axis_from_biv, percentile=70)
+
+    # Estrae superficie del cuore (per registrazione ICP)
+    heart_from_torso_clipped_surf = heart_from_torso_clipped.extract_surface() 
+    heart_from_torso_clipped_surf.save("heart_from_torso_surface_clipped.vtk.vtk")
 
     # Torso senza cuore (per la sostituzione)
     torso_no_cardiac = torso.extract_cells(np.where(~heart_mask)[0])
@@ -395,9 +401,9 @@ if __name__ == "__main__":
 
     #heart_from_torso_surf_clipped = clip_torso_to_biv_base(heart_from_torso_surface, base_normal, base_height)
     #heart_from_torso_surf_clipped= clip_mesh_to_basal_planev2(heart_from_torso_surface, base_normal, base_origin)
-    long_axis_from_biv = get_long_axis_from_ab(biv_surface)
-    heart_from_torso_surf_clipped = clip_mesh_given_axis(heart_from_torso_surface, long_axis_from_biv, percentile=70)
-    heart_from_torso_surf_clipped.save("heart_from_torso_clipped.vtk")
+    #long_axis_from_biv = get_long_axis_from_ab(biv_surface)
+    #heart_from_torso_surf_clipped = clip_mesh_given_axis(heart_from_torso_surface, long_axis_from_biv, percentile=70)
+    #heart_from_torso_surf_clipped.save("heart_from_torso_clipped.vtk")
 
     '''
     # Landmark-based T_init
@@ -427,13 +433,13 @@ if __name__ == "__main__":
 
     '''
     source_pcd = pv_surface_to_o3d(biv_surface)
-    target_pcd = pv_surface_to_o3d(heart_from_torso_surf_clipped)
+    target_pcd = pv_surface_to_o3d(heart_from_torso_clipped_surf)
 
     T_global_ransac = global_registration_fpfh(source_pcd, target_pcd, voxel_size)
     draw_registration_result(source_pcd, target_pcd, T_global_ransac)
     #T_init_from_pca = coarse_alignment(biv_mesh_surface_pts, heart_from_torso_surface_pts)
     biv_after_ransac = biv_mesh.transform(T_global_ransac)
-    #biv_after_ransac.save("503kaggle500_ransac.vtk") 
+    biv_after_ransac.save("503kaggle500_after_ransac.vtk") 
 
     normals = np.asarray(source_pcd.normals)
     print("Num Normali:", normals.shape[0])
@@ -441,14 +447,14 @@ if __name__ == "__main__":
     print("norma media:", np.linalg.norm(normals, axis=1).mean())
 
     # ICP point-to-plane
-    '''
+    
     print("Local registration using ICP...")
     result = o3d.pipelines.registration.registration_icp(
         source_pcd, target_pcd,
-        max_correspondence_distance=voxel_size * 0.4,
+        max_correspondence_distance=voxel_size * 0.5,
         init=T_global_ransac,
         estimation_method=o3d.pipelines.registration.TransformationEstimationPointToPlane(),
-        criteria=o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=300, relative_fitness=1e-6, relative_rmse=1e-6)
+        criteria=o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=2000)
     )
 
     T_final = result.transformation
@@ -457,8 +463,7 @@ if __name__ == "__main__":
 
     # Applica trasformazione al biventricolo
     biv_registered = biv_mesh.transform(T_final)
-    #biv_registered.save("503kaggle500_registered.vtk") 
+    biv_registered.save("503kaggle500_reg_icp.vtk") 
     # Unisci torso (senza cuore) + biv registrato
-    merged = torso_no_cardiac.merge(biv_registered)
+    #merged = torso_no_cardiac.merge(biv_registered)
     #merged.save("torso_heart_merged.vtk")
-'''

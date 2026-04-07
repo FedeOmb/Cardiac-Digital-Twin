@@ -284,12 +284,17 @@ def draw_registration_result(source, target, transformation):
     o3d.visualization.draw_geometries([source_temp, target_temp], width=1280, height=720)
     
 def pv_surface_to_o3d(pv_surface):
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(np.array(pv_surface.points))
-    pcd.estimate_normals(
-        search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2, max_nn=30)
+    #calcolo normali superficie con pyvista
+    surf_with_normals = pv_surface.compute_normals(
+        cell_normals=False, 
+        point_normals=True, 
+        auto_orient_normals=True
     )
-    # Orienta le normali in modo coerente (tutte verso l'esterno)
+    pcd = o3d.geometry.PointCloud()
+    pcd.points = o3d.utility.Vector3dVector(np.array(surf_with_normals.points))
+    normals = np.array(surf_with_normals.point_data["Normals"])
+    pcd.normals = o3d.utility.Vector3dVector(normals)
+    #pcd.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=voxel_size * 2, max_nn=30))
     #pcd.orient_normals_consistent_tangent_plane(k=15)    
     return pcd
 
@@ -438,7 +443,7 @@ if __name__ == "__main__":
     T_global_ransac = global_registration_fpfh(source_pcd, target_pcd, voxel_size)
     draw_registration_result(source_pcd, target_pcd, T_global_ransac)
     #T_init_from_pca = coarse_alignment(biv_mesh_surface_pts, heart_from_torso_surface_pts)
-    biv_after_ransac = biv_mesh.transform(T_global_ransac)
+    biv_after_ransac = biv_mesh.copy().transform(T_global_ransac)
     biv_after_ransac.save("503kaggle500_after_ransac.vtk") 
 
     normals = np.asarray(source_pcd.normals)
@@ -462,7 +467,7 @@ if __name__ == "__main__":
     draw_registration_result(source_pcd, target_pcd, T_final)
 
     # Applica trasformazione al biventricolo
-    biv_registered = biv_mesh.transform(T_final)
+    biv_registered = biv_mesh.copy().transform(T_final)
     biv_registered.save("503kaggle500_reg_icp.vtk") 
     # Unisci torso (senza cuore) + biv registrato
     #merged = torso_no_cardiac.merge(biv_registered)

@@ -4,6 +4,182 @@ import numpy as np
 import open3d as o3d
 import copy
 
+ # array (3,3): [apice, centroide_RV, centroide_LV]
+def landmark_based_init(biv_landmarks, torso_landmarks):
+    """
+    Calcola T_init da 3 coppie di landmark anatomici.
+    Usa SVD per trovare la rotazione ottimale (metodo Kabsch).
+    """
+    # Centroidi
+    src_c = biv_landmarks.mean(axis=0)
+    tgt_c = torso_landmarks.mean(axis=0)
+
+    # Matrici centrate
+    A = biv_landmarks   - src_c
+    B = torso_landmarks - tgt_c
+
+    # SVD → rotazione ottimale (metodo Kabsch)
+    H = A.T @ B
+    U, S, Vt = np.linalg.svd(H)
+    R = Vt.T @ U.T
+
+    # Correggi riflessione (det deve essere +1)
+    if np.linalg.det(R) < 0:
+        Vt[-1, :] *= -1
+        R = Vt.T @ U.T
+
+    t = tgt_c - R @ src_c
+
+    T = np.eye(4)
+    T[:3, :3] = R
+    T[:3, 3]  = t
+    return T
+
+def get_ventricle_centroids(mesh):
+    """Estrae centroidi RV e LV dai tag della mesh."""
+    tags = mesh.cell_data["elemTag"]
+    
+    rv_cells = np.where(np.isin(tags, [34]))[0]  # tag RV
+    lv_cells = np.where(np.isin(tags, [35]))[0]  # tag LV
+
+    def cells_centroid(mesh, cell_ids):
+        pts_idx = set()
+        for cid in cell_ids:
+            pts_idx.update(mesh.get_cell(cid).point_ids)
+        return mesh.points[list(pts_idx)].mean(axis=0)
+
+    rv_center = cells_centroid(mesh, rv_cells)
+    lv_center = cells_centroid(mesh, lv_cells)
+    return rv_center, lv_center
+
+def get_basal_plane_from_ab(biv_mesh, ab_threshold=0.99):
+    """
+    Stima il piano basale dalla coordinata apicobasale 'ab'.
+    Usa i nodi con ab > ab_threshold per fit del piano con PCA.
+    """
+    pts = np.array(biv_mesh.points)
+    ab  = np.array(biv_mesh.point_data["ab"]).ravel()
+
+    print(f"Attributo 'ab': min={ab.min():.4f}, max={ab.max():.4f}")
+    print(f"Nodi con ab > {ab_threshold}: {(ab > ab_threshold).sum()}")
+
+    basal_pts = pts[ab > ab_threshold]
+
+    if len(basal_pts) < 10:
+        raise ValueError(
+            f"Troppo pochi punti basali ({len(basal_pts)}) con soglia {ab_threshold}. "
+            f"Riduci ab_threshold (es. 0.90)."
+        )
+
+    # Fit del piano con PCA sui punti basali
+    centroid = basal_pts.mean(axis=0)
+    cov = np.cov((basal_pts - centroid).T)
+    eigenvalues, eigenvectors = np.linalg.eigh(cov)
+
+    # La normale al piano = autovettore con varianza MINIMA (piano di best fit)
+    base_normal = eigenvectors[:, 0]   # minore eigenvalue = normale al piano
+
+    # Convenzione: la normale deve puntare verso l'apice (ab=0)
+    apex_pt = pts[ab.argmin()]
+    if np.dot(base_normal, apex_pt - centroid) > 0:
+        base_normal = -base_normal   # inverti se punta nella direzione sbagliata
+
+    print(f"Centroide piano basale: {centroid.round(1)}")
+    print(f"Normale piano basale:   {base_normal.round(4)}")
+    print(f"Planarità punti basali (eigenvalue minore): {eigenvalues[0]:.2f} "
+          f"(più basso = più piano)")
+
+    return base_normal, centroid
+
+def clip_to_basal_plane(mesh, base_normal=None, base_origin=None):
+    """
+    Ritaglia la mesh con il piano basale del BIV.
+    Se base_normal e base_origin non sono specificati,
+    li stima automaticamente dal piano di taglio della mesh sorgente.
+    """
+    if base_normal is None:
+        # Stima automatica: il piano basale è perpendicolare all'asse
+        # apice-base. L'asse apice-base coincide col primo PC della mesh.
+        pts = np.array(mesh.points)
+        cov = np.cov((pts - pts.mean(0)).T)
+        _, vecs = np.linalg.eigh(cov)
+        base_normal = vecs[:, -1]  # asse di maggiore varianza = asse lungo
+
+        # L'origine è il punto con z-score massimo lungo quell'asse
+        # (la base è la parte opposta all'apice)
+        proj = pts @ base_normal
+        base_origin = pts[proj.argmax()]  # punto più "alto" = base
+
+    clipped = mesh.clip(
+        normal=base_normal.tolist(),
+        origin=base_origin.tolist(),
+        invert=False  # mantieni la parte sotto il piano basale
+    )
+    return clipped, base_normal, base_origin
+
+def clip_torso_to_biv_base(torso_heart_surface, base_normal, base_height, margin_factor=1.05):
+    """
+    Taglia la mesh del torso allo stesso piano basale del BIV.
+    margin_factor > 1.0 include una piccola margine oltre la base del BIV
+    per non perdere la geometria di raccordo.
+    """
+    pts = np.array(torso_heart_surface.points)
+    torso_proj = pts @ np.array(base_normal)
+
+    print(f"\nMesh torso lungo asse basale:")
+    print(f"  min={torso_proj.min():.1f}, max={torso_proj.max():.1f}")
+    print(f"  Piano di taglio a: {base_height * margin_factor:.1f}")
+
+    # L'origine del piano viene spostata alla quota basale del BIV (+ margine)
+    clip_origin = np.array(base_normal) * base_height * margin_factor
+
+    clipped = torso_heart_surface.clip(
+        normal=(-np.array(base_normal)).tolist(),  # inverte: tieni la parte SOTTO
+        origin=clip_origin.tolist(),
+        invert=False
+    )
+
+    n_before = len(torso_heart_surface.points)
+    n_after  = len(clipped.points)
+    print(f"  Punti prima: {n_before}, dopo taglio: {n_after} "
+          f"({100*n_after/n_before:.1f}% mantenuto)")
+
+    if n_after < 100:
+        raise ValueError(
+            "Il taglio ha rimosso troppi punti. "
+        )
+    return clipped
+
+def clip_mesh_to_basal_planev2(mesh, base_normal, base_origin, invert=False):
+    """
+    Taglia la mesh del torso con il piano basale estratto dal BIV.
+    La normale punta verso l'apice → clip taglia tutto sopra la base.
+    """
+    # Verifica quanti punti del torso cadono su ciascun lato del piano
+    pts   = np.array(mesh.points)
+    dists = (pts - base_origin) @ base_normal   # positivo = lato apice
+    print(f"\nDistribuizione punti torso rispetto al piano:")
+    print(f"  Lato apice  (d > 0): {(dists > 0).sum()} punti")
+    print(f"  Lato base   (d < 0): {(dists < 0).sum()} punti")
+
+    clipped = mesh.clip(
+        normal=base_normal.tolist(),
+        origin=base_origin.tolist(),
+        invert=invert
+    )
+
+    if len(clipped.points) < 50:
+        print("Troppo pochi punti dopo il taglio — prova con invert=True")
+        clipped = mesh.clip(
+            normal=base_normal.tolist(),
+            origin=base_origin.tolist(),
+            invert=not invert
+        )
+
+    print(f"Punti torso: {len(mesh.points)} → {len(clipped.points)} "
+          f"({100*len(clipped.points)/len(mesh.points):.1f}% mantenuto)")
+    return clipped
+
 def clip_at_long_axis_percentile(mesh, percentile=92):
     """
     Trova l'asse lungo della mesh tramite PCA sui suoi punti,
@@ -185,15 +361,11 @@ def global_registration_fpfh(source_pcd, target_pcd, voxel_size):
     print(f"RANSAC fitness: {result_ransac.fitness:.4f}, RMSE: {result_ransac.inlier_rmse:.2f}")
     return result_ransac.transformation
 
-def export_mesh_vtk42(mesh, filename):
-    # Esporta mesh in formato VTK 4.2 (legacy) con pyvista
-    # Per compatibilità con OpenCARP che richiede VTK 4.2
-    mesh.save(filename, binary=False)
 
 if __name__ == "__main__":
     PATH_CARDIAC_MESH = os.path.join(".", "503kaggle500_meshes", "503kaggle500um_tagged.vtk")
     PATH_TORSO_MESH = os.path.join(".", "KCL_torso1", "KCL_torso1.vtk")
-    voxel_size = 3000  # in um 
+    voxel_size = 2000  # in um 
 
     torso = pv.read(PATH_TORSO_MESH)
 
@@ -216,7 +388,6 @@ if __name__ == "__main__":
     heart_from_torso_surface.save("heart_from_torso_surface.vtk")
 
     long_axis_from_biv = get_long_axis_from_ab(biv_surface)
-
     heart_from_torso_clipped = clip_mesh_given_axis(heart_mesh, long_axis_from_biv, percentile=70)
 
     # Estrae superficie del cuore (per registrazione ICP)
@@ -225,8 +396,47 @@ if __name__ == "__main__":
 
     # Torso senza cuore (per la sostituzione)
     torso_no_cardiac = torso.extract_cells(np.where(~heart_mask)[0])
-    torso_no_cardiac.save("torso_no_biv_mesh.vtk", binary=False)
+
+    # base_normal e base_origin vengono stimati dal BIV e applicati al cuore del torso
+    #base_normal, base_origin = get_basal_plane_from_ab(biv_surface)
+    #print("Base normal stimata da mesh biv:", base_normal)
+    #print("Base origin stimata da mesh biv:", base_origin)
+
+    # Applica lo stesso piano di taglio al torso
+
+    #heart_from_torso_surf_clipped = clip_torso_to_biv_base(heart_from_torso_surface, base_normal, base_height)
+    #heart_from_torso_surf_clipped= clip_mesh_to_basal_planev2(heart_from_torso_surface, base_normal, base_origin)
+    #long_axis_from_biv = get_long_axis_from_ab(biv_surface)
+    #heart_from_torso_surf_clipped = clip_mesh_given_axis(heart_from_torso_surface, long_axis_from_biv, percentile=70)
+    #heart_from_torso_surf_clipped.save("heart_from_torso_clipped.vtk")
+
+    '''
+    # Landmark-based T_init
+    rv_biv, lv_biv = get_ventricle_centroids(biv_mesh)
+    rv_torso, lv_torso = get_ventricle_centroids(heart_mesh)
+
+    apex_biv = np.array(biv_surface.points)[np.array(biv_surface.points) @ base_normal == (np.array(biv_surface.points) @ base_normal).min()][0]
+    apex_torso = np.array(heart_surface_clipped.points)[np.array(heart_surface_clipped.points) @ base_normal == (np.array(heart_surface_clipped.points) @ base_normal).min()][0]
+
+    biv_landmarks   = np.array([apex_biv,   rv_biv,   lv_biv])
+    torso_landmarks = np.array([apex_torso, rv_torso, lv_torso])
+    T_init = landmark_based_init(biv_landmarks, torso_landmarks)
+
+    # Surface del cuore nel torso (target) e del biv (source)
+    source_pcd = pv_surface_to_o3d(biv_mesh.extract_surface())
+    target_pcd = pv_surface_to_o3d(heart_from_torso_surface)
     
+    eval_init = o3d.pipelines.registration.evaluate_registration(
+        source_pcd, target_pcd,
+        max_correspondence_distance=voxel_size * 1.5,
+        transformation=T_init
+    )
+
+    print(f"Fitness landmark init: {eval_init.fitness:.4f}")
+
+    draw_registration_result(source_pcd, target_pcd, T_init)
+
+    '''
     source_pcd = pv_surface_to_o3d(biv_surface)
     target_pcd = pv_surface_to_o3d(heart_from_torso_clipped_surf)
 
@@ -246,7 +456,7 @@ if __name__ == "__main__":
     print("Local registration using ICP...")
     result = o3d.pipelines.registration.registration_icp(
         source_pcd, target_pcd,
-        max_correspondence_distance=voxel_size * 0.8,
+        max_correspondence_distance=voxel_size * 0.5,
         init=T_global_ransac,
         estimation_method=o3d.pipelines.registration.TransformationEstimationPointToPlane(),
         criteria=o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=2000)
@@ -258,7 +468,7 @@ if __name__ == "__main__":
 
     # Applica trasformazione al biventricolo
     biv_registered = biv_mesh.copy().transform(T_final)
-    biv_registered.save("503kaggle500_reg_icp.vtk", binary=False) 
+    biv_registered.save("503kaggle500_reg_icp.vtk") 
     # Unisci torso (senza cuore) + biv registrato
     #merged = torso_no_cardiac.merge(biv_registered)
     #merged.save("torso_heart_merged.vtk")

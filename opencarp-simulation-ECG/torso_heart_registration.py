@@ -3,6 +3,7 @@ import pyvista as pv
 import numpy as np
 import open3d as o3d
 import copy
+import vtk
 
 def clip_at_long_axis_percentile(mesh, percentile=92):
     """
@@ -187,8 +188,15 @@ def global_registration_fpfh(source_pcd, target_pcd, voxel_size):
 
 def export_mesh_vtk42(mesh, filename):
     # Esporta mesh in formato VTK 4.2 (legacy) con pyvista
-    # Per compatibilità con OpenCARP che richiede VTK 4.2
-    mesh.save(filename, binary=False)
+    # Per compatibilità con meshtool
+
+    writer = vtk.vtkUnstructuredGridWriter()
+    writer.SetFileName(filename)
+    writer.SetInputData(mesh)
+    writer.SetFileVersion(42)
+    writer.SetFileTypeToASCII()
+    writer.Write()
+    print("mesh esportata in VTK 4.2: ", filename)
 
 if __name__ == "__main__":
     PATH_CARDIAC_MESH = os.path.join(".", "503kaggle500_meshes", "503kaggle500um_tagged.vtk")
@@ -225,8 +233,9 @@ if __name__ == "__main__":
 
     # Torso senza cuore (per la sostituzione)
     torso_no_cardiac = torso.extract_cells(np.where(~heart_mask)[0])
-    torso_no_cardiac.save("torso_no_biv_mesh.vtk", binary=False)
-    
+    #torso_no_cardiac.save("torso_no_biv_mesh.vtk", binary=False)
+    export_mesh_vtk42(torso_no_cardiac, "torso_no_biv_mesh.vtk")
+
     source_pcd = pv_surface_to_o3d(biv_surface)
     target_pcd = pv_surface_to_o3d(heart_from_torso_clipped_surf)
 
@@ -234,7 +243,8 @@ if __name__ == "__main__":
     draw_registration_result(source_pcd, target_pcd, T_global_ransac)
     #T_init_from_pca = coarse_alignment(biv_mesh_surface_pts, heart_from_torso_surface_pts)
     biv_after_ransac = biv_mesh.copy().transform(T_global_ransac)
-    biv_after_ransac.save("503kaggle500_after_ransac.vtk") 
+    #biv_after_ransac.save("503kaggle500_after_ransac.vtk") 
+    export_mesh_vtk42(biv_after_ransac, "503kaggle500_after_ransac.vtk")
 
     normals = np.asarray(source_pcd.normals)
     print("Num Normali:", normals.shape[0])
@@ -258,7 +268,8 @@ if __name__ == "__main__":
 
     # Applica trasformazione al biventricolo
     biv_registered = biv_mesh.copy().transform(T_final)
-    biv_registered.save("503kaggle500_reg_icp.vtk", binary=False) 
+    #biv_registered.save("503kaggle500_reg_icp.vtk", binary=False) 
+    export_mesh_vtk42(biv_registered, "503kaggle500_reg_icp.vtk")
     # Unisci torso (senza cuore) + biv registrato
     #merged = torso_no_cardiac.merge(biv_registered)
     #merged.save("torso_heart_merged.vtk")

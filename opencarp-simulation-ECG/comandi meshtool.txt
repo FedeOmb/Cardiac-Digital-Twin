@@ -12,4 +12,6 @@ meshtool resample mesh -msh=502_volumetric_mesh_tetra_clean -ifmt=vtk -avrg=1.5 
 
 
 #verifica elementi di overlap tra mesh torso e mesh biventricolare
-meshtool extract overlap -msh1=$TORSO -msh2=$BIV -ifmt=vtk_bin -submsh=overlapping_zone -mode=1 -size=3000.0
+meshtool extract overlap -msh1=$TORSO -msh2=$BIV -ifmt=vtk_bin -submsh=overlapping_zone -mode=1 -size=3.0
+
+

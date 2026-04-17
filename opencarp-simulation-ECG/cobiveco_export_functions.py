@@ -181,6 +181,27 @@ def scale_mesh_mantaining_point_data(input_vtk, output_vtk, scale):
     else:
         print("Formato output non supportato")
 
+def scale_vtksurfmesh(input_vtk, output_vtk, scale):
+    # Leggi mesh originale di superficie
+    mesh_orig = pv.read(input_vtk)
+    print("Bounds mesh originale:", mesh_orig.bounds)
+    # Scala le coordinate geometriche
+    mesh_scaled = mesh_orig.copy()
+    mesh_scaled.points = mesh_orig.points * scale
+
+    print("Point data preservati:", list(mesh_scaled.point_data.keys()))
+
+    # Esporta in VTK 4.2 compatibile con meshtool
+    writer = vtk.vtkPolyDataWriter()
+    writer.SetInputData(mesh_scaled)
+    writer.SetFileName(output_vtk)
+    writer.SetFileVersion(42)
+    writer.SetFileTypeToASCII()
+    writer.Write()
+    print(f"Mesh scalata salvata in: {output_vtk}")
+    print("mesh scalata di un fattore:", scale)
+    print("Bounds mesh scalata:", mesh_scaled.bounds)
+
 def tag_vol_region_from_tm(input_vtu, output_vtk):
     # carica la mesh volumetrica con le coord cobiveco
     mesh = pv.read(input_vtu)
@@ -226,28 +247,42 @@ if __name__ == "__main__":
 '''
 
 if __name__ == "__main__":
-    geometric_data_dir = './cardiac-data/meta_data/geometric_data/'
-    subject_name = 'kaggle502'
+    geometric_data_dir = '../cardiac-data/meta_data/geometric_data/'
+    subject_name = 'sb301'
     target_resolution = 'coarse1500'
-    vtu_filename = 'kaggle502_coarse1500_cm.vtu'
-    save_vtk_vtu_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
-    save_vtu_arrays_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
+    #SCALING MESH da mm a cm per framework CDT
+    input_dir = geometric_data_dir + subject_name + '/'
+    input_filename = 'sb301_coarse1500_mmcoord.vtu'
+    input_path = input_dir + input_filename
+    out_filename = 'sb301_coarse1500_cmcoord.vtu'
+    out_path = input_dir + out_filename
+    #scale_mesh_mantaining_point_data(input_path, out_path, scale=0.1)
+    input_filename = 'sb301_coarse1500_mmclasses.vtp'
+    input_path = input_dir + input_filename
+    out_filename = 'sb301_coarse1500_cmclasses.vtp'
+    out_path = input_dir + out_filename
+    #scale_mesh_mantaining_point_data(input_path, out_path, scale=0.1)
+    # EXPORT CSV coordinate cobiveco
+    vtu_filename = 'sb301_coarse1500_cmcoord.vtu'
+    #save_vtk_vtu_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
+    #save_vtu_arrays_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
     #export solo nodi e tetra per mesh fine
-    fine_resolution = 'fine500'
-    fine_vtk_filename = 'kaggle502_fine500.vtk'
-    #save_vtk_vtu_to_csv(subject_name, geometric_data_dir, fine_resolution, fine_vtk_filename)
+    fine_resolution = 'fine500um'
+    fine_vtk_filename = 'sb301_fine500um.vtk'
+    save_vtk_vtu_to_csv(subject_name, geometric_data_dir, fine_resolution, fine_vtk_filename)
+    
     #export nodi endo rv e lv mesh coarse
     input_dir = geometric_data_dir + subject_name + '/'
     vtu_path = input_dir + vtu_filename
     output_dir = geometric_data_dir + subject_name + '/' + subject_name + '_' + target_resolution + '/'
-    vtp_filename = 'kaggle502_classes_cm.vtp'
+    vtp_filename = 'sb301_coarse1500_cmclasses.vtp'
     vtp_path = input_dir + vtp_filename
     #save_endo_nodes_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename, lv_tag=3, rv_tag=2, tag_array_name='surClass')
 
     TAG_LV_ENDO = 3  # Valore per Endocardio LV
     TAG_RV_ENDO = 4  # Valore per Endocardio RV
     TAG_ARRAY_NAME = 'class'
-
+'''
     extract_ids_from_tagged_vtp(
         vtu_path=vtu_path,
         vtp_path=vtp_path,
@@ -263,3 +298,4 @@ if __name__ == "__main__":
         target_tag_value=TAG_RV_ENDO,
         output_csv=os.path.join(output_dir, subject_name + '_' + target_resolution + '_boundarynodefield' + '_rvendo' + '.csv')
     )
+'''

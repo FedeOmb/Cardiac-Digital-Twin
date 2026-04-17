@@ -1,5 +1,5 @@
-from tabnanny import verbose
-
+import sys
+sys.path.insert(0, "../src")
 import numpy as np
 import os
 from cellular_models import StepFunctionUpstrokeEP
@@ -244,19 +244,18 @@ if __name__ == "__main__":
     working_directory = os.getcwd()
     print('Working directory:', working_directory)
     if os.path.isfile('../.custom_config/.your_path_mapping.txt'):
-        path_dict = get_path_mapping('../.custom_config/.your_path_mapping_docker_vscode.txt')
-        #path_dict = get_path_mapping()
+        #path_dict = get_path_mapping('../.custom_config/.your_path_mapping_docker_vscode.txt')
+        path_dict = get_path_mapping()
     else:
         raise 'Missing data and results configuration file at: ../.custom_config/.your_path_mapping.txt'    
     
     data_dir = path_dict["data_path"]
     geometric_data_dir = data_dir + 'geometric_data/'
 
-    subject_name = 'kaggle503'
-    # subject_name = 'DTI003'
+    subject_name = 'sb301'
     output_dir = 'purkinje/'
     coarse_resolution = 'coarse1500'
-    fine_resolution = 'fine500'
+    fine_resolution = 'fine500um'
 
     geometry, lv_pk, rv_pk, roots = generate_purkinje_network(subject_name=subject_name, geometric_data_dir=geometric_data_dir, resolution=coarse_resolution)
     

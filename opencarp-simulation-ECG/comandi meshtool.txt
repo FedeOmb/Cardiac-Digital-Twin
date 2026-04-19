@@ -15,3 +15,19 @@ meshtool resample mesh -msh=502_volumetric_mesh_tetra_clean -ifmt=vtk -avrg=1.5 
 meshtool extract overlap -msh1=$TORSO -msh2=$BIV -ifmt=vtk_bin -submsh=overlapping_zone -mode=1 -size=3.0
 
 
+#COMANDI INSERIMENTO MESH BIVENTRICOLARE NEL TORSO E GENERAZIONE MESH VOLUMETRICA TORSO da superficiale
+
+#estrae superficie esterna della mesh biventricolare
+meshtool extract surface -msh=sb301_fine500um_tagged -surf=sb301_fine500um_surface -ifmt=carp_txt -ofmt=vtk
+
+#genera mesh volumetrica nello spazio tra superficie torso e superficie cuore
+meshtool generate mesh -surf=sb301_torsoum.vtk,sb301_fine500um_surface.surfmesh.vtk -ins_tag=10,99 -outmsh=sb301_torsoum_volumcavity -ofmt=carp_txt -scale=0.8
+
+#estrae dalla mesh generata solo il tag del torso
+meshtool extract mesh -msh=sb301_torsoum_volumcavity -tags=10 -submsh=sb301_torsoonly_volum -ifmt=carp_txt -ofmt=carp_txt
+
+#fa il merge tra la mesh del torso generata e la mesh biventricolare già taggata con endo, mid e epi
+meshtool merge meshes -msh1=sb301_torsoonly_volum -msh2=sb301_fine500um_tagged_opencarp -outmsh=sb301_finalmeshum_torsobiv -ifmt=carp_txt -ofmt=vtk -thr=100
+
+#conversione finale mesh merged in formato opencarp
+meshtool convert -imsh=sb301_finalmeshum_torsobiv.vtk -omsh=sb301_finalmesh_torsobiv_opencarp -ofmt=carp_txt

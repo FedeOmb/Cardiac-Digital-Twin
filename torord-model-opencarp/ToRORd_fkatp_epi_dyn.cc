@@ -16,15 +16,15 @@ extern opencarp::FILE_SPEC _nc_logf;
 
 ////////////////////////////////////////////////
 
-#include "ToRORd_fkatp_endo.h"
+#include "ToRORd_fkatp_epi.h"
 
 
 
 namespace limpet {
 
-void ToRORd_fkatp_endoIonType::tune(IonIfBase& iif_base, const char* im_par) const {
+void ToRORd_fkatp_epiIonType::tune(IonIfBase& iif_base, const char* im_par) const {
   IonIfDerived& iif = static_cast<IonIfDerived&>(iif_base);
-  ToRORd_fkatp_endo_Params *p;							// pointer to parameter structure
+  ToRORd_fkatp_epi_Params *p;							// pointer to parameter structure
   char parameter[1024], mod[1024];
 
   p = iif.params();
@@ -69,10 +69,10 @@ void ToRORd_fkatp_endoIonType::tune(IonIfBase& iif_base, const char* im_par) con
 
 /** output all parameters which may be tuned for all IMPs
  */
-void ToRORd_fkatp_endoIonType::print_params() const {
+void ToRORd_fkatp_epiIonType::print_params() const {
   IonIfDerived IF{*this, Target::AUTO, 0, {}};
   IF.initialize_params();
-  printf("Name: ToRORd_fkatp_endo\n" );
+  printf("Name: ToRORd_fkatp_epi\n" );
   printf("\tParameters:\n" );
 
 
@@ -80,13 +80,13 @@ void ToRORd_fkatp_endoIonType::print_params() const {
 
 
 
-int ToRORd_fkatp_endoIonType::write_svs(IonIfBase& IF_base, FILE *out, int node) const {
+int ToRORd_fkatp_epiIonType::write_svs(IonIfBase& IF_base, FILE *out, int node) const {
   IonIfDerived& IF = static_cast<IonIfDerived&>(IF_base);
   fprintf( out, "%s\n", IF.get_type().get_name().c_str() );
 
   int inner_id = node % this->dlo_vector_size();
 
-  ToRORd_fkatp_endo_state *sv = IF.sv_tab().data()+(node / (this->dlo_vector_size()));
+  ToRORd_fkatp_epi_state *sv = IF.sv_tab().data()+(node / (this->dlo_vector_size()));
 
   fprintf( out, "%-20g# C1\n", sv->C1 );
 
@@ -179,7 +179,7 @@ int ToRORd_fkatp_endoIonType::write_svs(IonIfBase& IF_base, FILE *out, int node)
 
 
 
-int ToRORd_fkatp_endoIonType::read_svs(IonIfBase& IF_base, FILE *in) const {
+int ToRORd_fkatp_epiIonType::read_svs(IonIfBase& IF_base, FILE *in) const {
   IonIfDerived& IF = static_cast<IonIfDerived&>(IF_base);
   const int  BUFSIZE=256;
   char       impname[256], buf[BUFSIZE];
@@ -204,7 +204,7 @@ int ToRORd_fkatp_endoIonType::read_svs(IonIfBase& IF_base, FILE *in) const {
   if(!IF.get_num_node())  {
     flg = 1;
   }
-  ToRORd_fkatp_endo_state *sv = IF.sv_tab().data();
+  ToRORd_fkatp_epi_state *sv = IF.sv_tab().data();
 
   sscanf( fgets(buf,BUFSIZE,in), gdt_sc, &sv->C1 );
 
@@ -296,17 +296,17 @@ int ToRORd_fkatp_endoIonType::read_svs(IonIfBase& IF_base, FILE *in) const {
 
 
 
-SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, int *sz) const {
+SVgetfcn ToRORd_fkatp_epiIonType::get_sv_offset(const char *svname, int *off, int *sz) const {
   SVgetfcn retall = (SVgetfcn)(1);
 
 
-        ToRORd_fkatp_endo_state *sv;
+        ToRORd_fkatp_epi_state *sv;
 
         if( !strcmp(svname,"ALL_SV") )  {
 
           *off  = 0;
 
-          *sz   = sizeof(ToRORd_fkatp_endo_state);
+          *sz   = sizeof(ToRORd_fkatp_epi_state);
 
           return retall;
 
@@ -314,7 +314,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"C1") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,C1);
+          *off  = offsetof(ToRORd_fkatp_epi_state,C1);
 
           *sz   = sizeof  (sv->C1) / this->dlo_vector_size();
 
@@ -324,7 +324,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"C2") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,C2);
+          *off  = offsetof(ToRORd_fkatp_epi_state,C2);
 
           *sz   = sizeof  (sv->C2) / this->dlo_vector_size();
 
@@ -334,7 +334,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"C3") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,C3);
+          *off  = offsetof(ToRORd_fkatp_epi_state,C3);
 
           *sz   = sizeof  (sv->C3) / this->dlo_vector_size();
 
@@ -344,7 +344,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"CaMKt") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,CaMKt);
+          *off  = offsetof(ToRORd_fkatp_epi_state,CaMKt);
 
           *sz   = sizeof  (sv->CaMKt) / this->dlo_vector_size();
 
@@ -354,7 +354,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"I") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,I);
+          *off  = offsetof(ToRORd_fkatp_epi_state,I);
 
           *sz   = sizeof  (sv->I) / this->dlo_vector_size();
 
@@ -364,7 +364,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"Jrel_np") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,Jrel_np);
+          *off  = offsetof(ToRORd_fkatp_epi_state,Jrel_np);
 
           *sz   = sizeof  (sv->Jrel_np) / this->dlo_vector_size();
 
@@ -374,7 +374,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"Jrel_p") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,Jrel_p);
+          *off  = offsetof(ToRORd_fkatp_epi_state,Jrel_p);
 
           *sz   = sizeof  (sv->Jrel_p) / this->dlo_vector_size();
 
@@ -384,7 +384,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"O") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,O);
+          *off  = offsetof(ToRORd_fkatp_epi_state,O);
 
           *sz   = sizeof  (sv->O) / this->dlo_vector_size();
 
@@ -394,7 +394,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"a") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,a);
+          *off  = offsetof(ToRORd_fkatp_epi_state,a);
 
           *sz   = sizeof  (sv->a) / this->dlo_vector_size();
 
@@ -404,7 +404,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"ap") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,ap);
+          *off  = offsetof(ToRORd_fkatp_epi_state,ap);
 
           *sz   = sizeof  (sv->ap) / this->dlo_vector_size();
 
@@ -414,7 +414,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"cai") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,cai);
+          *off  = offsetof(ToRORd_fkatp_epi_state,cai);
 
           *sz   = sizeof  (sv->cai) / this->dlo_vector_size();
 
@@ -424,7 +424,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"cajsr") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,cajsr);
+          *off  = offsetof(ToRORd_fkatp_epi_state,cajsr);
 
           *sz   = sizeof  (sv->cajsr) / this->dlo_vector_size();
 
@@ -434,7 +434,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"cansr") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,cansr);
+          *off  = offsetof(ToRORd_fkatp_epi_state,cansr);
 
           *sz   = sizeof  (sv->cansr) / this->dlo_vector_size();
 
@@ -444,7 +444,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"cass") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,cass);
+          *off  = offsetof(ToRORd_fkatp_epi_state,cass);
 
           *sz   = sizeof  (sv->cass) / this->dlo_vector_size();
 
@@ -454,7 +454,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"d") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,d);
+          *off  = offsetof(ToRORd_fkatp_epi_state,d);
 
           *sz   = sizeof  (sv->d) / this->dlo_vector_size();
 
@@ -464,7 +464,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"fcaf") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,fcaf);
+          *off  = offsetof(ToRORd_fkatp_epi_state,fcaf);
 
           *sz   = sizeof  (sv->fcaf) / this->dlo_vector_size();
 
@@ -474,7 +474,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"fcafp") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,fcafp);
+          *off  = offsetof(ToRORd_fkatp_epi_state,fcafp);
 
           *sz   = sizeof  (sv->fcafp) / this->dlo_vector_size();
 
@@ -484,7 +484,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"fcas") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,fcas);
+          *off  = offsetof(ToRORd_fkatp_epi_state,fcas);
 
           *sz   = sizeof  (sv->fcas) / this->dlo_vector_size();
 
@@ -494,7 +494,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"ff") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,ff);
+          *off  = offsetof(ToRORd_fkatp_epi_state,ff);
 
           *sz   = sizeof  (sv->ff) / this->dlo_vector_size();
 
@@ -504,7 +504,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"ffp") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,ffp);
+          *off  = offsetof(ToRORd_fkatp_epi_state,ffp);
 
           *sz   = sizeof  (sv->ffp) / this->dlo_vector_size();
 
@@ -514,7 +514,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"fs") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,fs);
+          *off  = offsetof(ToRORd_fkatp_epi_state,fs);
 
           *sz   = sizeof  (sv->fs) / this->dlo_vector_size();
 
@@ -524,7 +524,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"h") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,h);
+          *off  = offsetof(ToRORd_fkatp_epi_state,h);
 
           *sz   = sizeof  (sv->h) / this->dlo_vector_size();
 
@@ -534,7 +534,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"hL") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,hL);
+          *off  = offsetof(ToRORd_fkatp_epi_state,hL);
 
           *sz   = sizeof  (sv->hL) / this->dlo_vector_size();
 
@@ -544,7 +544,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"hLp") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,hLp);
+          *off  = offsetof(ToRORd_fkatp_epi_state,hLp);
 
           *sz   = sizeof  (sv->hLp) / this->dlo_vector_size();
 
@@ -554,7 +554,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"hp") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,hp);
+          *off  = offsetof(ToRORd_fkatp_epi_state,hp);
 
           *sz   = sizeof  (sv->hp) / this->dlo_vector_size();
 
@@ -564,7 +564,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"iF") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,iF);
+          *off  = offsetof(ToRORd_fkatp_epi_state,iF);
 
           *sz   = sizeof  (sv->iF) / this->dlo_vector_size();
 
@@ -574,7 +574,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"iFp") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,iFp);
+          *off  = offsetof(ToRORd_fkatp_epi_state,iFp);
 
           *sz   = sizeof  (sv->iFp) / this->dlo_vector_size();
 
@@ -584,7 +584,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"iS") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,iS);
+          *off  = offsetof(ToRORd_fkatp_epi_state,iS);
 
           *sz   = sizeof  (sv->iS) / this->dlo_vector_size();
 
@@ -594,7 +594,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"iSp") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,iSp);
+          *off  = offsetof(ToRORd_fkatp_epi_state,iSp);
 
           *sz   = sizeof  (sv->iSp) / this->dlo_vector_size();
 
@@ -604,7 +604,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"j") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,j);
+          *off  = offsetof(ToRORd_fkatp_epi_state,j);
 
           *sz   = sizeof  (sv->j) / this->dlo_vector_size();
 
@@ -614,7 +614,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"jca") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,jca);
+          *off  = offsetof(ToRORd_fkatp_epi_state,jca);
 
           *sz   = sizeof  (sv->jca) / this->dlo_vector_size();
 
@@ -624,7 +624,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"jp") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,jp);
+          *off  = offsetof(ToRORd_fkatp_epi_state,jp);
 
           *sz   = sizeof  (sv->jp) / this->dlo_vector_size();
 
@@ -634,7 +634,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"ki") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,ki);
+          *off  = offsetof(ToRORd_fkatp_epi_state,ki);
 
           *sz   = sizeof  (sv->ki) / this->dlo_vector_size();
 
@@ -644,7 +644,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"kss") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,kss);
+          *off  = offsetof(ToRORd_fkatp_epi_state,kss);
 
           *sz   = sizeof  (sv->kss) / this->dlo_vector_size();
 
@@ -654,7 +654,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"m") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,m);
+          *off  = offsetof(ToRORd_fkatp_epi_state,m);
 
           *sz   = sizeof  (sv->m) / this->dlo_vector_size();
 
@@ -664,7 +664,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"mL") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,mL);
+          *off  = offsetof(ToRORd_fkatp_epi_state,mL);
 
           *sz   = sizeof  (sv->mL) / this->dlo_vector_size();
 
@@ -674,7 +674,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"nai") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,nai);
+          *off  = offsetof(ToRORd_fkatp_epi_state,nai);
 
           *sz   = sizeof  (sv->nai) / this->dlo_vector_size();
 
@@ -684,7 +684,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"nass") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,nass);
+          *off  = offsetof(ToRORd_fkatp_epi_state,nass);
 
           *sz   = sizeof  (sv->nass) / this->dlo_vector_size();
 
@@ -694,7 +694,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"nca_i") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,nca_i);
+          *off  = offsetof(ToRORd_fkatp_epi_state,nca_i);
 
           *sz   = sizeof  (sv->nca_i) / this->dlo_vector_size();
 
@@ -704,7 +704,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"nca_ss") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,nca_ss);
+          *off  = offsetof(ToRORd_fkatp_epi_state,nca_ss);
 
           *sz   = sizeof  (sv->nca_ss) / this->dlo_vector_size();
 
@@ -714,7 +714,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"xs1") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,xs1);
+          *off  = offsetof(ToRORd_fkatp_epi_state,xs1);
 
           *sz   = sizeof  (sv->xs1) / this->dlo_vector_size();
 
@@ -724,7 +724,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
         if( !strcmp(svname,"xs2") )  {
 
-          *off  = offsetof(ToRORd_fkatp_endo_state,xs2);
+          *off  = offsetof(ToRORd_fkatp_epi_state,xs2);
 
           *sz   = sizeof  (sv->xs2) / this->dlo_vector_size();
 
@@ -738,7 +738,7 @@ SVgetfcn ToRORd_fkatp_endoIonType::get_sv_offset(const char *svname, int *off, i
 
 
 
-int ToRORd_fkatp_endoIonType::get_sv_list(char*** list) const {
+int ToRORd_fkatp_epiIonType::get_sv_list(char*** list) const {
 
   *list = (char**)malloc( sizeof(char*)*42 );
 
@@ -834,7 +834,7 @@ int ToRORd_fkatp_endoIonType::get_sv_list(char*** list) const {
 
 
 #define BOGUSTYPE -1
-int ToRORd_fkatp_endoIonType::get_sv_type(const char *svname, int *type, char **Typename) const
+int ToRORd_fkatp_epiIonType::get_sv_type(const char *svname, int *type, char **Typename) const
 {
   *type = BOGUSTYPE;
   if (0) ;
@@ -974,7 +974,7 @@ int ToRORd_fkatp_endoIonType::get_sv_type(const char *svname, int *type, char **
 
 
 
-void ToRORd_fkatp_endoIonType::print_metadata() const {
+void ToRORd_fkatp_epiIonType::print_metadata() const {
   printf("Metadata:\n");
   printf("\t\n");
   printf("\t\n");
@@ -990,8 +990,8 @@ void ToRORd_fkatp_endoIonType::print_metadata() const {
         
 
 extern "C" {
-    limpet::ToRORd_fkatp_endoIonType* __new_IonType(bool plugin) {
-              return new limpet::ToRORd_fkatp_endoIonType(plugin);
+    limpet::ToRORd_fkatp_epiIonType* __new_IonType(bool plugin) {
+              return new limpet::ToRORd_fkatp_epiIonType(plugin);
     }
 }
     

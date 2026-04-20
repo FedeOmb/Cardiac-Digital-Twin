@@ -20,15 +20,21 @@ def parser():
                         default='./sb301_rootnodes/sb301_candidate_root_nodes_times.csv',
                         help='File CSV contenente i tempi di attivazione (candidate_root_nodes_times.csv)')
     parser.add_argument('--tend',
-                        type=float, default=200.0,
+                        type=float, default=600.0,
                         help='Durata della simulazione in ms')
     parser.add_argument('--outdir',
-                        default='test_monodomain_torord_sb301',
+                        default='test_monodomain_torord_sb301_v2',
                         help='Directory di output (simID)')
     return parser
 
 def jobID(args):
     return args.outdir
+
+def get_nodes_by_radius(pts_file, root_node, radius=3000):
+    pts = np.loadtxt(pts_file, skiprows=1)  # Salta la prima riga con il numero di punti
+    root_coords = pts[root_node]
+    distances = np.linalg.norm(pts - root_coords, axis=1)
+    return np.where(distances <= radius)[0]
 
 @tools.carpexample(parser, jobID)
 def run(args, job):
@@ -54,14 +60,17 @@ def run(args, job):
     # ==========================================
     vtx_dir = os.path.join(args.outdir, 'sb301_rootnodes_vtx')
     os.makedirs(vtx_dir, exist_ok=True)
-    
+    PTS_PATH = './sb301_meshes/sb301_fine500um_tagged_opencarp.pts'
     stim_cmds = ['-num_stim', len(nodes)]
     for i, (node, t) in enumerate(zip(nodes, times)):
+        nearby_nodes = get_nodes_by_radius(PTS_PATH,node, radius=1500)
         vtx_filename = os.path.join(vtx_dir, f'RN{i+1}.vtx')
         with open(vtx_filename, 'w') as f:
-            f.write("1\nintra\n")  # Header standard di openCARP per i vertici intracellulari
-            f.write(f"{node}\n")
-        
+            f.write(f"{len(nearby_nodes)}\n")  # Numero di nodi da stimolare
+            f.write("intra\n")  # Header standard di openCARP per i vertici intracellulari
+            for n in nearby_nodes:
+                f.write(f"{n}\n")
+
         # Parametri dello stimolo
         stim_cmds += [
             f'-stim[{i}].name', f'RN{i+1}',
@@ -69,8 +78,8 @@ def run(args, job):
             f'-stim[{i}].ptcl.duration', 2.0,
             f'-stim[{i}].ptcl.npls', 1,
             f'-stim[{i}].ptcl.start', float(t),
-            f'-stim[{i}].pulse.strength', 100.0,
-            f'-stim[{i}].crct.type', 0
+            f'-stim[{i}].pulse.strength', 200.0,
+            f'-stim[{i}].crct.type', 0,
         ]
 
     # ==========================================
@@ -85,12 +94,12 @@ def run(args, job):
         '-tend', args.tend,
         '-spacedt', 1.0,
         '-timedt', 1.0,
-        '-dt', 25,
+        '-dt', 20,
         '-bidomain', 0,
         '-parab_solve', 1,
         '-mass_lumping', 1,
         '-phie_rec_ptf', 'sb301_electrodes_opencarp',
-        '-phie_recovery_file', 'sb301_phie_recovery_test'
+        '-phie_recovery_file', 'sb301_phie_recovery_test2',
     ]
 
     #caricamento modello torord esterno compilato

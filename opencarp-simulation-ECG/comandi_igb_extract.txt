@@ -1,0 +1,2 @@
+#comando per estrarre valori raw 10 elettrodi da file igb phie recovery
+igbextract -l 0-9 -o asciiTm -O sb301_phierec1_ascii.txt sb301_phie_recovery_test.igb

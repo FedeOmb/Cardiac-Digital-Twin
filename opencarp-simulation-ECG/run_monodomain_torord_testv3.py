@@ -4,9 +4,9 @@ import pandas as pd
 from carputils import settings
 from carputils import tools
 
-TORORD_LIB_ENDO = './torord-model-opencarp-ubuntu/ToRORd_fkatp_endo.so'
-TORORD_LIB_MID = './torord-model-opencarp-ubuntu/ToRORd_fkatp_endo_mid.so'
-TORORD_LIB_EPI  = './torord-model-opencarp-ubuntu/ToRORd_fkatp_epi.so'
+TORORD_LIB_ENDO = './torord-model-opencarp/ToRORd_fkatp_endo.so'
+TORORD_LIB_MID = './torord-model-opencarp/ToRORd_fkatp_endo_mid.so'
+TORORD_LIB_EPI  = './torord-model-opencarp/ToRORd_fkatp_epi.so'
 
 def parser():
     parser = tools.standard_parser()
@@ -20,7 +20,7 @@ def parser():
                         default='./sb301_rootnodes/sb301_candidate_root_nodes_times.csv',
                         help='File CSV contenente i tempi di attivazione (candidate_root_nodes_times.csv)')
     parser.add_argument('--tend',
-                        type=float, default=600.0,
+                        type=float, default=200.0,
                         help='Durata della simulazione in ms')
     parser.add_argument('--outdir',
                         default='test_monodomain_torord_sb301_v3',
@@ -30,7 +30,7 @@ def parser():
 def jobID(args):
     return args.outdir
 
-def get_nodes_by_radius(pts_file, root_node, radius=3000):
+def get_nodes_by_radius(pts_file, root_node, radius=1500):
     pts = np.loadtxt(pts_file, skiprows=1)  # Salta la prima riga con il numero di punti
     root_coords = pts[root_node]
     distances = np.linalg.norm(pts - root_coords, axis=1)
@@ -63,7 +63,7 @@ def run(args, job):
     PTS_PATH = './sb301_meshes/sb301_fine500um_tagged_opencarp.pts'
     stim_cmds = ['-num_stim', len(nodes)]
     for i, (node, t) in enumerate(zip(nodes, times)):
-        nearby_nodes = get_nodes_by_radius(PTS_PATH,node, radius=1500)
+        nearby_nodes = get_nodes_by_radius(PTS_PATH,node, radius=3000)
         vtx_filename = os.path.join(vtx_dir, f'RN{i+1}.vtx')
         with open(vtx_filename, 'w') as f:
             f.write(f"{len(nearby_nodes)}\n")  # Numero di nodi da stimolare
@@ -75,10 +75,10 @@ def run(args, job):
         stim_cmds += [
             f'-stim[{i}].name', f'RN{i+1}',
             f'-stim[{i}].elec.vtx_file', vtx_filename,
-            f'-stim[{i}].ptcl.duration', 2.0,
+            f'-stim[{i}].ptcl.duration', 4.0, # 4ms da paper camps
             f'-stim[{i}].ptcl.npls', 1,
             f'-stim[{i}].ptcl.start', float(t),
-            f'-stim[{i}].pulse.strength', 200.0,
+            f'-stim[{i}].pulse.strength', 10.0,  # 5uA/cm2 convertito da paper camps 53 pA/pF x 100 pF/cm2
             f'-stim[{i}].crct.type', 0,
         ]
 
@@ -94,12 +94,12 @@ def run(args, job):
         '-tend', args.tend,
         '-spacedt', 1.0,
         '-timedt', 1.0,
-        '-dt', 20,
+        '-dt', 10.0,
         '-bidomain', 0,
         '-parab_solve', 1,
         '-mass_lumping', 1,
         '-phie_rec_ptf', 'sb301_electrodes_opencarp',
-        '-phie_recovery_file', 'sb301_phie_recovery_test2',
+        '-phie_recovery_file', 'sb301_phie_recovery_test3',
     ]
 
     #caricamento modello torord esterno compilato
@@ -112,7 +112,7 @@ def run(args, job):
 
     # Proprietà di Conduzione (GRegions)
     cmd += [
-        '-num_gregions', 1,
+        '-num_gregions', 2,
         '-gregion[0].name', 'Miocardio',
         '-gregion[0].num_IDs', 3,
         '-gregion[0].ID[0]', 1,
@@ -121,6 +121,10 @@ def run(args, job):
         '-gregion[0].g_il', 0.174,
         '-gregion[0].g_it', 0.019,
         '-gregion[0].g_in', 0.019,
+        '-gregion[1].name', 'FastEndo',
+        '-gregion[1].num_IDs', 1,
+        '-gregion[1].ID[0]', 3,
+        '-gregion[1].g_mult', 5.0,
     ]
 
     torord_params_common = (

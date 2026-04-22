@@ -177,13 +177,13 @@ filtering = True
 normalise = False
 zero_align = False
 frequency = 1000
-high_freq_cut = 0.9
+high_freq_cut = 150
 low_freq_cut = 0.5
 max_len_ecg = 200
 max_len_qrs = 150
 nb_leads = 8
 qrs_onset = 0
-simulation_folder = './test_monodomain_torord_sb301/'
+simulation_folder = './test_monodomain_torord_sb301_v3/'
 casename = 'sb301'
 
 # Preprocess the clinical data
@@ -200,7 +200,7 @@ casename = 'sb301'
 
 # Read in simulated ECGs
 print('Importing and preprocessing simulated monoAlg3D ECGs')
-simulated_t, simulated_ecgs_8leads = import_simulated_ecg_8leads_raw(filename=simulation_folder + casename + '_phierec1_ascii.txt', monoalg_activation_offset=0)
+simulated_t, simulated_ecgs_8leads = import_simulated_ecg_8leads_raw(filename=simulation_folder + casename + '_phierec3_ascii.txt', monoalg_activation_offset=0)
 simulation_frequency = simulated_ecgs_8leads.shape[1]
 print('simulated_ecgs_8leads.shape ', simulated_ecgs_8leads.shape)
 print('simulation_frequency ', simulation_frequency)

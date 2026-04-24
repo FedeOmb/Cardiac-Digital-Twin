@@ -11,7 +11,7 @@ TORORD_LIB_EPI  = './torord-model-opencarp/ToRORd_fkatp_epi.so'
 def parser():
     parser = tools.standard_parser()
     parser.add_argument('--meshname',
-                        default='./sb301_meshes/sb301_fine500um_tagged_opencarp',
+                        default='./sb301_meshes/sb301_fine500um_opencarp',
                         help='Percorso base della mesh per openCARP')
     parser.add_argument('--vtx-file',
                         default='./sb301_rootnodes/sb301_fine500um_active_root_nodes.vtx',
@@ -20,10 +20,10 @@ def parser():
                         default='./sb301_rootnodes/sb301_candidate_root_nodes_times.csv',
                         help='File CSV contenente i tempi di attivazione (candidate_root_nodes_times.csv)')
     parser.add_argument('--tend',
-                        type=float, default=200.0,
+                        type=float, default=600.0,
                         help='Durata della simulazione in ms')
     parser.add_argument('--outdir',
-                        default='test_monodomain_torord_sb301_v4',
+                        default='test_monodomain_torord_sb301_v5',
                         help='Directory di output (simID)')
     return parser
 
@@ -42,7 +42,7 @@ def run(args, job):
     # 1. Lettura dei nodi e dei tempi di attivazione
     # ==========================================
     print(f"Leggendo i nodi da {args.vtx_file} e i tempi da {args.times_file}...")
-    nodes = np.loadtxt(args.vtx_file, dtype=int, skiprows=2)  
+    nodes = np.loadtxt(args.vtx_file, dtype=int)  
     
     # Assicuriamoci che nodes sia iterabile anche in caso contenga un solo nodo
     if nodes.ndim == 0:
@@ -60,10 +60,10 @@ def run(args, job):
     # ==========================================
     vtx_dir = os.path.join(args.outdir, 'sb301_rootnodes_vtx')
     os.makedirs(vtx_dir, exist_ok=True)
-    PTS_PATH = './sb301_meshes/sb301_fine500um_tagged_opencarp.pts'
+    PTS_PATH = './sb301_meshes/sb301_fine500um_opencarp.pts'
     stim_cmds = ['-num_stim', len(nodes)]
     for i, (node, t) in enumerate(zip(nodes, times)):
-        nearby_nodes = get_nodes_by_radius(PTS_PATH,node, radius=3000)
+        nearby_nodes = get_nodes_by_radius(PTS_PATH,node, radius=2000)
         vtx_filename = os.path.join(vtx_dir, f'RN{i+1}.vtx')
         with open(vtx_filename, 'w') as f:
             f.write(f"{len(nearby_nodes)}\n")  # Numero di nodi da stimolare
@@ -99,7 +99,7 @@ def run(args, job):
         '-parab_solve', 1,
         '-mass_lumping', 1,
         '-phie_rec_ptf', 'sb301_electrodes_opencarp',
-        '-phie_recovery_file', 'sb301_phie_recovery_test4',
+        '-phie_recovery_file', 'sb301_phie_recovery_test5',
     ]
 
     #caricamento modello torord esterno compilato
@@ -118,9 +118,9 @@ def run(args, job):
         '-gregion[0].ID[0]', 1,
         '-gregion[0].ID[1]', 2,
         '-gregion[0].ID[2]', 3,
-        '-gregion[0].g_il', 0.174,
-        '-gregion[0].g_it', 0.019,
-        '-gregion[0].g_in', 0.019,
+        '-gregion[0].g_il', 0.000310, #unità misura S/m valori da paper camps
+        '-gregion[0].g_it', 0.000185, 
+        '-gregion[0].g_in', 0.000205,
         '-gregion[1].name', 'FastEndo',
         '-gregion[1].num_IDs', 1,
         '-gregion[1].ID[0]', 3,

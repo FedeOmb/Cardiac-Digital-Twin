@@ -1,6 +1,8 @@
 # This is a stand alone script that plots ECGs from body surface potentials
 # simulated from monodomain simulations.
 # The normalisation strategy is the same as in ecg_functions.py.
+import os
+
 import numpy as np
 from scipy import signal
 import matplotlib
@@ -187,7 +189,8 @@ casename = 'DTI032'
 
 # Preprocess the clinical data
 print('Preprocessing clinical ECGs')
-clinical_data_filename_path = '/mnt/scratch/jenny/'+casename+'_clinical_full_ecg.csv'
+clinical_folder = os.path.join('..', 'cardiac-data','meta_data','clinical_data')
+clinical_data_filename_path = os.path.join(clinical_folder, casename+'_clinical_full_ecg.csv')
 reference_ecg = np.genfromtxt(clinical_data_filename_path, delimiter=',')
 reference_ecg = __preprocess_ecg_without_normalise(original_ecg=reference_ecg, filtering=filtering, zero_align=zero_align,
                                                    frequency=frequency, low_freq_cut=low_freq_cut, high_freq_cut=high_freq_cut)

@@ -119,7 +119,7 @@ def generate_purkinje_network(subject_name, geometric_data_dir, resolution):
                     visualisation_dir=output_dir, xyz_name_list=get_xyz_name_list())
     
     # 4. Randomizzazione Attivazione root nodes
-    all_candidate_root_nodes_index = conduction_system.get_candidate_root_node_index()
+    all_candidate_root_nodes_index = geometry.get_candidate_root_node_index()
     num_candidate_root_nodes = len(all_candidate_root_nodes_index)
     #random_active_percentage = np.random.uniform(0.5, 0.9)
     #print(f"Attivando casualmente {random_active_percentage*100:.1f}% dei root nodes candidati ({total_candidate_root_nodes} totali)")
@@ -136,7 +136,7 @@ def generate_purkinje_network(subject_name, geometric_data_dir, resolution):
     lv_purkinje_edge = lv_candidate_purkinje_edge
     rv_purkinje_edge = rv__candidate_purkinje_edge
     purkinje_speed = 0.2 #cm/ms
-    activation_times = conduction_system.get_candidate_root_node_time(purkinje_speed=purkinje_speed)
+    activation_times = geometry.get_candidate_root_node_time(purkinje_speed=purkinje_speed)
     # 5. Esportazione per openCARP (.vtx)
     vtx_filename = os.path.join(output_dir, f"{subject_name}_candidate_root_nodes.vtx")
     np.savetxt(vtx_filename, active_root_nodes, fmt='%d')

@@ -1,3 +1,4 @@
 cardiac-data/
 .venv-cdt/
+.venv/
 opencarp-simulation-ECG/venv_carputils/

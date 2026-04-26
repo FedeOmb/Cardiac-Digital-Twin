@@ -21,7 +21,7 @@ meshtool extract overlap -msh1=$TORSO -msh2=$BIV -ifmt=vtk_bin -submsh=overlappi
 meshtool extract surface -msh=sb301_fine500um_tagged -surf=sb301_fine500um_surface -ifmt=carp_txt -ofmt=vtk
 
 #genera mesh volumetrica nello spazio tra superficie torso e superficie cuore
-meshtool generate mesh -surf=sb301_torsoum.vtk,sb301_fine500um_surface.surfmesh.vtk -ins_tag=10,99 -outmsh=sb301_torsoum_volumcavity -ofmt=carp_txt -scale=0.8
+meshtool generate mesh -surf=sb301_torsoum.vtk,sb301_fine500um_surface.surfmesh.vtk -ins_tag=10,99 -outmsh=sb301_torsoum_volumcavity -ofmt=carp_txt -scale=1.0
 
 #estrae dalla mesh generata solo il tag del torso
 meshtool extract mesh -msh=sb301_torsoum_volumcavity -tags=10 -submsh=sb301_torsoonly_volum -ifmt=carp_txt -ofmt=carp_txt

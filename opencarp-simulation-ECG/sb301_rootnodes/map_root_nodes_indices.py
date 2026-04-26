@@ -1,8 +1,10 @@
+import os
 import numpy as np
 import pyvista as pv
 from scipy.spatial import cKDTree
 
-merged_mesh = pv.read("sb301_finalmeshum_torsobiv.vtk")
+merged_mesh_path = os.path.join("..", "sb301_torsomesh", "sb301_finalmeshum_torsobiv.vtk")
+merged_mesh = pv.read(merged_mesh_path)
 
 # Estrai punti e tag delle celle
 merged_pts = np.array(merged_mesh.points)            
@@ -28,9 +30,10 @@ _, global_idx = tree_merged.query(myo_pts)
 
 # --- KD-tree sui nodi miocardici, risultato in indici globali ---
 # Leggi i root nodes dalla mesh BIV originale
-biv_mesh    = pv.read("sb301_fine500um_tagged.vtk")
+biv_mesh_path = os.path.join("..","sb301_meshes", "sb301_fine500um_tagged2.vtk")
+biv_mesh    = pv.read(biv_mesh_path)
 biv_pts     = np.array(biv_mesh.points)
-root_idx    = np.loadtxt("sb301_fine500um_active_root_nodes.vtx", dtype=int, skiprows=2)
+root_idx    = np.loadtxt("sb301_fine500um_active_root_nodes.vtx", dtype=int)
 root_coords = biv_pts[root_idx]
 
 distances, local_idx = tree_myo.query(root_coords)
@@ -60,14 +63,12 @@ for j, (ni, dist) in enumerate(zip(new_indices[:5], distances[:5])):  # mostra p
     print(f"  Root {j}: nodo globale {ni}, distanza {dist:.4f} mm")
 
 # --- Salva in formato .vtx per openCARP ---
-with open("root_nodes_merged.vtx", "w") as f:
-    f.write(f"{len(new_indices)}\n")
-    f.write("intra\n")
+with open("sb301_root_nodes_mapping_torsobiv.vtx", "w") as f:
     for i in new_indices:
         f.write(f"{i}\n")
 
-np.savetxt("root_nodes_merged.dat", new_indices, fmt="%d")
+np.savetxt("sb301_root_nodes_mapping_torsobiv.dat", new_indices, fmt="%d")
 
 print("\nFile salvati:")
-print("  root_nodes_merged.vtx  → usa in openCARP come stim[x].vtx_file")
-print("  root_nodes_merged.dat  → indici di riferimento")
+print("  sb301_root_nodes_mapping_torsobiv.vtx  → usa in openCARP come stim[x].vtx_file")
+print("  sb301_root_nodes_mapping_torsobiv.dat  → indici di riferimento")

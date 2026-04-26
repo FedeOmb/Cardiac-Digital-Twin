@@ -4,8 +4,9 @@
 import numpy as np
 from scipy import signal
 import matplotlib
-matplotlib.use('tkagg')
-from matplotlib import pyplot as plt
+#matplotlib.use('tkagg')
+import matplotlib.pyplot as plt
+#plt.switch_backend('Agg')# backend non-interattivo per ambiente headless
 # Helper functions from ecg_functions.py:
 
 def filter_butterworth_ecg(b, a, ecg):
@@ -151,6 +152,7 @@ def visualise_ecgs(nb_leads, reference_ecg, simulated_ecgs, simulated_t,  lead_n
     axes[nb_leads-1].legend(loc='center left', bbox_to_anchor=(0.1, 0.2), fontsize=14)
     fig.suptitle(casename)
     plt.show()
+    #plt.savefig(casename+'_ecg_comparison.png')
 
 
 def read_csv_file(filename, skiprows=0, usecols=None):
@@ -183,7 +185,7 @@ max_len_ecg = 200
 max_len_qrs = 150
 nb_leads = 8
 qrs_onset = 0
-simulation_folder = './test_monodomain_torord_sb301_v3/'
+simulation_folder = './test_monodomain_torord_sb301_v10/'
 casename = 'sb301'
 
 # Preprocess the clinical data
@@ -200,7 +202,7 @@ casename = 'sb301'
 
 # Read in simulated ECGs
 print('Importing and preprocessing simulated monoAlg3D ECGs')
-simulated_t, simulated_ecgs_8leads = import_simulated_ecg_8leads_raw(filename=simulation_folder + casename + '_phierec3_ascii.txt', monoalg_activation_offset=0)
+simulated_t, simulated_ecgs_8leads = import_simulated_ecg_8leads_raw(filename=simulation_folder + casename + '_phierec10_ascii.txt', monoalg_activation_offset=0)
 simulation_frequency = simulated_ecgs_8leads.shape[1]
 print('simulated_ecgs_8leads.shape ', simulated_ecgs_8leads.shape)
 print('simulation_frequency ', simulation_frequency)
@@ -211,10 +213,23 @@ max_len_qrs = 200 * 4
 #processed_simulated_ecgs = preprocess_ecg(original_ecg=simulated_ecgs_8leads, reference_ecg=reference_ecg, filtering=filtering, zero_align=zero_align,
 #                                frequency=simulation_frequency, low_freq_cut=low_freq_cut, high_freq_cut=high_freq_cut, max_len_qrs=max_len_qrs,
 #                               qrs_onset=qrs_onset, reference_lead_is_positive=reference_lead_is_positive)
+# Normalizza rispetto al picco globale del QRS (finestra 0-150 ms)
+qrs_window = int(150)  # campioni (con freq=1000 Hz → 150 ms)
+qrs_segment = simulated_ecgs_8leads[:, :qrs_window]
+norm_factor = np.max(np.abs(qrs_segment))
+simulated_ecgs_norm = simulated_ecgs_8leads / norm_factor
+print(f"Fattore di normalizzazione: {norm_factor:.4f} mV")
+
+# Normalizza ciascuna derivazione al proprio picco (per vedere morfologia)
+simulated_ecgs_norm_perlead = simulated_ecgs_8leads.copy()
+for i in range(8):
+    peak = np.max(np.abs(simulated_ecgs_norm_perlead[i, :qrs_window]))
+    if peak > 1e-6:  # evita divisione per zero
+        simulated_ecgs_norm_perlead[i, :] /= peak
 
 # Plot together
 print('Visualising ECGs together')
-visualise_ecgs(nb_leads=nb_leads, reference_ecg=simulated_ecgs_8leads, simulated_ecgs=simulated_ecgs_8leads, simulated_t=simulated_t,
+visualise_ecgs(nb_leads=nb_leads, reference_ecg=simulated_ecgs_8leads, simulated_ecgs=simulated_ecgs_norm, simulated_t=simulated_t,
                lead_names=['I', 'II', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6'], casename=casename)
 
 # # Test if code is working properly by reading in an Eikonal ECG:

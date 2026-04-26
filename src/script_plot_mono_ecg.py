@@ -175,7 +175,7 @@ def unfold_ecg_matrix(data, nb_leads):
 
 ###################################################################################################################
 ## Main script
-filtering = True
+filtering = False
 normalise = True
 zero_align = True
 frequency = 1000
@@ -202,7 +202,9 @@ reference_ecg = preprocess_ecg(original_ecg=reference_ecg, reference_ecg=referen
 
 # Read in simulated ECGs
 print('Importing and preprocessing simulated monoAlg3D ECGs')
-simulated_t, simulated_ecgs_8leads = import_simulated_ecg_8leads_raw(filename=casename+'_ecg.txt', monoalg_activation_offset=37)
+simulation_folder = os.path.join('..', 'opencarp-simulation-ECG','test_monodomain_torord_sb301_v7')
+filename= os.path.join(simulation_folder, 'sb301' + '_phierec7_ascii.txt')
+simulated_t, simulated_ecgs_8leads = import_simulated_ecg_8leads_raw(filename=filename, monoalg_activation_offset=0)
 simulation_frequency = simulated_ecgs_8leads.shape[1]
 max_len_qrs = 200 * 4
 processed_simulated_ecgs = preprocess_ecg(original_ecg=simulated_ecgs_8leads, reference_ecg=reference_ecg, filtering=filtering, zero_align=zero_align,

@@ -23,7 +23,7 @@ def parser():
                         type=float, default=200.0,
                         help='Durata della simulazione in ms')
     parser.add_argument('--outdir',
-                        default='test_monodomain_torord_sb301_v6',
+                        default='test_monodomain_torord_sb301_v10',
                         help='Directory di output (simID)')
     return parser
 
@@ -78,7 +78,7 @@ def run(args, job):
             f'-stim[{i}].ptcl.duration', 4.0, # 4ms da paper camps
             f'-stim[{i}].ptcl.npls', 1,
             f'-stim[{i}].ptcl.start', float(t),
-            f'-stim[{i}].pulse.strength', 10.0,  # 5uA/cm2 convertito da paper camps 53 pA/pF x 100 pF/cm2
+            f'-stim[{i}].pulse.strength', 50,  # 50uA/cm2 convertito da paper camps 53 pA/pF x 100 pF/cm2
             f'-stim[{i}].crct.type', 0,
         ]
 
@@ -94,12 +94,12 @@ def run(args, job):
         '-tend', args.tend,
         '-spacedt', 1.0,
         '-timedt', 1.0,
-        '-dt', 25.0,
+        '-dt', 10.0,
         '-bidomain', 0,
         '-parab_solve', 1,
         '-mass_lumping', 1,
         '-phie_rec_ptf', 'sb301_electrodes_opencarp',
-        '-phie_recovery_file', 'sb301_phie_recovery_test6',
+        '-phie_recovery_file', 'sb301_phie_recovery_test10',
     ]
 
     #caricamento modello torord esterno compilato
@@ -114,17 +114,20 @@ def run(args, job):
     cmd += [
         '-num_gregions', 2,
         '-gregion[0].name', 'Miocardio',
-        '-gregion[0].num_IDs', 3,
+        '-gregion[0].num_IDs', 2,
         '-gregion[0].ID[0]', 1,
         '-gregion[0].ID[1]', 2,
-        '-gregion[0].ID[2]', 3,
-        '-gregion[0].g_il', 0.000310, #unità misura S/m valori da paper camps
-        '-gregion[0].g_it', 0.000185, 
-        '-gregion[0].g_in', 0.000205,
+        '-gregion[0].g_il', 0.2615, #unità misura S/m calibrati con tunecv per CV 0.65 m/s
+        '-gregion[0].g_it', 0.1093, # calibrata  per CV 0.36 m/s
+        '-gregion[0].g_in', 0.1661, # calibrata  per CV 0.48 m/s
+
         '-gregion[1].name', 'FastEndo',
         '-gregion[1].num_IDs', 1,
         '-gregion[1].ID[0]', 3,
-        '-gregion[1].g_mult', 5.0,
+        '-gregion[1].g_il', 0.2615 * 4.0,
+        '-gregion[1].g_it', 0.1093 * 4.0, 
+        '-gregion[1].g_in', 0.1661 * 4.0,
+        #'-gregion[1].g_mult', 5.0,
     ]
 
     torord_params_common = (

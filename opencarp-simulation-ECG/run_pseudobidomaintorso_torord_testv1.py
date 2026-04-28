@@ -182,11 +182,8 @@ def run(args, job):
 
         '-phys_region[1].name',    'Extracellular domain',
         '-phys_region[1].ptype',   1,
-        '-phys_region[1].num_IDs', 4,      # 3 tag miocardio + 1 bath
-        '-phys_region[1].ID[0]',   1,
-        '-phys_region[1].ID[1]',   2,
-        '-phys_region[1].ID[2]',   3,
-        '-phys_region[1].ID[3]',   10,        
+        '-phys_region[1].num_IDs', 1,
+        '-phys_region[1].ID[0]',   10,        
     ]
 
     # Aggiunta configurazione Stimoli Dinamici all'esecuzione

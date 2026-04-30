@@ -131,43 +131,43 @@ def run(args, job):
     ]
 
     torord_params_hfbase_endo = (               # Heart Failure non-ischemica
-        'flags=ENDO,'
-        'GNaL_b*1.30,'    # ×1.80
-        'thL*1.80,'         # ×1.80
-        'Gto_b*0.40,'       # ×0.40
-        'GK1_b*0.68,'      # ×0.68
-        'PNaK_b*0.70,'     # ×0.70
-        'Gncx_b*1.75,'    # ×1.75
-        'Jup_b*0.45,'     # SERCA −55%
-        'Cajsr_half*0.80,' # RyR sens. −20%
-        'Jrel_b*1.30,'    # SR leak +30%
-        'CaMKo*1.50'      # CaMKII +50%
+        'flags=ENDO',
+        'GNaL_b*1.30',    # 130%
+        'tau_hL*1.80',         # 180%
+        'Gto_b*0.40',       # 40%
+        'GK1_b*0.68',      # 68%
+        'Pnak_b*0.70',     # 70%
+        'Gncx_b*1.65',    # 165%
+        'Jup_b*0.45',     # SERCA 45%
+        'cajsr_half*0.80', # RyR sens. 80%
+        'Jrel_b*1.30',    # SR leak 130%
+        'CaMKo*1.50'      # CaMKII 150%
     )
     torord_params_hfbase_mid = (               # Heart Failure non-ischemica
-        'flags=MCELL,'
-        'GNaL_b*1.30,'    # ×1.80
-        'thL*1.80,'         # ×1.80
-        'Gto_b*0.40,'       # ×0.40
-        'GK1_b*0.68,'      # ×0.68
-        'PNaK_b*0.70,'     # ×0.70
-        'Gncx_b*1.75,'    # ×1.75
-        'Jup_b*0.45,'     # SERCA −55%
-        'Cajsr_half*0.80,' # RyR sens. −20%
-        'Jrel_b*1.30,'    # SR leak +30%
-        'CaMKo*1.50'      # CaMKII +50%
+        'flags=M',
+        'GNaL_b*1.30',    # 130%
+        'tau_hL*1.80',         # 180%
+        'Gto_b*0.40',       # 40%
+        'GK1_b*0.68',      # 68%
+        'Pnak_b*0.70',     # 70%
+        'Gncx_b*1.65',    # 165%
+        'Jup_b*0.45',     # SERCA 45%
+        'cajsr_half*0.80', # RyR sens. 80%
+        'Jrel_b*1.30',    # SR leak 130%
+        'CaMKo*1.50'      # CaMKII 150% 
     )
     torord_params_hfbase_epi = (               # Heart Failure non-ischemica
-        'flags=EPI,'
-        'GNaL_b*1.30,'    # ×1.80
-        'thL*1.80,'         # ×1.80
-        'Gto_b*0.40,'       # ×0.40
-        'GK1_b*0.68,'      # ×0.68
-        'PNaK_b*0.70,'     # ×0.70
-        'Gncx_b*1.75,'    # ×1.75
-        'Jup_b*0.45,'     # SERCA −55%
-        'Cajsr_half*0.80,' # RyR sens. −20%
-        'Jrel_b*1.30,'    # SR leak +30%
-        'CaMKo*1.50'      # CaMKII +50%
+        'flags=EPI',
+        'GNaL_b*1.30',    # 130%
+        'tau_hL*1.80',         # 180%
+        'Gto_b*0.40',       # 40%
+        'GK1_b*0.68',      # 68%
+        'Pnak_b*0.70',     # 70%
+        'Gncx_b*1.65',    # 165%
+        'Jup_b*0.45',     # SERCA 45%
+        'cajsr_half*0.80', # RyR sens. 80%
+        'Jrel_b*1.30',    # SR leak 130%
+        'CaMKo*1.50'      # CaMKII 150% 
     )
 
 
@@ -178,20 +178,20 @@ def run(args, job):
         '-imp_region[0].name', 'Endocardio',
         '-imp_region[0].num_IDs', 1,
         '-imp_region[0].ID[0]', 3,      #tag endocardio 3 
-        '-imp_region[0].im', 'Tomek',
-        '-imp_region[0].im_param', torord_params_hfbase_endo,
+        '-imp_region[0].im', 'Tomek20Land17_DynSarc',
+        '-imp_region[0].im_param', ','.join(torord_params_hfbase_endo),
         
         '-imp_region[1].name', 'Mid_Miocardio',
         '-imp_region[1].num_IDs', 1,
         '-imp_region[1].ID[0]', 2,      #tag mid miocardio 2
-        '-imp_region[1].im', 'Tomek',
-        '-imp_region[1].im_param', torord_params_hfbase_mid,
+        '-imp_region[1].im', 'Tomek20Land17_DynSarc',
+        '-imp_region[1].im_param', ','.join(torord_params_hfbase_mid),
 
         '-imp_region[2].name', 'Epicardio',
         '-imp_region[2].num_IDs', 1,
         '-imp_region[2].ID[0]', 1,      #tag epicardio 1
-        '-imp_region[2].im', 'Tomek',
-        '-imp_region[2].im_param', torord_params_hfbase_epi,
+        '-imp_region[2].im', 'Tomek20Land17_DynSarc',
+        '-imp_region[2].im_param', ','.join(torord_params_hfbase_epi),
     ]
 
     # Phys Regions (Dominio Intracellulare Globale)

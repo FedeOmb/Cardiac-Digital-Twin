@@ -22,7 +22,7 @@ def parser():
                         type=float, default=600.0,
                         help='Durata della simulazione in ms')
     parser.add_argument('--outdir',
-                        default='test_monodomain_torord_sb301_hf1',
+                        default='test_monodomain_torord_sb301_hf2',
                         help='Directory di output (simID)')
     return parser
 
@@ -98,7 +98,7 @@ def run(args, job):
         '-parab_solve', 1,
         '-mass_lumping', 1,
         '-phie_rec_ptf', './sb301_torsomesh/sb301_electrodes_opencarp',
-        '-phie_recovery_file', 'sb301_phie_recovery_hf1',
+        '-phie_recovery_file', 'sb301_phie_recovery_hf2',
     ]
 
     #caricamento modello tomek modificato con parametri
@@ -130,41 +130,41 @@ def run(args, job):
     torord_params_hfbase_endo = (               # Heart Failure non-ischemica
         'flags=ENDO',
         'GNaL_b*1.30',    # 130%
-        'tau_hL*1.80',         # 180%
+        'thL*1.80',         # 180%
         'Gto_b*0.40',       # 40%
         'GK1_b*0.68',      # 68%
-        'Pnak_b*0.70',     # 70%
+        'PNaK_b*0.70',     # 70%
         'Gncx_b*1.65',    # 165%
         'Jup_b*0.45',     # SERCA 45%
-        'cajsr_half*0.80', # RyR sens. 80%
+        'Cajsr_half*0.80', # RyR sens. 80%
         'Jrel_b*1.30',    # SR leak 130%
         'CaMKo*1.50'      # CaMKII 150%
     )
     torord_params_hfbase_mid = (               # Heart Failure non-ischemica
         'flags=MCELL',
         'GNaL_b*1.30',    # 130%
-        'tau_hL*1.80',         # 180%
+        'thL*1.80',         # 180%
         'Gto_b*0.40',       # 40%
         'GK1_b*0.68',      # 68%
-        'Pnak_b*0.70',     # 70%
+        'PNaK_b*0.70',     # 70%
         'Gncx_b*1.65',    # 165%
         'Jup_b*0.45',     # SERCA 45%
-        'cajsr_half*0.80', # RyR sens. 80%
+        'Cajsr_half*0.80', # RyR sens. 80%
         'Jrel_b*1.30',    # SR leak 130%
-        'CaMKo*1.50'      # CaMKII 150% 
+        'CaMKo*1.50'      # CaMKII 150%
     )
     torord_params_hfbase_epi = (               # Heart Failure non-ischemica
         'flags=EPI',
         'GNaL_b*1.30',    # 130%
-        'tau_hL*1.80',         # 180%
+        'thL*1.80',         # 180%
         'Gto_b*0.40',       # 40%
         'GK1_b*0.68',      # 68%
-        'Pnak_b*0.70',     # 70%
+        'PNaK_b*0.70',     # 70%
         'Gncx_b*1.65',    # 165%
         'Jup_b*0.45',     # SERCA 45%
-        'cajsr_half*0.80', # RyR sens. 80%
+        'Cajsr_half*0.80', # RyR sens. 80%
         'Jrel_b*1.30',    # SR leak 130%
-        'CaMKo*1.50'      # CaMKII 150% 
+        'CaMKo*1.50'      # CaMKII 150%
     )
 
 

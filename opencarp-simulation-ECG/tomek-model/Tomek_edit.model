@@ -1,0 +1,602 @@
+group { 
+  #Authors ::= Jakub Tomek, Alfonso Bueno-Orovio, Elisa Passini, Xin Zhou, Ana Minchole, Oliver Britton, Chiara Bartolucci, Stefano Severi, Alvin Shrier, Laszlo Virag, Andras Varro, Blanca Rodriguez
+  #Year ::= 2019
+  #Title ::= Development, calibration, and validation of a novel human ventricular myocyte model in health, disease, and drug block
+  #JourNal ::= eLife
+  #DOI ::=  10.7554/eLife.48890
+  #Comment ::= 
+} .reference();
+
+
+V;    .external(Vm); .nodal();
+Iion; .external(); .nodal();
+V;    .lookup(-1000,1000,1e-2);
+Cai;  .lookup(1e-6,1e-2,1e-6);
+
+# Cell type
+ENDO = 0;
+EPI = 1;
+MCELL = 2;
+celltype = ENDO; .flag(ENDO,EPI,MCELL);
+
+group {
+    GNaL_b;   thL;        # INaL  — corrente Na tardiva
+    Gto_b;                # Ito   — transitoria outward
+    GK1_b;                # IK1   — inward rectifier
+    GKr_b;                # IKr   — K rapida
+    Gncx_b;               # INCX  — scambiatore Na/Ca
+    PNaK_b;               # INaK  — pompa Na/K
+    Jup_b;    Cajsr_half; # SERCA / soglia RyR
+    Jrel_b;               # RyR   — ampiezza rilascio
+    CaMKo;                # CaMKII baseline
+} .param();
+
+# Constants
+Nao = 140.0; .units(mmol/L);
+Cao = 1.8; .units(mmol/L);
+Ko = 5.0; .units(mmol/L);
+Clo = 150.0; .units(mmol/L);
+R = 8314; .units(J/kmol/K);
+T = 310; .units(K);
+F = 96485; .units(C/mol);
+zNa = 1; .units(unitless);
+zCa = 2; .units(unitless);
+zK = 1; .units(unitless);
+zcl = -1; .units(unitless);
+L = 0.01; .units(cm);
+rad = 0.0011; .units(cm);
+KmCaMK = 0.15; .units(mmol/L);
+aCaMK = 0.05; .units(L/mmol/ms);
+bCaMK = 0.00068; .units(unitless/ms);
+CaMKo = 0.05; .units(unitless);
+KmCaM = 0.0015; .units(mmol/L);
+cmdnmax_b = 0.05; .units(mmol/L);
+Kmcmdn = 0.00238; .units(mmol/L);
+trpnmax = 0.07; .units(mmol/L);
+Kmtrpn = 0.0005; .units(mmol/L);
+BSRmax = 0.047; .units(mmol/L);
+KmBSR = 0.00087; .units(mmol/L);
+BSLmax = 1.124; .units(mmol/L);
+KmBSL = 0.0087; .units(mmol/L);
+csqnmax = 10; .units(mmol/L);
+Kmcsqn = 0.8; .units(mmol/L);
+Cli = 24.0; .units(mmol/L);
+PKNa = 0.01833; .units(unitless);
+gKatp = 4.3195; .units(mS/uF);
+fKatp = 0.0; .units(unitless);
+K_o_n = 5; .units(mmol/L);
+A_atp = 2; .units(mmol/L);
+K_atp = 0.25; .units(mmol/L);
+GNa = 11.7802; .units(mS/uF);
+thL = 200; .units(ms);
+GNaL_b = 0.0279; .units(mS/uF);
+Gto_b = 0.16; .units(mS/uF);
+EKshift = 0; .units(mV);
+Kmn = 0.002; .units(mmol/L);
+K2n = 500; .units(unitless/ms);
+PCa_b = 8.3757e-05; .units(unitless);
+Aff = 0.6; .units(unitless);
+tjCa = 75; .units(ms);
+VShift = 0; .units(mV);
+offset = 0; .units(ms);
+dielConstant = 74; .units(unitless/K);
+ICaL_fractionSS = 0.8; .units(unitless);
+GKr_b = 0.0321; .units(mS/uF);
+alpha_1 = 0.154375; .units(unitless/ms);
+beta_1 = 0.1911; .units(unitless/ms);
+GKs_b = 0.0011; .units(mS/uF);
+GK1_b = 0.6992; .units(mS/uF);
+INaCa_fractionSS = 0.35; .units(unitless);
+KNa1 = 15; .units(unitless/ms);
+KNa2 = 5; .units(unitless/ms);
+KNa3 = 88.12; .units(unitless/ms);
+Kasymm = 12.5; .units(unitless);
+wNa = 6e4; .units(unitless);
+wCa = 6e4; .units(unitless);
+wNaCa = 5e3; .units(unitless);
+KCaon = 1.5e6; .units(unitless/ms);
+KCaoff = 5e3; .units(unitless/ms);
+qNa = 0.5224; .units(unitless);
+qCa = 0.167; .units(unitless);
+KmCaAct = 150e-6; .units(mmol/L);
+Gncx_b = 0.0034; .units(mS/uF);
+K1p = 949.5; .units(unitless/ms);
+K1m = 182.4; .units(unitless/ms);
+K2p = 687.2; .units(unitless/ms);
+K2m = 39.4; .units(unitless/ms);
+K3p = 1899; .units(unitless/ms);
+K3m = 79300; .units(unitless/ms);
+K4p = 639; .units(unitless/ms);
+K4m = 40; .units(unitless/ms);
+KNai0 = 9.073; .units(mmol/L);
+KNao0 = 27.78; .units(mmol/L);
+delta = -0.155; .units(mV);
+KKi = 0.5; .units(unitless/ms);
+KKo = 0.3582; .units(unitless/ms);
+MgADP = 0.05; .units(mmol/L);
+MgATP = 9.8; .units(mmol/L);
+Kmgatp = 1.698e-7; .units(mmol/L);
+H = 1e-7; .units(mmol/L);
+eP = 4.2; .units(unitless);
+Khp = 1.698e-7; .units(mmol/L);
+KNap = 224; .units(mmol/L);
+KxKur = 292; .units(mmol/L);
+PNaK_b = 15.4509; .units(mS/uF);
+GKb_b = 0.0189; .units(mS/uF);
+PNab = 1.9239e-09; .units(mS/uF);
+PCab = 5.9194e-08; .units(mS/uF);
+GpCa = 5e-04; .units(mS/uF);
+KmCap = 0.0005; .units(mmol/L);
+GClCa = 0.2843; .units(mS/uF);
+GClb = 1.98e-3; .units(mS/uF);
+KdClCa = 0.1; .units(mmol/L);
+Fjunc = 1; .units(unitless);
+tauNa = 2.0; .units(ms);
+tauK = 2.0; .units(ms);
+tauCa = 0.2; .units(ms);
+bt = 4.75; .units(ms);
+Cajsr_half = 1.7; .units(mmol/L);
+Jrel_b = 1.5378; .units(unitless);
+Jup_b = 1.0; .units(unitless);
+
+# Initial Values
+V_init = -88.7638; .units(mV);
+CaMKt_init = 0.0111; .units(mmol/L);
+Nai_init = 12.1025; .units(mmol/L);
+Nass_init = 12.1029; .units(mmol/L);
+Ki_init = 142.3002; .units(mmol/L);
+Kss_init = 142.3002; .units(mmol/L);
+Cass_init = 7.0305e-5; .units(mmol/L);
+Cansr_init = 1.5211; .units(mmol/L);
+Cajsr_init = 1.5214; .units(mmol/L);
+Cai_init = 8.1583e-05; .units(mmol/L);
+m_init = 8.0572e-4; .units(unitless);
+h_init = 0.8286; .units(unitless);
+j_init = 0.8284; .units(unitless);
+hp_init = 0.6707; .units(unitless);
+jp_init = 0.8281; .units(unitless);
+mL_init = 1.629e-4; .units(unitless);
+hL_init = 0.5255; .units(unitless);
+hLp_init = 0.2872; .units(unitless);
+a_init = 9.5098e-4; .units(unitless);
+iF_init = 0.9996; .units(unitless);
+iS_init = 0.5936; .units(unitless);
+ap_init = 4.8454e-4; .units(unitless);
+iFp_init = 0.9996; .units(unitless);
+iSp_init = 0.6538; .units(unitless);
+d_init = 8.1084e-9; .units(unitless);
+ff_init = 1.0; .units(unitless);
+fs_init = 0.939; .units(unitless);
+fCaf_init = 1.0; .units(unitless);
+fCas_init = 0.9999; .units(unitless);
+jCa_init = 1.0; .units(unitless);
+ffp_init = 1.0; .units(unitless);
+fCafp_init = 1.0; .units(unitless);
+nCa_ss_init = 6.6462e-4; .units(unitless);
+nCa_i_init = 0.0012; .units(unitless);
+C1_init = 7.0344e-4; .units(unitless);
+C2_init = 8.5109e-4; .units(unitless);
+C3_init = 0.9981; .units(unitless);
+I_init = 1.3289e-5; .units(unitless);
+O_init = 3.7585e-4; .units(unitless);
+xs1_init = 0.248; .units(unitless);
+xs2_init = 1.7707e-4; .units(unitless);
+Jrel_np_init = 1.6129e-22; .units(mmol/L/ms);
+Jrel_p_init = 1.2475e-20; .units(mmol/L/ms);
+
+#cell_geometry
+Vcell = (1000.*3.14*rad*rad*L); .units(uL);
+Ageo = ((2.*3.14*rad*rad)+(2.*3.14*rad*L)); .units(cm^2);
+ACap = (2.*Ageo); .units(cm^2);
+Vmyo = (0.68*Vcell); .units(uL);
+Vnsr = (0.0552*Vcell); .units(uL);
+Vjsr = (0.0048*Vcell); .units(uL);
+Vss = (0.02*Vcell); .units(uL);
+
+#membrane
+Vffrt = ((V*F*F)/(R*T)); .units(C/mol);
+Vfrt = ((V*F)/(R*T)); .units(unitless);
+Iion = INa+INaL+Ito+ICaL+ICaNa+ICaK+IKr+IKs+IK1+INaCa_i+INaCa_ss+INaK+INab+IKb+IpCa+ICab+IClCa+IClb+IKATP; .units(uA/uF);
+
+#CaMK
+CaMKb = ((CaMKo*(1. - CaMKt))/(1.+(KmCaM/Cass))); .units(mmol/L);
+CaMKa = (CaMKb+CaMKt); .units(mmol/L);
+diff_CaMKt = ((aCaMK*CaMKb*(CaMKb+CaMKt)) - (bCaMK*CaMKt)); .units(mmol/L/ms);
+
+#intracellular_ions
+cmdnmax = ((celltype==1.) ? (cmdnmax_b*1.3) : cmdnmax_b); .units(mmol/L);
+diff_Nai = (((-(INa+INaL+(3.*INaCa_i)+ICaNa_i+(3.*INaK)+INab)*ACap)/(F*Vmyo))+((JdiffNa*Vss)/Vmyo)); .units(mmol/L/ms);
+diff_Nass = (((-(ICaNa_ss+(3.*INaCa_ss))*ACap)/(F*Vss)) - JdiffNa); .units(mmol/L/ms);
+diff_Ki = (((-(((Ito+IKr+IKs+IK1+IKb+IKATP+0) - (2.*INaK))+ICaK_i)*ACap)/(F*Vmyo))+((JdiffK*Vss)/Vmyo)); .units(mmol/L/ms);
+diff_Kss = (((-ICaK_ss*ACap)/(F*Vss)) - JdiffK); .units(mmol/L/ms);
+BCai = (1./(1.+((cmdnmax*Kmcmdn)/((Kmcmdn+Cai)*(Kmcmdn+Cai)))+((trpnmax*Kmtrpn)/((Kmtrpn+Cai)*(Kmtrpn+Cai))))); .units(unitless);
+diff_Cai = (BCai*((((-((ICaL_i+IpCa+ICab) - (2.*INaCa_i))*ACap)/(2.*F*Vmyo)) - ((Jup*Vnsr)/Vmyo))+((Jdiff*Vss)/Vmyo))); .units(mmol/L/ms);
+BCass = (1./(1.+((BSRmax*KmBSR)/((KmBSR+Cass)*(KmBSR+Cass)))+((BSLmax*KmBSL)/((KmBSL+Cass)*(KmBSL+Cass))))); .units(unitless);
+diff_Cass = (BCass*((((-(ICaL_ss - (2.*INaCa_ss))*ACap)/(2.*F*Vss))+((Jrel*Vjsr)/Vss)) - Jdiff)); .units(mmol/L/ms);
+diff_Cansr = (Jup - ((Jtr*Vjsr)/Vnsr)); .units(mmol/L/ms);
+BCajsr = (1./(1.+((csqnmax*Kmcsqn)/((Kmcsqn+Cajsr)*(Kmcsqn+Cajsr))))); .units(unitless);
+diff_Cajsr = (BCajsr*(Jtr - Jrel)); .units(mmol/L/ms);
+
+#reVersal_potentials
+ENa = (((R*T)/(zNa*F))*log((Nao/Nai))); .units(mV);
+EK = (((R*T)/(zK*F))*log((Ko/Ki))); .units(mV);
+EKs = (((R*T)/(zK*F))*log(((Ko+(PKNa*Nao))/(Ki+(PKNa*Nai))))); .units(mV);
+ECl = (((R*T)/(zcl*F))*log((Clo/Cli))); .units(mV);
+
+#IKATP
+aKiK = pow((Ko/K_o_n),0.24); .units(unitless);
+bKiK = (1./(1.+((A_atp/K_atp)*(A_atp/K_atp)))); .units(unitless);
+IKATP = (fKatp*gKatp*aKiK*bKiK*(V - EK)); .units(uA/uF);
+
+#INa
+mss = (1./((1.+exp((-(V+56.86)/9.03)))*(1.+exp((-(V+56.86)/9.03))))); .units(unitless);
+tm = ((0.1292*exp(-(((V+45.79)/15.54)*((V+45.79)/15.54))))+(0.06487*exp(-(((V - 4.823)/51.12)*((V - 4.823)/51.12))))); .units(ms);
+diff_m = ((mss - m)/tm); .units(unitless/ms);
+hss = (1./((1.+exp(((V+71.55)/7.43)))*(1.+exp(((V+71.55)/7.43))))); .units(unitless);
+ah = ((V>=-40.) ? 0. : (0.057*exp((-(V+80.)/6.8)))); .units(unitless);
+bh = ((V>=-40.) ? (0.77/(0.13*(1.+exp((-(V+10.66)/11.1))))) : ((2.7*exp((0.079*V)))+(3.1e5*exp((0.3485*V))))); .units(unitless);
+th = (1./(ah+bh)); .units(ms);
+diff_h = ((hss - h)/th); .units(unitless/ms);
+aj = ((V>=-40.) ? 0. : ((((-2.5428e4*exp((0.2444*V))) - (6.948e-6*exp((-0.04391*V))))*(V+37.78))/(1.+exp((0.311*(V+79.23)))))); .units(unitless);
+bj = ((V>=-40.) ? ((0.6*exp((0.057*V)))/(1.+exp((-0.1*(V+32.))))) : ((0.02424*exp((-0.01052*V)))/(1.+exp((-0.1378*(V+40.14)))))); .units(unitless);
+jss = hss; .units(unitless);
+tj = (1./(aj+bj)); .units(ms);
+diff_j = ((jss - j)/tj); .units(unitless/ms);
+hssp = (1./((1.+exp(((V+77.55)/7.43)))*(1.+exp(((V+77.55)/7.43))))); .units(unitless);
+diff_hp = ((hssp - hp)/th); .units(unitless/ms);
+tjp = (1.46*tj); .units(ms);
+diff_jp = ((jss - jp)/tjp); .units(unitless/ms);
+fINap = (1./(1.+(KmCaMK/CaMKa))); .units(unitless);
+INa = (GNa*(V - ENa)*(m*m*m)*(((1. - fINap)*h*j)+(fINap*hp*jp))); .units(uA/uF);
+
+#INaL
+mLss = (1./(1.+exp((-(V+42.85)/5.264)))); .units(unitless);
+tmL = ((0.1292*exp(-(((V+45.79)/15.54)*((V+45.79)/15.54))))+(0.06487*exp(-(((V - 4.823)/51.12)*((V - 4.823)/51.12))))); .units(ms);
+diff_mL = ((mLss - mL)/tmL); .units(unitless/ms);
+hLss = (1./(1.+exp(((V+87.61)/7.488)))); .units(unitless);
+diff_hL = ((hLss - hL)/thL); .units(unitless/ms);
+hLssp = (1./(1.+exp(((V+93.81)/7.488)))); .units(unitless);
+thLp = (3.*thL); .units(ms);
+diff_hLp = ((hLssp - hLp)/thLp); .units(unitless/ms);
+GNaL = ((celltype==1.) ? (GNaL_b*0.6) : GNaL_b); .units(mS/uF);
+fINaLp = (1./(1.+(KmCaMK/CaMKa))); .units(unitless);
+INaL = (GNaL*(V - ENa)*mL*(((1. - fINaLp)*hL)+(fINaLp*hLp))); .units(uA/uF);
+
+#Ito
+ass = (1./(1.+exp((-((V+EKshift) - 14.34)/14.82)))); .units(unitless);
+ta = (1.0515/((1./(1.2089*(1.+exp((-((V+EKshift) - 18.4099)/29.3814)))))+(3.5/(1.+exp(((V+EKshift+100.)/29.3814)))))); .units(ms);
+diff_a = ((ass - a)/ta); .units(unitless/ms);
+iss = (1./(1.+exp(((V+EKshift+43.94)/5.711)))); .units(unitless);
+delta_epi = ((celltype==1.) ? (1. - (0.95/(1.+exp(((V+EKshift+70.)/5.))))) : 1.); .units(unitless);
+tiF_b = (4.562+(1./((0.3933*exp((-(V+EKshift+100.)/100.)))+(0.08004*exp(((V+EKshift+50.)/16.59)))))); .units(ms);
+tiS_b = (23.62+(1./((0.001416*exp((-(V+EKshift+96.52)/59.05)))+(1.78e-8*exp(((V+EKshift+114.1)/8.079)))))); .units(ms);
+tiF = (tiF_b*delta_epi); .units(ms);
+tiS = (tiS_b*delta_epi); .units(ms);
+AiF = (1./(1.+exp((((V+EKshift) - 213.6)/151.2)))); .units(unitless);
+AiS = (1. - AiF); .units(unitless);
+diff_iF = ((iss - iF)/tiF); .units(unitless/ms);
+diff_iS = ((iss - iS)/tiS); .units(unitless/ms);
+i_t = ((AiF*iF)+(AiS*iS)); .units(unitless);
+assp = (1./(1.+exp((-((V+EKshift) - 24.34)/14.82)))); .units(unitless);
+diff_ap = ((assp - ap)/ta); .units(unitless/ms);
+dti_deVelop = (1.354+(1.e-4/(exp((((V+EKshift) - 167.4)/15.89))+exp((-((V+EKshift) - 12.23)/0.2154))))); .units(unitless);
+dti_recoVer = (1. - (0.5/(1.+exp(((V+EKshift+70.0)/20.0))))); .units(unitless);
+tiFp = (dti_deVelop*dti_recoVer*tiF); .units(ms);
+tiSp = (dti_deVelop*dti_recoVer*tiS); .units(ms);
+diff_iFp = ((iss - iFp)/tiFp); .units(unitless/ms);
+diff_iSp = ((iss - iSp)/tiSp); .units(unitless/ms);
+ip = ((AiF*iFp)+(AiS*iSp)); .units(unitless);
+Gto = ((celltype==1.) ? (Gto_b*2.) : ((celltype==2.) ? (Gto_b*2.) : Gto_b)); .units(mS/uF);
+fItop = (1./(1.+(KmCaMK/CaMKa))); .units(unitless);
+Ito = (Gto*(V - EK)*(((1. - fItop)*a*i_t)+(fItop*ap*ip))); .units(uA/uF);
+
+#ICaL
+dss = ((V>=31.4978) ? 1. : (1.0763*exp((-1.0070*exp((-0.0829*V)))))); .units(unitless);
+td = (offset+0.6+(1./(exp((-0.05*(V+VShift+6.)))+exp((0.09*(V+VShift+14.)))))); .units(ms);
+diff_d = ((dss - d)/td); .units(unitless/ms);
+fss = (1./(1.+exp(((V+19.58)/3.696)))); .units(unitless);
+tff = (7.+(1./((0.0045*exp((-(V+20.)/10.)))+(0.0045*exp(((V+20.)/10.)))))); .units(ms);
+tfs = (1000.+(1./((0.000035*exp((-(V+5.)/4.)))+(0.000035*exp(((V+5.)/6.)))))); .units(ms);
+Afs = (1. - Aff); .units(unitless);
+diff_ff = ((fss - ff)/tff); .units(unitless/ms);
+diff_fs = ((fss - fs)/tfs); .units(unitless/ms);
+f = ((Aff*ff)+(Afs*fs)); .units(unitless);
+fCass = fss; .units(unitless);
+tfCaf = (7.+(1./((0.04*exp((-(V - 4.)/7.)))+(0.04*exp(((V - 4.)/7.)))))); .units(ms);
+tfCas = (100.+(1./((0.00012*exp((-V/3.)))+(0.00012*exp((V/7.)))))); .units(ms);
+AfCaf = (0.3+(0.6/(1.+exp(((V - 10.)/10.))))); .units(unitless);
+AfCas = (1. - AfCaf); .units(unitless);
+diff_fCaf = ((fCass - fCaf)/tfCaf); .units(unitless/ms);
+diff_fCas = ((fCass - fCas)/tfCas); .units(unitless/ms);
+fCa = ((AfCaf*fCaf)+(AfCas*fCas)); .units(unitless);
+jCass = (1.0/(1.0+exp(((V+18.08)/2.7916)))); .units(unitless);
+diff_jCa = ((jCass - jCa)/tjCa); .units(unitless/ms);
+tffp = (2.5*tff); .units(ms);
+diff_ffp = ((fss - ffp)/tffp); .units(unitless/ms);
+fp = ((Aff*ffp)+(Afs*fs)); .units(unitless);
+tfCafp = (2.5*tfCaf); .units(ms);
+diff_fCafp = ((fCass - fCafp)/tfCafp); .units(unitless/ms);
+fCap = ((AfCaf*fCafp)+(AfCas*fCas)); .units(unitless);
+Km2n = (jCa*1.); .units(unitless/ms);
+anCa_ss = (1./((K2n/Km2n)+((1.+(Kmn/Cass))*(1.+(Kmn/Cass))*(1.+(Kmn/Cass))*(1.+(Kmn/Cass))))); .units(unitless);
+diff_nCa_ss = ((anCa_ss*K2n) - (nCa_ss*Km2n)); .units(unitless/ms);
+Io = ((0.5*(Nao+Ko+Clo+(4.*Cao)))/1000.); .units(unitless);
+Iss = ((0.5*(Nass+Kss+Cli+(4.*Cass)))/1000.); .units(unitless);
+constA = (1.82e6*pow((dielConstant*T),-1.5)); .units(unitless);
+gamma_Cass = exp((-constA*4.*((sqrt(Iss)/(1.+sqrt(Iss))) - (0.3*Iss)))); .units(unitless);
+gamma_Cao = exp((-constA*4.*((sqrt(Io)/(1.+sqrt(Io))) - (0.3*Io)))); .units(unitless);
+gamma_Nass = exp((-constA*1.*((sqrt(Iss)/(1.+sqrt(Iss))) - (0.3*Iss)))); .units(unitless);
+gamma_Nao = exp((-constA*1.*((sqrt(Io)/(1.+sqrt(Io))) - (0.3*Io)))); .units(unitless);
+gamma_Kss = exp((-constA*1.*((sqrt(Iss)/(1.+sqrt(Iss))) - (0.3*Iss)))); .units(unitless);
+gamma_Ko = exp((-constA*1.*((sqrt(Io)/(1.+sqrt(Io))) - (0.3*Io)))); .units(unitless);
+PhiCaL_ss = ((4.*Vffrt*((gamma_Cass*Cass*exp((2.*Vfrt))) - (gamma_Cao*Cao)))/(exp((2.*Vfrt)) - 1.)); .units(unitless);
+PhiCaNa_ss = ((1.*Vffrt*((gamma_Nass*Nass*exp((1.*Vfrt))) - (gamma_Nao*Nao)))/(exp((1.*Vfrt)) - 1.)); .units(unitless);
+PhiCaK_ss = ((1.*Vffrt*((gamma_Kss*Kss*exp((1.*Vfrt))) - (gamma_Ko*Ko)))/(exp((1.*Vfrt)) - 1.)); .units(unitless);
+PCa = ((celltype==1.) ? (PCa_b*1.2) : ((celltype==2.) ? (PCa_b*2.) : PCa_b)); .units(unitless);
+PCap = (1.1*PCa); .units(unitless);
+PCaNa = (0.00125*PCa); .units(unitless);
+PCaK = (3.574e-4*PCa); .units(unitless);
+PCaNap = (0.00125*PCap); .units(unitless);
+PCaKp = (3.574e-4*PCap); .units(unitless);
+fICaLp = (1./(1.+(KmCaMK/CaMKa))); .units(unitless);
+ICaL_ss = (ICaL_fractionSS*(((1. - fICaLp)*PCa*PhiCaL_ss*d*((f*(1. - nCa_ss))+(jCa*fCa*nCa_ss)))+(fICaLp*PCap*PhiCaL_ss*d*((fp*(1. - nCa_ss))+(jCa*fCap*nCa_ss))))); .units(uA/uF);
+ICaNa_ss = (ICaL_fractionSS*(((1. - fICaLp)*PCaNa*PhiCaNa_ss*d*((f*(1. - nCa_ss))+(jCa*fCa*nCa_ss)))+(fICaLp*PCaNap*PhiCaNa_ss*d*((fp*(1. - nCa_ss))+(jCa*fCap*nCa_ss))))); .units(uA/uF);
+ICaK_ss = (ICaL_fractionSS*(((1. - fICaLp)*PCaK*PhiCaK_ss*d*((f*(1. - nCa_ss))+(jCa*fCa*nCa_ss)))+(fICaLp*PCaKp*PhiCaK_ss*d*((fp*(1. - nCa_ss))+(jCa*fCap*nCa_ss))))); .units(uA/uF);
+anCa_i = (1./((K2n/Km2n)+((1.+(Kmn/Cai))*(1.+(Kmn/Cai))*(1.+(Kmn/Cai))*(1.+(Kmn/Cai))))); .units(unitless);
+diff_nCa_i = ((anCa_i*K2n) - (nCa_i*Km2n)); .units(unitless/ms);
+Ii = ((0.5*(Nai+Ki+Cli+(4.*Cai)))/1000.); .units(unitless);
+gamma_Cai = exp((-constA*4.*((sqrt(Ii)/(1.+sqrt(Ii))) - (0.3*Ii)))); .units(unitless);
+gamma_Nai = exp((-constA*1.*((sqrt(Ii)/(1.+sqrt(Ii))) - (0.3*Ii)))); .units(unitless);
+gamma_Ki = exp((-constA*1.*((sqrt(Ii)/(1.+sqrt(Ii))) - (0.3*Ii)))); .units(unitless);
+PhiCaL_i = ((4.*Vffrt*((gamma_Cai*Cai*exp((2.*Vfrt))) - (gamma_Cao*Cao)))/(exp((2.*Vfrt)) - 1.)); .units(unitless);
+PhiCaNa_i = ((1.*Vffrt*((gamma_Nai*Nai*exp((1.*Vfrt))) - (gamma_Nao*Nao)))/(exp((1.*Vfrt)) - 1.)); .units(unitless);
+PhiCaK_i = ((1.*Vffrt*((gamma_Ki*Ki*exp((1.*Vfrt))) - (gamma_Ko*Ko)))/(exp((1.*Vfrt)) - 1.)); .units(unitless);
+ICaL_i = ((1. - ICaL_fractionSS)*(((1. - fICaLp)*PCa*PhiCaL_i*d*((f*(1. - nCa_i))+(jCa*fCa*nCa_i)))+(fICaLp*PCap*PhiCaL_i*d*((fp*(1. - nCa_i))+(jCa*fCap*nCa_i))))); .units(uA/uF);
+ICaNa_i = ((1. - ICaL_fractionSS)*(((1. - fICaLp)*PCaNa*PhiCaNa_i*d*((f*(1. - nCa_i))+(jCa*fCa*nCa_i)))+(fICaLp*PCaNap*PhiCaNa_i*d*((fp*(1. - nCa_i))+(jCa*fCap*nCa_i))))); .units(uA/uF);
+ICaK_i = ((1. - ICaL_fractionSS)*(((1. - fICaLp)*PCaK*PhiCaK_i*d*((f*(1. - nCa_i))+(jCa*fCa*nCa_i)))+(fICaLp*PCaKp*PhiCaK_i*d*((fp*(1. - nCa_i))+(jCa*fCap*nCa_i))))); .units(uA/uF);
+ICaL = (ICaL_ss+ICaL_i); .units(uA/uF);
+ICaNa = (ICaNa_ss+ICaNa_i); .units(uA/uF);
+ICaK = (ICaK_ss+ICaK_i); .units(uA/uF);
+
+#IKr
+alpha = (0.1161*exp((0.2990*Vfrt))); .units(unitless/ms);
+beta = (0.2442*exp((-1.604*Vfrt))); .units(unitless/ms);
+alpha_2 = (0.0578*exp((0.9710*Vfrt))); .units(unitless/ms);
+beta_2 = (0.349e-3*exp((-1.062*Vfrt))); .units(unitless/ms);
+alpha_i = (0.2533*exp((0.5953*Vfrt))); .units(unitless/ms);
+beta_i = (0.06525*exp((-0.8209*Vfrt))); .units(unitless/ms);
+alpha_C2ToI = (0.52e-4*exp((1.525*Vfrt))); .units(unitless/ms);
+beta_ItoC2 = ((beta_2*beta_i*alpha_C2ToI)/(alpha_2*alpha_i)); .units(unitless/ms);
+diff_C3 = ((beta*C2) - (alpha*C3)); .units(unitless/ms);
+diff_C2 = (((alpha*C3)+(beta_1*C1)) - ((beta+alpha_1)*C2)); .units(unitless/ms);
+diff_C1 = (((alpha_1*C2)+(beta_2*O)+(beta_ItoC2*I)) - ((beta_1+alpha_2+alpha_C2ToI)*C1)); .units(unitless/ms);
+diff_O = (((alpha_2*C1)+(beta_i*I)) - ((beta_2+alpha_i)*O)); .units(unitless/ms);
+diff_I = (((alpha_C2ToI*C1)+(alpha_i*O)) - ((beta_ItoC2+beta_i)*I)); .units(unitless/ms);
+GKr = ((celltype==1.) ? (GKr_b*1.3) : ((celltype==2.) ? (GKr_b*0.8) : GKr_b)); .units(mS/uF);
+IKr = (GKr*sqrt((Ko/5.))*O*(V - EK)); .units(uA/uF);
+
+#IKs
+xs1ss = (1./(1.+exp((-(V+11.6)/8.932)))); .units(unitless);
+txs1 = (817.3+(1./((2.326e-4*exp(((V+48.28)/17.8)))+(0.001292*exp((-(V+210.)/230.)))))); .units(ms);
+diff_xs1 = ((xs1ss - xs1)/txs1); .units(unitless/ms);
+xs2ss = xs1ss; .units(unitless);
+txs2 = (1./((0.01*exp(((V - 50.)/20.)))+(0.0193*exp((-(V+66.54)/31.))))); .units(ms);
+diff_xs2 = ((xs2ss - xs2)/txs2); .units(unitless/ms);
+KsCa = (1.+(0.6/(1.+pow((3.8e-5/Cai),1.4)))); .units(unitless);
+GKs = ((celltype==1.) ? (GKs_b*1.4) : GKs_b); .units(mS/uF);
+IKs = (GKs*KsCa*xs1*xs2*(V - EKs)); .units(uA/uF);
+
+#IK1
+aK1 = (4.094/(1.+exp((0.1217*((V - EK) - 49.934))))); .units(unitless);
+bK1 = (((15.72*exp((0.0674*((V - EK) - 3.257))))+exp((0.0618*((V - EK) - 594.31))))/(1.+exp((-0.1629*((V - EK)+14.207))))); .units(unitless);
+K1ss = (aK1/(aK1+bK1)); .units(unitless);
+GK1 = ((celltype==1.) ? (GK1_b*1.2) : ((celltype==2.) ? (GK1_b*1.3) : GK1_b)); .units(mS/uF);
+IK1 = (GK1*sqrt((Ko/5.))*K1ss*(V - EK)); .units(uA/uF);
+
+#INaCa
+hCa = exp((qCa*Vfrt)); .units(unitless);
+hNa = exp((qNa*Vfrt)); .units(unitless);
+h1_i = (1.+((Nai/KNa3)*(1.+hNa))); .units(unitless);
+h2_i = ((Nai*hNa)/(KNa3*h1_i)); .units(unitless);
+h3_i = (1./h1_i); .units(unitless);
+h4_i = (1.+((Nai/KNa1)*(1.+(Nai/KNa2)))); .units(unitless);
+h5_i = ((Nai*Nai)/(h4_i*KNa1*KNa2)); .units(unitless);
+h6_i = (1./h4_i); .units(unitless);
+h7_i = (1.+((Nao/KNa3)*(1.+(1./hNa)))); .units(unitless);
+h8_i = (Nao/(KNa3*hNa*h7_i)); .units(unitless);
+h9_i = (1./h7_i); .units(unitless);
+h10_i = (Kasymm+1.+((Nao/KNa1)*(1.+(Nao/KNa2)))); .units(unitless);
+h11_i = ((Nao*Nao)/(h10_i*KNa1*KNa2)); .units(unitless);
+h12_i = (1./h10_i); .units(unitless);
+K1_i = (h12_i*Cao*KCaon); .units(unitless);
+K2_i = KCaoff; .units(unitless);
+K3p_i = (h9_i*wCa); .units(unitless);
+K3pp_i = (h8_i*wNaCa); .units(unitless);
+K3_i = (K3p_i+K3pp_i); .units(unitless);
+K4p_i = ((h3_i*wCa)/hCa); .units(unitless);
+K4pp_i = (h2_i*wNaCa); .units(unitless);
+K4_i = (K4p_i+K4pp_i); .units(unitless);
+K5_i = KCaoff; .units(unitless);
+K6_i = (h6_i*Cai*KCaon); .units(unitless);
+K7_i = (h5_i*h2_i*wNa); .units(unitless);
+K8_i = (h8_i*h11_i*wNa); .units(unitless);
+x1_i = ((K2_i*K4_i*(K7_i+K6_i))+(K5_i*K7_i*(K2_i+K3_i))); .units(unitless);
+x2_i = ((K1_i*K7_i*(K4_i+K5_i))+(K4_i*K6_i*(K1_i+K8_i))); .units(unitless);
+x3_i = ((K1_i*K3_i*(K7_i+K6_i))+(K8_i*K6_i*(K2_i+K3_i))); .units(unitless);
+x4_i = ((K2_i*K8_i*(K4_i+K5_i))+(K3_i*K5_i*(K1_i+K8_i))); .units(unitless);
+E1_i = (x1_i/(x1_i+x2_i+x3_i+x4_i)); .units(unitless);
+E2_i = (x2_i/(x1_i+x2_i+x3_i+x4_i)); .units(unitless);
+E3_i = (x3_i/(x1_i+x2_i+x3_i+x4_i)); .units(unitless);
+E4_i = (x4_i/(x1_i+x2_i+x3_i+x4_i)); .units(unitless);
+allo_i = (1./(1.+((KmCaAct/Cai)*(KmCaAct/Cai)))); .units(unitless);
+JncxNa_i = (((3.*((E4_i*K7_i) - (E1_i*K8_i)))+(E3_i*K4pp_i)) - (E2_i*K3pp_i)); .units(mmol/L/ms);
+JncxCa_i = ((E2_i*K2_i) - (E1_i*K1_i)); .units(mmol/L/ms);
+Gncx = ((celltype==1.) ? (Gncx_b*1.1) : ((celltype==2.) ? (Gncx_b*1.4) : Gncx_b)); .units(mS/uF);
+INaCa_i = ((1. - INaCa_fractionSS)*Gncx*allo_i*((zNa*JncxNa_i)+(zCa*JncxCa_i))); .units(uA/uF);
+h1_ss = (1.+((Nass/KNa3)*(1.+hNa))); .units(unitless);
+h2_ss = ((Nass*hNa)/(KNa3*h1_ss)); .units(unitless);
+h3_ss = (1./h1_ss); .units(unitless);
+h4_ss = (1.+((Nass/KNa1)*(1.+(Nass/KNa2)))); .units(unitless);
+h5_ss = ((Nass*Nass)/(h4_ss*KNa1*KNa2)); .units(unitless);
+h6_ss = (1./h4_ss); .units(unitless);
+h7_ss = (1.+((Nao/KNa3)*(1.+(1./hNa)))); .units(unitless);
+h8_ss = (Nao/(KNa3*hNa*h7_ss)); .units(unitless);
+h9_ss = (1./h7_ss); .units(unitless);
+h10_ss = (Kasymm+1.+((Nao/KNa1)*(1.+(Nao/KNa2)))); .units(unitless);
+h11_ss = ((Nao*Nao)/(h10_ss*KNa1*KNa2)); .units(unitless);
+h12_ss = (1./h10_ss); .units(unitless);
+K1_ss = (h12_ss*Cao*KCaon); .units(unitless);
+K2_ss = KCaoff; .units(unitless);
+K3p_ss = (h9_ss*wCa); .units(unitless);
+K3pp_ss = (h8_ss*wNaCa); .units(unitless);
+K3_ss = (K3p_ss+K3pp_ss); .units(unitless);
+K4p_ss = ((h3_ss*wCa)/hCa); .units(unitless);
+K4pp_ss = (h2_ss*wNaCa); .units(unitless);
+K4_ss = (K4p_ss+K4pp_ss); .units(unitless);
+K5_ss = KCaoff; .units(unitless);
+K6_ss = (h6_ss*Cass*KCaon); .units(unitless);
+K7_ss = (h5_ss*h2_ss*wNa); .units(unitless);
+K8_ss = (h8_ss*h11_ss*wNa); .units(unitless);
+x1_ss = ((K2_ss*K4_ss*(K7_ss+K6_ss))+(K5_ss*K7_ss*(K2_ss+K3_ss))); .units(unitless);
+x2_ss = ((K1_ss*K7_ss*(K4_ss+K5_ss))+(K4_ss*K6_ss*(K1_ss+K8_ss))); .units(unitless);
+x3_ss = ((K1_ss*K3_ss*(K7_ss+K6_ss))+(K8_ss*K6_ss*(K2_ss+K3_ss))); .units(unitless);
+x4_ss = ((K2_ss*K8_ss*(K4_ss+K5_ss))+(K3_ss*K5_ss*(K1_ss+K8_ss))); .units(unitless);
+E1_ss = (x1_ss/(x1_ss+x2_ss+x3_ss+x4_ss)); .units(unitless);
+E2_ss = (x2_ss/(x1_ss+x2_ss+x3_ss+x4_ss)); .units(unitless);
+E3_ss = (x3_ss/(x1_ss+x2_ss+x3_ss+x4_ss)); .units(unitless);
+E4_ss = (x4_ss/(x1_ss+x2_ss+x3_ss+x4_ss)); .units(unitless);
+allo_ss = (1./(1.+((KmCaAct/Cass)*(KmCaAct/Cass)))); .units(unitless);
+JncxNa_ss = (((3.*((E4_ss*K7_ss) - (E1_ss*K8_ss)))+(E3_ss*K4pp_ss)) - (E2_ss*K3pp_ss)); .units(mmol/L/ms);
+JncxCa_ss = ((E2_ss*K2_ss) - (E1_ss*K1_ss)); .units(mmol/L/ms);
+INaCa_ss = (INaCa_fractionSS*Gncx*allo_ss*((zNa*JncxNa_ss)+(zCa*JncxCa_ss))); .units(uA/uF);
+
+#INaK
+KNai = (KNai0*exp(((delta*Vfrt)/3.))); .units(mmol/L);
+KNao = (KNao0*exp((((1. - delta)*Vfrt)/3.))); .units(mmol/L);
+P = (eP/(1.+(H/Khp)+(Nai/KNap)+(Ki/KxKur))); .units(unitless);
+a1 = ((K1p*((Nai/KNai)*(Nai/KNai)*(Nai/KNai)))/((((1.+(Nai/KNai))*(1.+(Nai/KNai))*(1.+(Nai/KNai)))+((1.+(Ki/KKi))*(1.+(Ki/KKi)))) - 1.)); .units(unitless);
+b1 = (K1m*MgADP); .units(unitless);
+a2 = K2p; .units(unitless);
+b2 = ((K2m*((Nao/KNao)*(Nao/KNao)*(Nao/KNao)))/((((1.+(Nao/KNao))*(1.+(Nao/KNao))*(1.+(Nao/KNao)))+((1.+(Ko/KKo))*(1.+(Ko/KKo)))) - 1.)); .units(unitless);
+a3 = ((K3p*((Ko/KKo)*(Ko/KKo)))/((((1.+(Nao/KNao))*(1.+(Nao/KNao))*(1.+(Nao/KNao)))+((1.+(Ko/KKo))*(1.+(Ko/KKo)))) - 1.)); .units(unitless);
+b3 = ((K3m*P*H)/(1.+(MgATP/Kmgatp))); .units(unitless);
+a4 = (((K4p*MgATP)/Kmgatp)/(1.+(MgATP/Kmgatp))); .units(unitless);
+b4 = ((K4m*((Ki/KKi)*(Ki/KKi)))/((((1.+(Nai/KNai))*(1.+(Nai/KNai))*(1.+(Nai/KNai)))+((1.+(Ki/KKi))*(1.+(Ki/KKi)))) - 1.)); .units(unitless);
+x1 = ((a4*a1*a2)+(b2*b4*b3)+(a2*b4*b3)+(b3*a1*a2)); .units(unitless);
+x2 = ((b2*b1*b4)+(a1*a2*a3)+(a3*b1*b4)+(a2*a3*b4)); .units(unitless);
+x3 = ((a2*a3*a4)+(b3*b2*b1)+(b2*b1*a4)+(a3*a4*b1)); .units(unitless);
+x4 = ((b4*b3*b2)+(a3*a4*a1)+(b2*a4*a1)+(b3*b2*a1)); .units(unitless);
+E1 = (x1/(x1+x2+x3+x4)); .units(unitless);
+E2 = (x2/(x1+x2+x3+x4)); .units(unitless);
+E3 = (x3/(x1+x2+x3+x4)); .units(unitless);
+E4 = (x4/(x1+x2+x3+x4)); .units(unitless);
+JNaKNa = (3.*((E1*a3) - (E2*b3))); .units(mmol/L/ms);
+JNaKK = (2.*((E4*b1) - (E3*a1))); .units(mmol/L/ms);
+PNaK = ((celltype==1.) ? (PNaK_b*0.9) : ((celltype==2.) ? (PNaK_b*0.7) : PNaK_b)); .units(mS/uF);
+INaK = (PNaK*((zNa*JNaKNa)+(zK*JNaKK))); .units(uA/uF);
+
+#IKb
+xKb = (1./(1.+exp((-(V - 10.8968)/23.9871)))); .units(unitless);
+GKb = ((celltype==1.) ? (GKb_b*0.6) : GKb_b); .units(mS/uF);
+IKb = (GKb*xKb*(V - EK)); .units(uA/uF);
+
+#INab
+INab = ((PNab*Vffrt*((Nai*exp(Vfrt)) - Nao))/(exp(Vfrt) - 1.)); .units(uA/uF);
+
+#ICab
+ICab = ((PCab*4.*Vffrt*((gamma_Cai*Cai*exp((2.*Vfrt))) - (gamma_Cao*Cao)))/(exp((2.*Vfrt)) - 1.)); .units(uA/uF);
+
+#IpCa
+IpCa = ((GpCa*Cai)/(KmCap+Cai)); .units(uA/uF);
+
+#ICl
+IClCa_junc = (((Fjunc*GClCa)/(1.+(KdClCa/Cass)))*(V - ECl)); .units(uA/uF);
+IClCa_sl = ((((1. - Fjunc)*GClCa)/(1.+(KdClCa/Cai)))*(V - ECl)); .units(uA/uF);
+IClCa = (IClCa_junc+IClCa_sl); .units(uA/uF);
+IClb = (GClb*(V - ECl)); .units(uA/uF);
+
+#diff
+JdiffNa = ((Nass - Nai)/tauNa); .units(mmol/L/ms);
+JdiffK = ((Kss - Ki)/tauK); .units(mmol/L/ms);
+Jdiff = ((Cass - Cai)/tauCa); .units(mmol/L/ms);
+
+#RyR
+a_rel = ((0.5*bt)/1.); .units(mmol/L/ms);
+Jrel_inf_b = (((-a_rel*ICaL_ss)/1.)/(1.+((Cajsr_half/Cajsr)*(Cajsr_half/Cajsr)*(Cajsr_half/Cajsr)*(Cajsr_half/Cajsr)*(Cajsr_half/Cajsr)*(Cajsr_half/Cajsr)*(Cajsr_half/Cajsr)*(Cajsr_half/Cajsr)))); .units(mmol/L/ms);
+Jrel_inf = ((celltype==2.) ? (Jrel_inf_b*1.7) : Jrel_inf_b); .units(mmol/L/ms);
+tau_rel_b = (bt/(1.+(0.0123/Cajsr))); .units(ms);
+tau_rel = ((tau_rel_b<0.001) ? 0.001 : tau_rel_b); .units(ms);
+diff_Jrel_np = ((Jrel_inf - Jrel_np)/tau_rel); .units(mmol/L/ms^2);
+btp = (1.25*bt); .units(ms);
+a_relp = ((0.5*btp)/1.); .units(mmol/L/ms);
+Jrel_infp_b = (((-a_relp*ICaL_ss)/1.)/(1.+((Cajsr_half/Cajsr)*(Cajsr_half/Cajsr)*(Cajsr_half/Cajsr)*(Cajsr_half/Cajsr)*(Cajsr_half/Cajsr)*(Cajsr_half/Cajsr)*(Cajsr_half/Cajsr)*(Cajsr_half/Cajsr)))); .units(mmol/L/ms);
+Jrel_infp = ((celltype==2.) ? (Jrel_infp_b*1.7) : Jrel_infp_b); .units(mmol/L/ms);
+tau_relp_b = (btp/(1.+(0.0123/Cajsr))); .units(ms);
+tau_relp = ((tau_relp_b<0.001) ? 0.001 : tau_relp_b); .units(ms);
+diff_Jrel_p = ((Jrel_infp - Jrel_p)/tau_relp); .units(mmol/L/ms^2);
+fJrelp = (1./(1.+(KmCaMK/CaMKa))); .units(unitless);
+Jrel = (Jrel_b*(((1. - fJrelp)*Jrel_np)+(fJrelp*Jrel_p))); .units(mmol/L/ms);
+
+#SERCA
+upSCale = ((celltype==1.) ? 1.3 : 1.); .units(unitless);
+Jupnp = ((upSCale*0.005425*Cai)/(Cai+0.00092)); .units(mmol/L/ms);
+Jupp = ((upSCale*2.75*0.005425*Cai)/((Cai+0.00092) - 0.00017)); .units(mmol/L/ms);
+fJupp = (1./(1.+(KmCaMK/CaMKa))); .units(unitless);
+JleaK = ((0.0048825*Cansr)/15.); .units(mmol/L/ms);
+Jup = (Jup_b*((((1. - fJupp)*Jupnp)+(fJupp*Jupp)) - JleaK)); .units(mmol/L/ms);
+
+#trans_flux
+Jtr = ((Cansr - Cajsr)/60.); .units(mmol/L/ms);
+
+group {
+	CaMKt;
+	Nai;
+	Nass;
+	Ki;
+	Kss;
+	Cai;
+	Cass;
+	Cansr;
+	Cajsr; 
+}.lb(1e-9);
+
+group{
+	m;
+	h;
+	j;
+	hp;
+	jp;
+	mL;
+	hL;
+	hLp;
+	a;
+	iF;
+	iS;
+	ap;
+	iFp;
+	iSp;
+	d;
+	ff;
+	fs;
+	fCaf;
+	fCas;
+	jCa;
+	ffp;
+	fCafp;
+	nCa_ss;
+	nCa_i;
+	C3;
+	C2;
+	C1;
+	O;
+	I;
+	xs1;
+	xs2;
+	Jrel_np;
+	Jrel_p;
+}.lb(0); .ub(1);
+
+group{
+  V;
+  Iion;
+} .trace();

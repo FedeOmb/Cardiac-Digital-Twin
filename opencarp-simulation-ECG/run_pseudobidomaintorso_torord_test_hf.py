@@ -27,7 +27,7 @@ def parser():
                         type=float, default=200.0,
                         help='Durata della simulazione in ms')
     parser.add_argument('--outdir',
-                        default='test_pseudobidomain_torord_sb301_v1',
+                        default='test_pseudobidomain_torord_sb301_hf',
                         help='Directory di output (simID)')
     return parser
 
@@ -68,7 +68,7 @@ def run(args, job):
             f'-stim[{i}].ptcl.duration', 4.0, # 4ms da paper camps
             f'-stim[{i}].ptcl.npls', 1,
             f'-stim[{i}].ptcl.start', float(t),
-            f'-stim[{i}].pulse.strength', 53,  # 53uA/cm2 convertito da paper camps 53 pA/pF x 100 pF/cm2
+            f'-stim[{i}].pulse.strength', 50,  # 53uA/cm2 convertito da paper camps 53 pA/pF x 100 pF/cm2
             f'-stim[{i}].crct.type', 0,
         ]
 
@@ -93,13 +93,11 @@ def run(args, job):
        # '-phie_recovery_file', 'sb301_phie_recovery_test',
     ]
 
-    #caricamento modello torord esterno compilato
-    #cmd += [
-    #    '-num_external_imp', 3,
-    #    '-external_imp[0]',  os.path.abspath(TORORD_LIB_ENDO),
-    #    '-external_imp[1]',  os.path.abspath(TORORD_LIB_MID),
-    #    '-external_imp[2]',  os.path.abspath(TORORD_LIB_EPI),
-    #]
+    #caricamento modello tomek modificato con parametri
+    cmd += [
+        '-num_external_imp', 1,
+        '-external_imp[0]',  os.path.abspath(TOMEK_LIB),
+    ]
 
     # Proprietà di Conduzione (GRegions)
     cmd += [
@@ -131,20 +129,44 @@ def run(args, job):
         '-gregion[2].g_bath', 0.216, # S/m
     ]
 
-    torord_params_common = (
-        'nao=140.0,'
-        'cao=1.8,'
-        'ko=5.4,'
-        'GNa=75.0,'
-        'GNaL=0.0279,'
-        'GKr=0.046,'
-        'GKs=0.006,'
-        'GK1=0.1908,'
-        'Gncx=0.0008,'
-        'GKb=0.003,'
-        'GpCa=0.0005,'
-        'PCa=0.0001007,'
-        'Pnak=30.0'
+    torord_params_hfbase_endo = (               # Heart Failure non-ischemica
+        'flags=ENDO',
+        'GNaL_b*1.30',    # 130%
+        'thL*1.80',         # 180%
+        'Gto_b*0.40',       # 40%
+        'GK1_b*0.68',      # 68%
+        'PNaK_b*0.70',     # 70%
+        'Gncx_b*1.65',    # 165%
+        'Jup_b*0.45',     # SERCA 45%
+        'Cajsr_half*0.80', # RyR sens. 80%
+        'Jrel_b*1.30',    # SR leak 130%
+        'CaMKo*1.50'      # CaMKII 150%
+    )
+    torord_params_hfbase_mid = (               # Heart Failure non-ischemica
+        'flags=MCELL',
+        'GNaL_b*1.30',    # 130%
+        'thL*1.80',         # 180%
+        'Gto_b*0.40',       # 40%
+        'GK1_b*0.68',      # 68%
+        'PNaK_b*0.70',     # 70%
+        'Gncx_b*1.65',    # 165%
+        'Jup_b*0.45',     # SERCA 45%
+        'Cajsr_half*0.80', # RyR sens. 80%
+        'Jrel_b*1.30',    # SR leak 130%
+        'CaMKo*1.50'      # CaMKII 150%
+    )
+    torord_params_hfbase_epi = (               # Heart Failure non-ischemica
+        'flags=EPI',
+        'GNaL_b*1.30',    # 130%
+        'thL*1.80',         # 180%
+        'Gto_b*0.40',       # 40%
+        'GK1_b*0.68',      # 68%
+        'PNaK_b*0.70',     # 70%
+        'Gncx_b*1.65',    # 165%
+        'Jup_b*0.45',     # SERCA 45%
+        'Cajsr_half*0.80', # RyR sens. 80%
+        'Jrel_b*1.30',    # SR leak 130%
+        'CaMKo*1.50'      # CaMKII 150%
     )
 
     # Eterogeneità Cellulare (ImpRegions per il modello tenTusscherPanfilov)
@@ -154,20 +176,20 @@ def run(args, job):
         '-imp_region[0].name', 'Endocardio',
         '-imp_region[0].num_IDs', 1,
         '-imp_region[0].ID[0]', 3,      #tag endocardio 3 
-        '-imp_region[0].im', 'Tomek',
-        '-imp_region[0].im_param', 'flags=ENDO',
+        '-imp_region[0].im', 'Tomek_edit',
+        '-imp_region[0].im_param', ','.join(torord_params_hfbase_endo),
         
         '-imp_region[1].name', 'Mid_Miocardio',
         '-imp_region[1].num_IDs', 1,
         '-imp_region[1].ID[0]', 2,      #tag mid miocardio 2
-        '-imp_region[1].im', 'Tomek',
-        '-imp_region[1].im_param', 'flags=MCELL',
+        '-imp_region[1].im', 'Tomek_edit',
+        '-imp_region[1].im_param', ','.join(torord_params_hfbase_mid),
 
         '-imp_region[2].name', 'Epicardio',
         '-imp_region[2].num_IDs', 1,
         '-imp_region[2].ID[0]', 1,      #tag epicardio 1
-        '-imp_region[2].im', 'Tomek',
-        '-imp_region[2].im_param', 'flags=EPI',
+        '-imp_region[2].im', 'Tomek_edit',
+        '-imp_region[2].im_param', ','.join(torord_params_hfbase_epi),
     ]
 
     # Phys Regions (Dominio Intracellulare Globale)

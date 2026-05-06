@@ -55,13 +55,23 @@ def save_vtu_arrays_to_csv(anatomy_subject_name, geometric_data_dir, target_reso
         np.savetxt(os.path.join(output_dir, anatomy_subject_name + '_' + target_resolution + '_nodefield_' + array_name + '.csv'), np_array, delimiter=',', fmt='%.16f')
 
     # Cell Data
-""" cell_data = data.GetCellData()
+    cell_data = data.GetCellData()
+    # Mappatura dei nomi originali nei nomi desiderati per i file CSV
+    name_mapping = {
+        'fiber': 'fibre',
+        'sheet': 'sheet',
+        'sheetnormal': 'normal'
+    }
     for i in range(cell_data.GetNumberOfArrays()):
         array_name = cell_data.GetArrayName(i)
-        array = cell_data.GetArray(i)
-        np_array = VN.vtk_to_numpy(array)
-        np.savetxt(os.path.join(output_dir, array_name + '.csv'), np_array, delimiter=',')
-     """
+        array_name_lower = array_name.lower()
+        # Esportiamo in modo mirato gli array di fibre, sheet e normal
+        if array_name_lower in name_mapping:
+            mapped_name = name_mapping[array_name_lower]
+            array = cell_data.GetArray(i)
+            np_array = VN.vtk_to_numpy(array)
+            filename = f"{anatomy_subject_name}_{target_resolution}_nodefield_{mapped_name}.csv"
+            np.savetxt(os.path.join(output_dir, filename), np_array, delimiter=',', fmt='%.16f')
 
 #Estrae i nodi delle superfici LV e RV da una mesh VTU.
 def save_endo_nodes_to_csv(anatomy_subject_name, geometric_data_dir, target_resolution, vtu_filename, lv_tag, rv_tag, tag_array_name='class'):

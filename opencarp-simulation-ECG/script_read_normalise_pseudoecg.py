@@ -299,8 +299,8 @@ def print_scaling_report(factors, ref_amp, sim_amp, mode):
 ###################################################################################################################
 ## Main script
 filtering = True
-normalise = False
-zero_align = False
+normalise = True
+zero_align = True
 frequency = 1000
 high_freq_cut = 150
 low_freq_cut = 0.5
@@ -310,10 +310,10 @@ qrs_window_ms = 150.0
 nb_leads = 8
 qrs_onset = 0
 scaling_mode = 'per_lead' # 'global', 'two_groups', 'per_lead'
-simulation_folder = './test_monodomain_torord_sb301_hf2/'
-casename = 'sb301'
-sim_ecg_filename=simulation_folder + casename + '_phierec_ascii_hf2.txt'
-ptb_record_path=os.path.join('..', 'PTB-ecg', 'HF', 'patient115','s0023_re')  # Path SENZA estensione, es. './ptb_ecg_records/s0010_re'
+simulation_folder = './test_monodomain_torord_sb3901_norm1/'
+casename = 'sb3901'
+sim_ecg_filename=simulation_folder + casename + '_phierec_ascii_norm1.txt'
+ptb_record_path=os.path.join('..', '..','ptb-diagnostic-ecg-database-1.0.0', 'patient131','s0273lre')  # Path SENZA estensione, es. './ptb_ecg_records/s0010_re'
 
 # Preprocess the clinical data
 #print('Preprocessing clinical ECGs')
@@ -416,7 +416,7 @@ scaled_simulated_ecgs_8, scale_factors, ref_amp, sim_amp = scale_simulated_to_re
 
 print_scaling_report(scale_factors, ref_amp, sim_amp, scaling_mode)
 
-out_png = os.path.join('.', casename + '_ptb_vs_scaled_simulation.png')
+out_png = os.path.join('.', f'{casename}_norm1_scaled_simulation_ptb131_{scaling_mode}.png')
 visualise_ecgs(
     reference_ecg=reference_ecg_8,
     simulated_ecgs=scaled_simulated_ecgs_8,

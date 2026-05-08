@@ -1,7 +1,6 @@
 import os
 import numpy as np
 import pandas as pd
-from scipy.spatial import cKDTree
 from carputils import settings
 from carputils import tools
 
@@ -11,27 +10,30 @@ TOMEK_LIB = './tomek-model/Tomek_edit.so'
 def parser():
     parser = tools.standard_parser()
     parser.add_argument('--meshname',
-                        default='./sb301_torsomesh/sb301_finalmesh_torsobiv_opencarp',
+                        default='./sb3901_meshes/sb3901_500um_tagged',
                         help='Percorso base della mesh per openCARP')
     parser.add_argument('--vtx-file',
-                        default='./sb301_rootnodes/sb301_root_nodes_mapping_torsobiv.vtx',
+                        default='./sb3901_rootnodes/sb3901_fine500um_active_root_nodes.vtx',
                         help='File contenente gli indici dei nodi root (candidate_root_nodes.vtx)')
-    parser.add_argument('--vtx-dir',
-                        default='./sb301_rootnodes/sb301_rootnodes_mapped_torsobiv',
-                        help='Directory contenente i file .vtx per gli stimoli')
     parser.add_argument('--times-file',
-                        default='./sb301_rootnodes/sb301_candidate_root_nodes_times.csv',
+                        default='./sb3901_rootnodes/sb3901_candidate_root_nodes_times.csv',
                         help='File CSV contenente i tempi di attivazione (candidate_root_nodes_times.csv)')
     parser.add_argument('--tend',
-                        type=float, default=400.0,
+                        type=float, default=600.0,
                         help='Durata della simulazione in ms')
     parser.add_argument('--outdir',
-                        default='test_pseudobidomain_torord_sb301_hf',
+                        default='test_monodomain_torord_sb3901_norm2',
                         help='Directory di output (simID)')
     return parser
 
 def jobID(args):
     return args.outdir
+
+def get_nodes_by_radius(pts_file, root_node, radius=1500):
+    pts = np.loadtxt(pts_file, skiprows=1)  # Salta la prima riga con il numero di punti
+    root_coords = pts[root_node]
+    distances = np.linalg.norm(pts - root_coords, axis=1)
+    return np.where(distances <= radius)[0]
 
 @tools.carpexample(parser, jobID)
 def run(args, job):
@@ -53,12 +55,20 @@ def run(args, job):
     assert len(nodes) == len(times), "Il numero di nodi deve corrispondere al numero dei tempi di attivazione"
 
     # ==========================================
-    # 2. Configurazione degli stimoli dai file .vtx esistenti
+    # 2. Generazione dei file .vtx per gli stimoli
     # ==========================================
-    vtx_dir = os.path.join('sb301_rootnodes', 'sb301_rootnodes_mapped_torsobiv')
+    vtx_dir = os.path.join(args.outdir, 'sb301_rootnodes_vtx')
+    os.makedirs(vtx_dir, exist_ok=True)
+    PTS_PATH = args.meshname+'.pts'
     stim_cmds = ['-num_stim', len(nodes)]
     for i, (node, t) in enumerate(zip(nodes, times)):
+        nearby_nodes = get_nodes_by_radius(PTS_PATH,node, radius=2000)
         vtx_filename = os.path.join(vtx_dir, f'RN{i+1}.vtx')
+        with open(vtx_filename, 'w') as f:
+            f.write(f"{len(nearby_nodes)}\n")  # Numero di nodi da stimolare
+            f.write("intra\n")  # Header standard di openCARP per i vertici intracellulari
+            for n in nearby_nodes:
+                f.write(f"{n}\n")
 
         # Parametri dello stimolo
         stim_cmds += [
@@ -67,7 +77,7 @@ def run(args, job):
             f'-stim[{i}].ptcl.duration', 4.0, # 4ms da paper camps
             f'-stim[{i}].ptcl.npls', 1,
             f'-stim[{i}].ptcl.start', float(t),
-            f'-stim[{i}].pulse.strength', 50,  # 53uA/cm2 convertito da paper camps 53 pA/pF x 100 pF/cm2
+            f'-stim[{i}].pulse.strength', 50,  # 50uA/cm2 convertito da paper camps 53 pA/pF x 100 pF/cm2
             f'-stim[{i}].crct.type', 0,
         ]
 
@@ -84,12 +94,12 @@ def run(args, job):
         '-spacedt', 1.0,
         '-timedt', 1.0,
         '-dt', 10.0,
-        '-bidomain', 2, # pseudobidomain
+        '-bidomain', 0,
         '-parab_solve', 1,
         '-mass_lumping', 1,
-        '-floating_ground', 1,
-       # '-phie_rec_ptf', './sb301_torsomesh/sb301_electrodes_opencarp',
-       # '-phie_recovery_file', 'sb301_phie_recovery_test',
+        '-output_level', 5,
+        '-phie_rec_ptf', './sb3901_meshes/sb3901_electrodesum',
+        '-phie_recovery_file', 'sb3901_phie_recovery_norm2',
     ]
 
     #caricamento modello tomek modificato con parametri
@@ -100,17 +110,14 @@ def run(args, job):
 
     # Proprietà di Conduzione (GRegions)
     cmd += [
-        '-num_gregions', 3,
+        '-num_gregions', 2,
         '-gregion[0].name', 'Miocardio',
         '-gregion[0].num_IDs', 2,
         '-gregion[0].ID[0]', 1,
         '-gregion[0].ID[1]', 2,
-        '-gregion[0].g_il', 0.6422, #unità misura S/m calibrati pseudobidommain con tunecv per CV 0.65 m/s e g_el 0.546 S/m
-        '-gregion[0].g_it', 0.3819, # calibrata  per CV 0.36 m/s e g_et 0.203 S/m
-        '-gregion[0].g_in', 3.045, # calibrata  per CV 0.48 m/s e g_en 0.203 S/m
-        '-gregion[0].g_el', 0.546,
-        '-gregion[0].g_et', 0.203,
-        '-gregion[0].g_en', 0.203,
+        '-gregion[0].g_il', 0.2615, #unità misura S/m calibrati con tunecv per CV 0.65 m/s
+        '-gregion[0].g_it', 0.1093, # calibrata  per CV 0.36 m/s
+        '-gregion[0].g_in', 0.1661, # calibrata  per CV 0.48 m/s
 
         '-gregion[1].name', 'FastEndo',
         '-gregion[1].num_IDs', 1,
@@ -118,14 +125,7 @@ def run(args, job):
         '-gregion[1].g_il', 0.2615 * 3.0,
         '-gregion[1].g_it', 0.1093 * 3.0, 
         '-gregion[1].g_in', 0.1661 * 3.0,
-        '-gregion[1].g_el', 0.546 * 3.0,
-        '-gregion[1].g_et', 0.203 * 3.0,
-        '-gregion[1].g_en', 0.203 * 3.0,
-
-        '-gregion[2].name', 'Torso',
-        '-gregion[2].num_IDs', 1,
-        '-gregion[2].ID[0]', 10,
-        '-gregion[2].g_bath', 0.216, # S/m
+        #'-gregion[1].g_mult', 5.0,
     ]
 
     torord_params_hfbase_endo = (               # Heart Failure non-ischemica
@@ -168,6 +168,7 @@ def run(args, job):
         'CaMKo*1.50'      # CaMKII 150%
     )
 
+
     # Eterogeneità Cellulare (ImpRegions per il modello tenTusscherPanfilov)
     cmd += [
         '-num_imp_regions', 3,
@@ -176,38 +177,30 @@ def run(args, job):
         '-imp_region[0].num_IDs', 1,
         '-imp_region[0].ID[0]', 3,      #tag endocardio 3 
         '-imp_region[0].im', 'Tomek_edit',
-        '-imp_region[0].im_param', ','.join(torord_params_hfbase_endo),
+        '-imp_region[0].im_param', 'flags=ENDO',
         
         '-imp_region[1].name', 'Mid_Miocardio',
         '-imp_region[1].num_IDs', 1,
         '-imp_region[1].ID[0]', 2,      #tag mid miocardio 2
         '-imp_region[1].im', 'Tomek_edit',
-        '-imp_region[1].im_param', ','.join(torord_params_hfbase_mid),
+        '-imp_region[1].im_param', 'flags=MCELL',
 
         '-imp_region[2].name', 'Epicardio',
         '-imp_region[2].num_IDs', 1,
         '-imp_region[2].ID[0]', 1,      #tag epicardio 1
         '-imp_region[2].im', 'Tomek_edit',
-        '-imp_region[2].im_param', ','.join(torord_params_hfbase_epi),
+        '-imp_region[2].im_param', 'flags=EPI',
     ]
 
     # Phys Regions (Dominio Intracellulare Globale)
     cmd += [
-        '-num_phys_regions', 2,
+        '-num_phys_regions', 1,
         '-phys_region[0].ptype', 0,
         '-phys_region[0].name', 'Intracellular domain',
         '-phys_region[0].num_IDs', 3,
         '-phys_region[0].ID[0]', 1,
         '-phys_region[0].ID[1]', 2,
         '-phys_region[0].ID[2]', 3,
-
-        '-phys_region[1].name',    'Extracellular domain',
-        '-phys_region[1].ptype',   1,
-        '-phys_region[1].num_IDs', 4,
-        '-phys_region[1].ID[0]', 1,
-        '-phys_region[1].ID[1]', 2,
-        '-phys_region[1].ID[2]', 3,        
-        '-phys_region[1].ID[3]', 10,        
     ]
 
     # Aggiunta configurazione Stimoli Dinamici all'esecuzione

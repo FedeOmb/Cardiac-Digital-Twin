@@ -2707,7 +2707,10 @@ def generate_djikstra_purkinje_tree_from_vc(approx_djikstra_max_path_len, edge, 
 
 def select_random_root_nodes(nb_root_nodes, candidate_root_node_indexes):
     rand_root_node_meta_indexes = np.zeros(candidate_root_node_indexes.shape, dtype=bool)
-    indexes = np.random.randint(0, candidate_root_node_indexes.shape[0], nb_root_nodes)
+    #original implementation
+    #indexes = np.random.randint(0, candidate_root_node_indexes.shape[0], nb_root_nodes)
+    #edited to select exactly nb_root_nodes
+    indexes = np.random.choice(candidate_root_node_indexes.shape[0], nb_root_nodes, replace=False)
     rand_root_node_meta_indexes[indexes] = True
     return rand_root_node_meta_indexes
 
@@ -2838,5 +2841,3 @@ if __name__ == '__main__':
     # TODO add here the functions that write out the PK tree as a vtk or something that can be visualised in Paraview.
 
 # EOF
-
-

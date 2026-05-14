@@ -6,7 +6,7 @@ matplotlib.rcParams['text.usetex'] = False
 matplotlib.rcParams['font.family'] = 'DejaVu Sans'
 import matplotlib.pyplot as plt
 plt.switch_backend('Agg')# backend non-interattivo per ambiente headless
-igb_path = os.path.join(".", "test_monodomain_torord_sb301_v7","sb301_phie_recovery_test7.igb")
+igb_path = os.path.join(".", "test_monodomain_torord_sb3901_norm1","sb3901_phie_recovery_norm1.igb")
 
 # 1. Leggi il file igb prodotto dalla phie recovery
 t, datadict = ecg.readfile(igb_path, sample_time=1.0, silent=False)
@@ -26,7 +26,7 @@ outdata_filt = ecg.filter_std_ecg(
     freq_bandstop=None
 )
 
-out_path = os.path.join(".", "test_monodomain_torord_sb301_v7","output_ecg")
+out_path = os.path.join(".", "test_monodomain_torord_sb3901_norm1","output_ecg")
 if not os.path.exists(out_path):
     os.makedirs(out_path)
 

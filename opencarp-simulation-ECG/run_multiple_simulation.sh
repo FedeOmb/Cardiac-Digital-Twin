@@ -1,14 +1,9 @@
 #!/bin/bash
 
 SIMS=(
-    "run_monodomain_torord_sb3901_norm2.py"
-    "run_monodomain_torord_sb3901_norm3.py"
-    "run_monodomain_torord_sb3901_norm4.py"
-    "run_monodomain_torord_sb3901_norm4.py"
-    "run_monodomain_torord_sb4101_norm1.py"
-    "run_monodomain_torord_sb4101_norm2.py"
-    "run_monodomain_torord_sb4101_norm3.py"
-    "run_monodomain_torord_sb4101_norm4.py"
+    "run_monodomain_torord_sb3901_9rn_norm2_prepace.py"
+    "run_monodomain_torord_sb301_7rn_hfv4_prepace.py"
+    "run_monodomain_torord_sb301_7rn_hfv5_prepace.py"
 )
 
 for sim in "${SIMS[@]}"; do

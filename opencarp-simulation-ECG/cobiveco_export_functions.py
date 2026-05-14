@@ -244,7 +244,7 @@ def tag_vol_region_from_tm(input_vtu, output_vtk):
 
 if __name__ == "__main__":
     geometric_data_dir = '../cardiac-data/meta_data/geometric_data/'
-    subject_name = 'sb4101'
+    subject_name = 'sb1201'
     target_resolution = 'coarse1500cm'
     #SCALING MESH coarse da mm a cm per framework CDT
     input_dir = geometric_data_dir + subject_name + '/'

@@ -4,25 +4,28 @@ import pandas as pd
 from carputils import settings
 from carputils import tools
 
-TOMEK_LIB = './tomek-model/Tomek_edit.so'
+TOMEK_LIB = '../tomek-model/Tomek_edit.so'
 
 
 def parser():
     parser = tools.standard_parser()
     parser.add_argument('--meshname',
-                        default='./sb3901_meshes/sb3901_500um_tagged',
+                        default='./sb301_meshes/sb301_fine500um_opencarp',
                         help='Percorso base della mesh per openCARP')
     parser.add_argument('--vtx-file',
-                        default='./sb3901_rootnodes/sb3901_fine500um_active_root_nodes.vtx',
+                        default='./sb301_rootnodes/sb301_fine500um_active_root_nodes.vtx',
                         help='File contenente gli indici dei nodi root (candidate_root_nodes.vtx)')
     parser.add_argument('--times-file',
-                        default='./sb3901_rootnodes/sb3901_candidate_root_nodes_times.csv',
+                        default='./sb301_rootnodes/sb301_selected_root_nodes_times.csv',
                         help='File CSV contenente i tempi di attivazione (candidate_root_nodes_times.csv)')
     parser.add_argument('--tend',
-                        type=float, default=600.0,
+                        type=float, default=1000.0,
                         help='Durata della simulazione in ms')
+    parser.add_argument('--inputdir',
+                        default='.',
+                        help='Directory di input')
     parser.add_argument('--outdir',
-                        default='test_monodomain_torord_sb3901_norm2',
+                        default='./test_monodomain_torord_sb301_7rn_hf4_prepace',
                         help='Directory di output (simID)')
     return parser
 
@@ -97,11 +100,16 @@ def run(args, job):
         '-bidomain', 0,
         '-parab_solve', 1,
         '-mass_lumping', 1,
-        '-output_level', 5,
-        '-phie_rec_ptf', './sb3901_meshes/sb3901_electrodesum',
-        '-phie_recovery_file', 'sb3901_phie_recovery_norm2',
+        '-phie_rec_ptf', os.path.join(args.inputdir, 'sb301_torsomesh', 'sb301_electrodes_opencarp'),
+        '-phie_recovery_file', 'sb301_phie_recovery_hf4_prepace',
     ]
-
+    cmd +=[
+    '-prepacing_beats',   250,
+    '-prepacing_bcl',     1000.0,
+    '-prepacing_stimdur', 4.0,    # coerente con il tuo protocollo tissutale
+    '-prepacing_stimstr', 60.0,   # unità µA/µF, default  per single-cell
+    '-prepacing_lats', os.path.join(args.inputdir, 'sb301_meshes', 'sb301_latmap_zero.dat'),
+    ]
     #caricamento modello tomek modificato con parametri
     cmd += [
         '-num_external_imp', 1,
@@ -122,9 +130,9 @@ def run(args, job):
         '-gregion[1].name', 'FastEndo',
         '-gregion[1].num_IDs', 1,
         '-gregion[1].ID[0]', 3,
-        '-gregion[1].g_il', 0.2615 * 3.0,
-        '-gregion[1].g_it', 0.1093 * 3.0, 
-        '-gregion[1].g_in', 0.1661 * 3.0,
+        '-gregion[1].g_il', 0.2615 * 4.0,
+        '-gregion[1].g_it', 0.1093 * 4.0, 
+        '-gregion[1].g_in', 0.1661 * 4.0,
         #'-gregion[1].g_mult', 5.0,
     ]
 
@@ -177,19 +185,19 @@ def run(args, job):
         '-imp_region[0].num_IDs', 1,
         '-imp_region[0].ID[0]', 3,      #tag endocardio 3 
         '-imp_region[0].im', 'Tomek_edit',
-        '-imp_region[0].im_param', 'flags=ENDO',
+        '-imp_region[0].im_param', ','.join(torord_params_hfbase_endo),
         
         '-imp_region[1].name', 'Mid_Miocardio',
         '-imp_region[1].num_IDs', 1,
         '-imp_region[1].ID[0]', 2,      #tag mid miocardio 2
         '-imp_region[1].im', 'Tomek_edit',
-        '-imp_region[1].im_param', 'flags=MCELL',
+        '-imp_region[1].im_param', ','.join(torord_params_hfbase_mid),
 
         '-imp_region[2].name', 'Epicardio',
         '-imp_region[2].num_IDs', 1,
         '-imp_region[2].ID[0]', 1,      #tag epicardio 1
         '-imp_region[2].im', 'Tomek_edit',
-        '-imp_region[2].im_param', 'flags=EPI',
+        '-imp_region[2].im_param', ','.join(torord_params_hfbase_epi),
     ]
 
     # Phys Regions (Dominio Intracellulare Globale)

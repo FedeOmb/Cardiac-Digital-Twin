@@ -1,4 +1,7 @@
-503kaggle500_test_simulation/
-sb301_meshes/
-sb301_torsomesh/
-torso_mesh_atria_models/
+*_torsomesh/
+*_torso/
+*_meshes/
+*_rootnodes/
+test_monodomain_*/
+test_pseudobidomain_*/
+*_sim_results/

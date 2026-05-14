@@ -3,7 +3,7 @@ import numpy as np
 import pyvista as pv
 from scipy.spatial import cKDTree
 
-merged_mesh_path = os.path.join("..", "sb301_torsomesh", "sb301_finalmeshum_torsobiv.vtk")
+merged_mesh_path = os.path.join(".", "sb3901_torso", "sb3901_finalmeshum_torsobiv.vtk")
 merged_mesh = pv.read(merged_mesh_path)
 
 # Estrai punti e tag delle celle
@@ -30,10 +30,11 @@ _, global_idx = tree_merged.query(myo_pts)
 
 # --- KD-tree sui nodi miocardici, risultato in indici globali ---
 # Leggi i root nodes dalla mesh BIV originale
-biv_mesh_path = os.path.join("..","sb301_meshes", "sb301_fine500um_tagged2.vtk")
+biv_mesh_path = os.path.join(".","sb3901_meshes", "sb3901_500um_tagged.vtk")
 biv_mesh    = pv.read(biv_mesh_path)
 biv_pts     = np.array(biv_mesh.points)
-root_idx    = np.loadtxt("sb301_fine500um_active_root_nodes.vtx", dtype=int)
+root_nodes_path = os.path.join(".", "sb3901_rootnodes","sb3901_fine500um_active_root_nodes.vtx")
+root_idx    = np.loadtxt(root_nodes_path, dtype=int)
 root_coords = biv_pts[root_idx]
 
 distances, local_idx = tree_myo.query(root_coords)
@@ -52,6 +53,7 @@ else:
 
 # --- Verifica tag dei nodi trovati ---
 # Ogni nodo può appartenere a celle di tag diversi; controlla il tag dominante
+'''
 print("\nVerifica tag celle adiacenti ai root nodes:")
 for j, (ni, dist) in enumerate(zip(new_indices[:5], distances[:5])):  # mostra primi 5
     # Trova celle che contengono questo nodo
@@ -61,14 +63,12 @@ for j, (ni, dist) in enumerate(zip(new_indices[:5], distances[:5])):  # mostra p
                      merged_pts[ni,1]-0.01, merged_pts[ni,1]+0.01,
                      merged_pts[ni,2]-0.01, merged_pts[ni,2]+0.01])]
     print(f"  Root {j}: nodo globale {ni}, distanza {dist:.4f} mm")
-
+'''
 # --- Salva in formato .vtx per openCARP ---
-with open("sb301_root_nodes_mapping_torsobiv.vtx", "w") as f:
+with open(os.path.join(".", "sb3901_rootnodes","sb3901_root_nodes_mapping_torsobiv.vtx"), "w") as f:
     for i in new_indices:
         f.write(f"{i}\n")
+#np.savetxt("sb301_root_nodes_mapping_torsobiv.dat", new_indices, fmt="%d")
 
-np.savetxt("sb301_root_nodes_mapping_torsobiv.dat", new_indices, fmt="%d")
+print("\nFIle root nodes mappati salvato")
 
-print("\nFile salvati:")
-print("  sb301_root_nodes_mapping_torsobiv.vtx  → usa in openCARP come stim[x].vtx_file")
-print("  sb301_root_nodes_mapping_torsobiv.dat  → indici di riferimento")

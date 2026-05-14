@@ -2,8 +2,7 @@ import os
 import pyvista as pv
 import numpy as np
 
-def get_nodes_in_radius_by_tag(vtk_file, center_node,
-                                        endo_tag, radius_um=1500):
+def get_nodes_in_radius_by_tag(vtk_file, center_node, endo_tag, radius_um=1500):
     mesh = pv.read(vtk_file)
 
     # Seleziona solo le celle (elementi) con il tag endocardio
@@ -22,11 +21,11 @@ def get_nodes_in_radius_by_tag(vtk_file, center_node,
 
     return endo_pt_ids[mask]
 
-
-nodes = np.loadtxt("sb301_root_nodes_mapping_torsobiv.vtx", dtype=int)  
-vtx_dir = os.path.join("sb301_rootnodes", 'sb301_rootnodes_mapped_torsobiv')
+mapped_rn_path = os.path.join(".","sb3901_rootnodes","sb3901_root_nodes_mapping_torsobiv.vtx")
+nodes = np.loadtxt(mapped_rn_path, dtype=int)  
+vtx_dir = os.path.join(".","sb3901_rootnodes", 'sb3901_rootnodes_mapped_torsobiv')
 os.makedirs(vtx_dir, exist_ok=True)
-torso_biv_mesh_path = os.path.join("..", "sb301_torsomesh", "sb301_finalmeshum_torsobiv.vtk")
+torso_biv_mesh_path = os.path.join(".", "sb3901_torso", "sb3901_finalmeshum_torsobiv.vtk")
 stim_cmds = ['-num_stim', len(nodes)]
 for i, node in enumerate(nodes):
     nearby_nodes = get_nodes_in_radius_by_tag(torso_biv_mesh_path, node, endo_tag=3, radius_um=2000)

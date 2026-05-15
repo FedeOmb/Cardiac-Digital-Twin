@@ -8,6 +8,7 @@ import os
 import csv
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+import subprocess
 import wfdb
 #plt.switch_backend('Agg')# backend non-interattivo per ambiente headless
 # Helper functions from ecg_functions.py:
@@ -351,9 +352,11 @@ qrs_window_ms = 150.0
 nb_leads = 8
 qrs_onset = 0
 scaling_mode = 'two_groups' # 'global', 'two_groups', 'per_lead'
-sim_folder = os.path.join(".", "test_monodomain_torord_sb3901_norm4")
-casename = 'sb3901'
-sim_ecg_filename = casename + '_phierec_ascii_norm4.txt'
+sim_folder = os.path.join(".", "sb4101","test_monodomain_torord_sb4101_9rn_norm1_prepace")
+casename = 'sb4101'
+sim_ecg_igb_filename = casename + '_phie_recovery_9rn_norm1_prepace.igb'
+sim_ecg_igb_path = os.path.join(sim_folder, sim_ecg_igb_filename)
+sim_ecg_filename = casename + '_phierec_ascii_9rn_norm1_prepace.txt'
 sim_ecg_path = os.path.join(sim_folder, sim_ecg_filename)
 ptb_casename = "patient131"
 ptb_filename ="s0273lre"
@@ -374,6 +377,16 @@ ptb_qrs_pre_ms = 120.0
 
 # Read in simulated ECGs
 print('Importing and preprocessing simulated ECG')
+cmd_convert_igb_txt =[
+    'opencarp-docker',
+    'igbextract', '-l', "0-9", "-o","asciiTm", "-O",
+    sim_ecg_path,
+    sim_ecg_igb_path
+] 
+
+print("Running command:", " ".join(cmd_convert_igb_txt))
+subprocess.run(cmd_convert_igb_txt, check=True)
+
 simulated_t_ms, simulated_ecgs_8leads = import_simulated_ecg_8leads_raw(filename=sim_ecg_path, monoalg_activation_offset=0)
 #simulation_frequency = simulated_ecgs_8leads.shape[1]
 sim_freq = 1000.0 / np.mean(np.diff(simulated_t_ms)) if len(simulated_t_ms) > 1 else 1000.0

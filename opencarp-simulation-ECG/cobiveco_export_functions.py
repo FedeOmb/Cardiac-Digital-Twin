@@ -242,8 +242,7 @@ def tag_vol_region_from_tm(input_vtu, output_vtk):
     print(f"Mesh scalata salvata in: {output_vtk}")
     print("Mesh taggata salvata con successo!")
 
-def tag_vol_region_from_tm_fastendo(input_vtu, output_vtk, input_vtp, endo_lv_tag, endo_rv_tag, tag_array_name):
-    FAST_ENDO_UM = 700.0
+def tag_vol_region_from_tm_fastendo(input_vtu, output_vtk, input_vtp, endo_lv_tag, endo_rv_tag, tag_array_name, fastendo_thickness=500.0):
     # carica la mesh volumetrica con le coord cobiveco
     mesh = pv.read(input_vtu)
     #estrai supercifi endocardiche da vtp input
@@ -267,14 +266,15 @@ def tag_vol_region_from_tm_fastendo(input_vtu, output_vtk, input_vtp, endo_lv_ta
     print("dist min/max:", dist_cells.min(), dist_cells.max())
     print("abs dist min/max:", np.abs(dist_cells).min(), np.abs(dist_cells).max())
     print("percentili abs dist:", np.percentile(np.abs(dist_cells), [1, 5, 10, 25, 50]))
-    print("n fastendo candidate:", np.sum(np.abs(dist_cells) < FAST_ENDO_UM))
+    print("n fastendo candidate:", np.sum(np.abs(dist_cells) < fastendo_thickness))
     # Tag 1: FastEndo — entro 0.5 mm dalla superficie endo (LV + RV)
-    tags[(dist_cells >= 0) & (dist_cells < FAST_ENDO_UM)] = 4
-    # Assegna gli altri tag alle celle in base al valore transmurale (da 0 a 1)
-    tags[(dist_cells >= FAST_ENDO_UM) & (tm_cells < 0.3)] = 1 # Endocardio
-    tags[(tm_cells >= 0.3) & (tm_cells <= 0.7)] = 2  # Mid-miocardio
-    tags[tm_cells > 0.7] = 3                         # Epicardio
 
+    # Assegna gli altri tag alle celle in base al valore transmurale (da 0 a 1)
+    fast_endo_mask = (dist_cells >= -fastendo_thickness) & (dist_cells <= 0)
+    tags[fast_endo_mask] = 4
+    tags[(tm_cells < 0.3)] = 1 # epicardio
+    tags[(tm_cells >= 0.3) & (tm_cells <= 0.7)] = 2  # Mid-miocardio
+    tags[(tm_cells > 0.7) & (~fast_endo_mask)] = 3             # endocardio           # fast endo (sia LV che RV)
     # Salva i tag nella mesh come l'array attivo per le "scalars" (classi)
     mesh.cell_data["elemTag"] = tags
     mesh.set_active_scalars("elemTag")

@@ -222,10 +222,59 @@ def tag_vol_region_from_tm(input_vtu, output_vtk):
     tm_cells = mesh_cells.cell_data["tm"]
     # Crea un nuovo array vuoto per i tag volumetrici (es. interi a 32 bit)
     tags = np.zeros(mesh.n_cells, dtype=np.int32)
-    # Assegna i tag alle celle in base al valore transmurale (da 0 a 1)
+    # Assegna i tag alle celle in base al valore transmurale (da 0 a 1)\
     tags[tm_cells < 0.3] = 1                         # Endocardio
     tags[(tm_cells >= 0.3) & (tm_cells <= 0.7)] = 2  # Mid-miocardio
     tags[tm_cells > 0.7] = 3                         # Epicardio
+    # Salva i tag nella mesh come l'array attivo per le "scalars" (classi)
+    mesh.cell_data["elemTag"] = tags
+    mesh.set_active_scalars("elemTag")
+
+    mesh.cell_data["fibers"] = mesh.cell_data["Fiber"]
+    mesh.cell_data["sheet"] = mesh.cell_data["Sheet"]
+
+    writer = vtk.vtkUnstructuredGridWriter()
+    writer.SetInputData(mesh)
+    writer.SetFileName(output_vtk)
+    writer.SetFileVersion(42)
+    writer.SetFileTypeToASCII()
+    writer.Write()
+    print(f"Mesh scalata salvata in: {output_vtk}")
+    print("Mesh taggata salvata con successo!")
+
+def tag_vol_region_from_tm_fastendo(input_vtu, output_vtk, input_vtp, endo_lv_tag, endo_rv_tag, tag_array_name):
+    FAST_ENDO_UM = 700.0
+    # carica la mesh volumetrica con le coord cobiveco
+    mesh = pv.read(input_vtu)
+    #estrai supercifi endocardiche da vtp input
+    surf_mesh_all = pv.read(input_vtp)
+    endo_surf_ug = surf_mesh_all.threshold(value=[endo_lv_tag, endo_rv_tag], 
+                                            scalars=tag_array_name, 
+                                            preference='cell')
+    endo_surface = endo_surf_ug.extract_surface()  # converte in vtkPolyData
+    print(endo_surface.n_points, endo_surface.n_cells)
+    print(endo_surface.bounds)
+    print(mesh.bounds)
+    mesh_with_dist = mesh.compute_implicit_distance(endo_surface, inplace=False)
+
+    # Converti i dati dai nodi alle celle (calcola la media per ogni tetraedro)
+    mesh_cells = mesh_with_dist.ptc() # Point-To-Cell data interpolation
+
+    dist_cells  = mesh_cells.cell_data["implicit_distance"]
+    tm_cells = mesh_cells.cell_data["tm"]
+    # Crea un nuovo array vuoto per i tag volumetrici (es. interi a 32 bit)
+    tags = np.zeros(mesh.n_cells, dtype=np.int32)
+    print("dist min/max:", dist_cells.min(), dist_cells.max())
+    print("abs dist min/max:", np.abs(dist_cells).min(), np.abs(dist_cells).max())
+    print("percentili abs dist:", np.percentile(np.abs(dist_cells), [1, 5, 10, 25, 50]))
+    print("n fastendo candidate:", np.sum(np.abs(dist_cells) < FAST_ENDO_UM))
+    # Tag 1: FastEndo — entro 0.5 mm dalla superficie endo (LV + RV)
+    tags[(dist_cells >= 0) & (dist_cells < FAST_ENDO_UM)] = 4
+    # Assegna gli altri tag alle celle in base al valore transmurale (da 0 a 1)
+    tags[(dist_cells >= FAST_ENDO_UM) & (tm_cells < 0.3)] = 1 # Endocardio
+    tags[(tm_cells >= 0.3) & (tm_cells <= 0.7)] = 2  # Mid-miocardio
+    tags[tm_cells > 0.7] = 3                         # Epicardio
+
     # Salva i tag nella mesh come l'array attivo per le "scalars" (classi)
     mesh.cell_data["elemTag"] = tags
     mesh.set_active_scalars("elemTag")

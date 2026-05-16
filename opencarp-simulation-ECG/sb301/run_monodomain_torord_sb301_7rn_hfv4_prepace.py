@@ -130,9 +130,9 @@ def run(args, job):
         '-gregion[1].name', 'FastEndo',
         '-gregion[1].num_IDs', 1,
         '-gregion[1].ID[0]', 3,
-        '-gregion[1].g_il', 0.2615 * 4.0,
-        '-gregion[1].g_it', 0.1093 * 4.0, 
-        '-gregion[1].g_in', 0.1661 * 4.0,
+        '-gregion[1].g_il', 0.2615 * 5.0,
+        '-gregion[1].g_it', 0.1093 * 5.0, 
+        '-gregion[1].g_in', 0.1661 * 5.0,
         #'-gregion[1].g_mult', 5.0,
     ]
 

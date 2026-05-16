@@ -18,15 +18,15 @@ if __name__ == "__main__":
     import os
     import sys
     import pyvista as pv
-    from cobiveco_export_functions import scale_mesh_mantaining_point_data, tag_vol_region_from_tm, scale_vtksurfmesh
+    from cobiveco_export_functions import scale_mesh_mantaining_point_data, tag_vol_region_from_tm, tag_vol_region_from_tm_fastendo, scale_vtksurfmesh
 
     # Esempio di scaling (se necessario)
     geometric_data_dir = os.path.join('..',"cardiac-data","meta_data","geometric_data")
-    subject_name = 'sb4101'
+    subject_name = 'sb3901'
    # input_filename = 'sb301_coarse1500_cmcoord.vtu'
-    sim_folder = os.path.join(".", subject_name+'sim_input')
-    sim_meshes_folder = os.path.join(sim_folder, subject_name+'meshes')
-    sim_rn_folder = os.path.join(sim_folder, subject_name+'rootnodes')
+    sim_folder = os.path.join(".", subject_name)
+    sim_meshes_folder = os.path.join(sim_folder, subject_name,'_meshes')
+    sim_rn_folder = os.path.join(sim_folder, subject_name+'_rootnodes')
 
     if not os.path.exists(sim_folder):
         os.makedirs(sim_folder)
@@ -34,17 +34,25 @@ if __name__ == "__main__":
         os.makedirs(sim_meshes_folder)
     if not os.path.exists(sim_rn_folder):
         os.makedirs(sim_rn_folder)
-        
+    TAG_LV_ENDO = 3  # Valore per Endocardio LV
+    TAG_RV_ENDO = 4  # Valore per Endocardio RV
+    TAG_ARRAY_NAME = 'class'        
     input_dir = os.path.join(geometric_data_dir, subject_name)
    # input_path = input_dir + input_filename
-    scaled_out_filename = subject_name + '_500um_fibers.vtk'
-    scaled_out_path = os.path.join(input_dir, scaled_out_filename)
+    input_vtk_filename = subject_name + '_500um_fibers.vtk'
+    input_vtk_path = os.path.join(input_dir, input_vtk_filename)
+    input_vtp_filename = 'sb3901_500um.vtp'
+    input_vtp_path = os.path.join(input_dir, input_vtp_filename)
     #scale_mesh_mantaining_point_data(input_path, scaled_out_path, scale=10000)
-    tagged_filename = subject_name + '_500um_tagged'
-    tagged_out_path = os.path.join(input_dir, tagged_filename+'.vtk')
-    tag_vol_region_from_tm(scaled_out_path, tagged_out_path)
+    tagged_filename = subject_name + '_500um_taggedv2_fastendo'
+    tagged_out_vtk_path = os.path.join(input_dir, tagged_filename+'.vtk')
+    #tag_vol_region_from_tm(input_vtk_path, tagged_out_vtk_path)
+    #scaled_out_vtp_filename = 'sb3901_500um.vtp'
+    #scaled_out_vtp_path = input_dir + scaled_out_vtp_filename
+    #scale_mesh_mantaining_point_data(input_vtp_path, scaled_out_vtp_path, scale=1000)
+    tag_vol_region_from_tm_fastendo(input_vtk_path, tagged_out_vtk_path, input_vtp_path, TAG_LV_ENDO, TAG_RV_ENDO, TAG_ARRAY_NAME, fastendo_thickness=400.0)
 
-    shutil.move( tagged_out_path, os.path.join(sim_meshes_folder, tagged_filename+'.vtk'))
+    shutil.move( tagged_out_vtk_path, os.path.join(sim_meshes_folder, tagged_filename+'.vtk'))
 
     cmd_convert =[
         'opencarp-docker',
@@ -62,10 +70,10 @@ if __name__ == "__main__":
     
     
     #scala coordinate mesh torso da mm a um
-    torso_input_filename = 'sb3901_TORSOmm.vtk'
-    torso_input_path = './sb3901_torso/' + torso_input_filename
-    torso_scaled_out_filename = 'sb3901_torsoum.vtk'
-    torso_scaled_out_path = './sb3901_torso/' + torso_scaled_out_filename
+    # torso_input_filename = 'sb3901_TORSOmm.vtk'
+    # torso_input_path = './sb3901_torso/' + torso_input_filename
+    # torso_scaled_out_filename = 'sb3901_torsoum.vtk'
+    # torso_scaled_out_path = './sb3901_torso/' + torso_scaled_out_filename
 
    # scale_vtksurfmesh(torso_input_path, torso_scaled_out_path, scale=1000)
 

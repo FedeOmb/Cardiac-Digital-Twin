@@ -41,8 +41,15 @@ def save_vtu_arrays_to_csv(anatomy_subject_name, geometric_data_dir, target_reso
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    reader = vtkXMLUnstructuredGridReader()
+    reader = vtkUnstructuredGridReader()
+    if vtu_filename.endswith('.vtu'):
+        reader = vtkXMLUnstructuredGridReader()
+    else:
+        reader = vtkUnstructuredGridReader()
     reader.SetFileName(input_dir + vtu_filename)
+    if not vtu_filename.endswith('.vtu'):
+        reader.ReadAllVectorsOn()
+        reader.ReadAllScalarsOn()
     reader.Update()
     data = reader.GetOutput()
 
@@ -270,11 +277,11 @@ def tag_vol_region_from_tm_fastendo(input_vtu, output_vtk, input_vtp, endo_lv_ta
     # Tag 1: FastEndo — entro 0.5 mm dalla superficie endo (LV + RV)
 
     # Assegna gli altri tag alle celle in base al valore transmurale (da 0 a 1)
-    fast_endo_mask = (dist_cells >= -fastendo_thickness) & (dist_cells <= 0)
+    fast_endo_mask = (dist_cells >= -fastendo_thickness) & (dist_cells <= 0)    # fast endocardio
     tags[fast_endo_mask] = 4
-    tags[(tm_cells < 0.3)] = 1 # epicardio
-    tags[(tm_cells >= 0.3) & (tm_cells <= 0.7)] = 2  # Mid-miocardio
-    tags[(tm_cells > 0.7) & (~fast_endo_mask)] = 3             # endocardio           # fast endo (sia LV che RV)
+    tags[(tm_cells < 0.3)] = 1 # epicardio  30%
+    tags[(tm_cells >= 0.3) & (tm_cells <= 0.55)] = 2  # Mid-miocardio 25%
+    tags[(tm_cells > 0.55) & (~fast_endo_mask)] = 3   # endocardio  45%         
     # Salva i tag nella mesh come l'array attivo per le "scalars" (classi)
     mesh.cell_data["elemTag"] = tags
     mesh.set_active_scalars("elemTag")
@@ -293,7 +300,7 @@ def tag_vol_region_from_tm_fastendo(input_vtu, output_vtk, input_vtp, endo_lv_ta
 
 if __name__ == "__main__":
     geometric_data_dir = '../cardiac-data/meta_data/geometric_data/'
-    subject_name = 'sb1201'
+    subject_name = 'sb3901'
     target_resolution = 'coarse1500cm'
     #SCALING MESH coarse da mm a cm per framework CDT
     input_dir = geometric_data_dir + subject_name + '/'
@@ -308,6 +315,12 @@ if __name__ == "__main__":
     out_filename = subject_name+'_1500cm.vtp'
     out_path = input_dir + out_filename
     scale_mesh_mantaining_point_data(input_path, out_path, scale=0.1)
+
+    input_filename = subject_name+'_500mm.vtp'
+    input_path = input_dir + input_filename
+    out_filename = subject_name+'_500um.vtp'
+    out_path = input_dir + out_filename
+    scale_mesh_mantaining_point_data(input_path, out_path, scale=1000)
 
     #scaling mesh fine da mm a um per opencarp 
     input_filename = subject_name+'_500mm_fibers.vtk'
@@ -325,6 +338,7 @@ if __name__ == "__main__":
     fine_resolution = 'fine500um'
     fine_vtk_filename = subject_name+'_500um_fibers.vtk'
     save_vtk_vtu_to_csv(subject_name, geometric_data_dir, fine_resolution, fine_vtk_filename)
+    save_vtu_arrays_to_csv(subject_name, geometric_data_dir, fine_resolution, fine_vtk_filename)
     
     #export nodi endo rv e lv mesh coarse
     input_dir = geometric_data_dir + subject_name + '/'

@@ -22,17 +22,17 @@ if __name__ == "__main__":
     TAG_ARRAY_NAME = 'class'
     # Esempio di scaling (se necessario)
     geometric_data_dir = "../cardiac-data/meta_data/geometric_data/"
-    subject_name = 'sb4101'
-    input_vtp_filename = 'sb4101_500mm.vtp'
+    subject_name = 'sb3901'
+    input_vtp_filename = 'sb3901_500mm.vtp'
     input_dir = geometric_data_dir + subject_name + '/'
     input_vtp_path = input_dir + input_vtp_filename
-    scaled_out_vtp_filename = 'sb4101_500um.vtp'
+    scaled_out_vtp_filename = 'sb3901_500um.vtp'
     scaled_out_vtp_path = input_dir + scaled_out_vtp_filename
-    #scale_mesh_mantaining_point_data(input_vtp_path, scaled_out_vtp_path, scale=1000)
-    tagged_filename = 'sb4101_500um_tagged_fastendo_400.vtk'
+    scale_mesh_mantaining_point_data(input_vtp_path, scaled_out_vtp_path, scale=1000)
+    tagged_filename = 'sb3901_500um_tagged_fastendo.vtk'
     tagged_out_path = input_dir + tagged_filename
     #tag_vol_region_from_tm(scaled_out_path, tagged_out_path)
-    input_vtk_filename = 'sb4101_500um_fibers.vtk'
+    input_vtk_filename = 'sb3901_500um_fibers.vtk'
     input_vtk_path = input_dir + input_vtk_filename
     tag_vol_region_from_tm_fastendo(input_vtk_path, tagged_out_path, scaled_out_vtp_path, TAG_LV_ENDO, TAG_RV_ENDO, TAG_ARRAY_NAME, fastendo_thickness=400.0)
 

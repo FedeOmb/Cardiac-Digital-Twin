@@ -189,10 +189,10 @@ def find_qrs_anchor(ecg, fs, search_window_ms=250):
 def align_qrs_anchor(reference_ecg, reference_t_ms, reference_qrs_anchor, simulated_ecg, simulated_t_ms, simulated_qrs_anchor, fs):
     shift = int(reference_qrs_anchor - simulated_qrs_anchor)
     if shift > 0:
-        simulated_ecg = np.pad(simulated_ecg, ((0, 0), (shift, 0)), mode='constant')[:, :reference_ecg.shape[1]]
-        simulated_t_ms = np.arange(simulated_ecg.shape[1]) * 1000.0 / fs
+        reference_ecg = reference_ecg[:, shift:]
+        reference_t_ms = np.arange(reference_ecg.shape[1]) * 1000.0 / fs
     elif shift < 0:
-        reference_ecg = np.pad(reference_ecg, ((0, 0), (-shift, 0)), mode='constant')[:, :simulated_ecg.shape[1]]
+        reference_ecg = np.pad(reference_ecg, ((0, 0), (-shift, 0)), mode='constant')
         reference_t_ms = np.arange(reference_ecg.shape[1]) * 1000.0 / fs
 
     n = min(reference_ecg.shape[1], simulated_ecg.shape[1])
@@ -258,7 +258,6 @@ def get_signed_qrs_amplitudes(ecg, qrs_onset_idx, qrs_window_ms, fs):
     use_pos = np.abs(maxv) >= np.abs(minv)
     amps = np.where(use_pos, maxv, minv)
     return amps
-
 
 def scale_simulated_to_reference(reference_ecg, simulated_ecg, fs, qrs_onset_idx, qrs_window_ms=150, mode='per_lead', eps=1e-8):
     ref_amp = get_signed_qrs_amplitudes(reference_ecg, qrs_onset_idx, qrs_window_ms, fs)
@@ -337,6 +336,12 @@ def save_ecg_csv(filepath, t_ms, ecg, lead_names):
         writer.writerow(header)
         for i in range(ecg.shape[1]):
             writer.writerow([float(t_ms[i])] + [float(ecg[j, i]) for j in range(ecg.shape[0])])
+
+def save_ecg_csv_per_row(filepath, t_ms, ecg, lead_names):
+    with open(filepath, 'w', newline='') as f:
+        writer = csv.writer(f)
+        for i, lead_name in enumerate(lead_names):
+            writer.writerow(ecg[i, :].tolist())
 
 ###################################################################################################################
 ## Main script
@@ -480,7 +485,7 @@ scaled_simulated_ecgs_8, scale_factors, ref_amp, sim_amp = scale_simulated_to_re
     reference_ecg=reference_beat,
     simulated_ecg=simulated_ecgs_8,
     fs=sim_freq,
-    qrs_onset_idx=min(reference_qrs_anchor, reference_beat.shape[1] - 1),
+    qrs_onset_idx=min(int(sim_qrs_anchor), reference_beat.shape[1] - 1),
     qrs_window_ms=qrs_window_ms,
     mode=scaling_mode,
 )
@@ -492,7 +497,10 @@ scaled_csv = os.path.join(sim_folder, casename + '_scaled_simulated_ecg.csv')
 out_png = os.path.join(sim_folder, f'{casename}_norm1_scaled_to_{ptb_casename}_{scaling_mode}.png')
 
 save_ecg_csv(clinical_csv, reference_t_ms, reference_beat, LEAD_NAMES_8)
-save_ecg_csv(scaled_csv, simulated_t_ms, scaled_simulated_ecgs_8, LEAD_NAMES_8)
+#save_ecg_csv(scaled_csv, simulated_t_ms, scaled_simulated_ecgs_8, LEAD_NAMES_8)
+save_ecg_csv_per_row(scaled_csv, simulated_t_ms, scaled_simulated_ecgs_8, LEAD_NAMES_8)
+save_ecg_csv_per_row(clinical_csv, reference_t_ms, reference_beat, LEAD_NAMES_8)
+
 print(f'Saved clinical beat CSV: {clinical_csv}')
 print(f'Saved scaled simulated ECG CSV: {scaled_csv}')
 visualise_ecgs(
@@ -505,4 +513,3 @@ visualise_ecgs(
     ylim=None,
     out_png=out_png,
 )
-

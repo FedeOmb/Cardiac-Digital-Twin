@@ -4,7 +4,7 @@ import pandas as pd
 from carputils import settings
 from carputils import tools
 
-TOMEK_LIB = '../tomek-model/Tomek_edit.so'
+TOMEK_LIB = '../tomek-model/Tomek_editv3.so'
 
 
 def parser():
@@ -25,7 +25,7 @@ def parser():
                         default='.',
                         help='Directory di input')                        
     parser.add_argument('--outdir',
-                        default='./test_monodomain_torord_sb3901_norm2_fastendo_grad_nomid',
+                        default='./test_monodomain_torord_sb3901_norm3_fast_realprep_grad',
                         help='Directory di output (simID)')
     return parser
 
@@ -103,17 +103,25 @@ def run(args, job):
        # '-pstrat', 1,
         '-output_level', 5,
         '-phie_rec_ptf', os.path.join(args.inputdir, 'sb3901_meshes', 'sb3901_electrodesum'),
-        '-phie_recovery_file', 'sb3901_phie_recovery_norm2_fastendo_grad',
+        '-phie_recovery_file', 'sb3901_phie_recovery_norm2_prep_fast',
     ]
 
     cmd += [
-    '-prepacing_beats',   250,
-    '-prepacing_bcl',     1000.0,
-    '-prepacing_stimdur', 4.0,    # coerente con il tuo protocollo tissutale
-    '-prepacing_stimstr', 60.0,   # unità µA/µF, default  per single-cell
-    '-prepacing_lats', os.path.join(args.inputdir, 'sb3901_meshes', 'sb3901_latmap_zero.dat'),
+     '-prepacing_beats',   250,
+     '-prepacing_bcl',     1000.0,
+     '-prepacing_stimdur', 4.0,    # coerente con il tuo protocollo tissutale
+     '-prepacing_stimstr', 60.0,   # unità µA/µF, default  per single-cell
+     '-prepacing_lats', os.path.join(args.inputdir, 'sb3901_meshes', 'init_acts_ACT-thresh.dat'),
     ]
-
+# Aggiungi queste righe per chiedere a openCARP di calcolare i LAT
+    # cmd += [
+    #     '-num_LATs', 1,
+    #     '-lats[0].ID', 'ACT',
+    #     '-lats[0].measurand', 0,       # Misura il voltaggio (Vm)
+    #     '-lats[0].all', 0,             # Registra solo la prima attivazione
+    #     '-lats[0].threshold', -10.0,   # Soglia di depolarizzazione in mV
+    #     '-lats[0].mode', 0,           
+    # ]
     #caricamento modello tomek modificato con parametri
     cmd += [
         '-num_external_imp', 1,
@@ -134,53 +142,12 @@ def run(args, job):
 
         '-gregion[1].name', 'FastEndo',
         '-gregion[1].num_IDs', 1,
-        '-gregion[1].ID[0]', 3,
+        '-gregion[1].ID[0]', 4,
         '-gregion[1].g_il', 0.2615 * 4.0,
         '-gregion[1].g_it', 0.1093 * 4.0, 
         '-gregion[1].g_in', 0.1661 * 4.0,
         #'-gregion[1].g_mult', 5.0,
     ]
-
-    torord_params_hfbase_endo = (               # Heart Failure non-ischemica
-        'flags=ENDO',
-        'GNaL_b*1.30',    # 130%
-        'thL*1.80',         # 180%
-        'Gto_b*0.40',       # 40%
-        'GK1_b*0.68',      # 68%
-        'PNaK_b*0.70',     # 70%
-        'Gncx_b*1.65',    # 165%
-        'Jup_b*0.45',     # SERCA 45%
-        'Cajsr_half*0.80', # RyR sens. 80%
-        'Jrel_b*1.30',    # SR leak 130%
-        'CaMKo*1.50'      # CaMKII 150%
-    )
-    torord_params_hfbase_mid = (               # Heart Failure non-ischemica
-        'flags=MCELL',
-        'GNaL_b*1.30',    # 130%
-        'thL*1.80',         # 180%
-        'Gto_b*0.40',       # 40%
-        'GK1_b*0.68',      # 68%
-        'PNaK_b*0.70',     # 70%
-        'Gncx_b*1.65',    # 165%
-        'Jup_b*0.45',     # SERCA 45%
-        'Cajsr_half*0.80', # RyR sens. 80%
-        'Jrel_b*1.30',    # SR leak 130%
-        'CaMKo*1.50'      # CaMKII 150%
-    )
-    torord_params_hfbase_epi = (               # Heart Failure non-ischemica
-        'flags=EPI',
-        'GNaL_b*1.30',    # 130%
-        'thL*1.80',         # 180%
-        'Gto_b*0.40',       # 40%
-        'GK1_b*0.68',      # 68%
-        'PNaK_b*0.70',     # 70%
-        'Gncx_b*1.65',    # 165%
-        'Jup_b*0.45',     # SERCA 45%
-        'Cajsr_half*0.80', # RyR sens. 80%
-        'Jrel_b*1.30',    # SR leak 130%
-        'CaMKo*1.50'      # CaMKII 150%
-    )
-
 
     # Eterogeneità Cellulare (ImpRegions per il modello tenTusscherPanfilov)
     cmd += [
@@ -190,24 +157,24 @@ def run(args, job):
         '-imp_region[0].num_IDs', 2,
         '-imp_region[0].ID[0]', 3,      #tag endocardio 3 
         '-imp_region[0].ID[1]', 4,      #tag fast endo 4
-        '-imp_region[0].im', 'Tomek_edit',
-        '-imp_region[0].im_param', 'flags=ENDO, GKr_b*0.5',
+        '-imp_region[0].im', 'Tomek_editv3',
+        '-imp_region[0].im_param', 'flags=ENDO',
         
         
         '-imp_region[1].name', 'Mid_Miocardio',
         '-imp_region[1].num_IDs', 1,
         '-imp_region[1].ID[0]', 2,      #tag mid miocardio 2
-        '-imp_region[1].im', 'Tomek_edit',
-        '-imp_region[1].im_param', 'flags=EPI, GKr_b*0.5',
+        '-imp_region[1].im', 'Tomek_editv3',
+        '-imp_region[1].im_param', 'flags=MCELL',
 
         '-imp_region[2].name', 'Epicardio',
         '-imp_region[2].num_IDs', 1,
         '-imp_region[2].ID[0]', 1,      #tag epicardio 1
-        '-imp_region[2].im', 'Tomek_edit',
-        '-imp_region[2].im_param', 'flags=EPI, GKr_b*0.5',
+        '-imp_region[2].im', 'Tomek_editv3',
+        '-imp_region[2].im_param', 'flags=EPI',
         '-num_adjustments', 1,   
-        '-adjustment[0].variable', 'Tomek_edit.GKs_b',
-        '-adjustment[0].file', './sb3901_meshes/gks_tomek_gradient.adj',
+        '-adjustment[0].variable', 'Tomek_editv3.GKs_b',
+        '-adjustment[0].file', './sb3901_meshes/gks_tomek_gradient30percent.adj',
         '-adjustment[0].dump', 1,
     ]
     # Phys Regions (Dominio Intracellulare Globale)

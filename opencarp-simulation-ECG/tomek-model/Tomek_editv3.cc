@@ -32,7 +32,7 @@
 // DO NOT EDIT THIS SOURCE CODE FILE
 // ANY CHANGES TO THIS FILE WILL BE OVERWRITTEN!!!!
 
-#include "Tomek_edit.h"
+#include "Tomek_editv3.h"
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -45,58 +45,58 @@ namespace limpet {
 using ::opencarp::f_open;
 using ::opencarp::FILE_SPEC;
 
-Tomek_editIonType::Tomek_editIonType(bool plugin) : IonType(std::move(std::string("Tomek_edit")), plugin) {}
+Tomek_editv3IonType::Tomek_editv3IonType(bool plugin) : IonType(std::move(std::string("Tomek_editv3")), plugin) {}
 
-size_t Tomek_editIonType::params_size() const {
-  return sizeof(struct Tomek_edit_Params);
+size_t Tomek_editv3IonType::params_size() const {
+  return sizeof(struct Tomek_editv3_Params);
 }
 
-size_t Tomek_editIonType::dlo_vector_size() const {
+size_t Tomek_editv3IonType::dlo_vector_size() const {
 
   return 1;
 }
 
-uint32_t Tomek_editIonType::reqdat() const {
-  return Tomek_edit_REQDAT;
+uint32_t Tomek_editv3IonType::reqdat() const {
+  return Tomek_editv3_REQDAT;
 }
 
-uint32_t Tomek_editIonType::moddat() const {
-  return Tomek_edit_MODDAT;
+uint32_t Tomek_editv3IonType::moddat() const {
+  return Tomek_editv3_MODDAT;
 }
 
-void Tomek_editIonType::destroy(IonIfBase& imp_base) const {
+void Tomek_editv3IonType::destroy(IonIfBase& imp_base) const {
   IonIfDerived& imp = static_cast<IonIfDerived&>(imp_base);
   imp.destroy_luts();
   // rarely need to do anything else
 }
 
-Target Tomek_editIonType::select_target(Target target) const {
+Target Tomek_editv3IonType::select_target(Target target) const {
   switch (target) {
     case Target::AUTO:
-#   ifdef TOMEK_EDIT_MLIR_CUDA_GENERATED
+#   ifdef TOMEK_EDITV3_MLIR_CUDA_GENERATED
       return Target::MLIR_CUDA;
-#   elif defined(TOMEK_EDIT_MLIR_ROCM_GENERATED)
+#   elif defined(TOMEK_EDITV3_MLIR_ROCM_GENERATED)
       return Target::MLIR_ROCM;
-#   elif defined(TOMEK_EDIT_MLIR_CPU_GENERATED)
+#   elif defined(TOMEK_EDITV3_MLIR_CPU_GENERATED)
       return Target::MLIR_CPU;
-#   elif defined(TOMEK_EDIT_CPU_GENERATED)
+#   elif defined(TOMEK_EDITV3_CPU_GENERATED)
       return Target::CPU;
 #   else
       return Target::UNKNOWN;
 #   endif
-#   ifdef TOMEK_EDIT_MLIR_CUDA_GENERATED
+#   ifdef TOMEK_EDITV3_MLIR_CUDA_GENERATED
     case Target::MLIR_CUDA:
       return Target::MLIR_CUDA;
 #   endif
-#   ifdef TOMEK_EDIT_MLIR_ROCM_GENERATED
+#   ifdef TOMEK_EDITV3_MLIR_ROCM_GENERATED
     case Target::MLIR_ROCM:
       return Target::MLIR_ROCM;
 #   endif
-#   ifdef TOMEK_EDIT_MLIR_CPU_GENERATED
+#   ifdef TOMEK_EDITV3_MLIR_CPU_GENERATED
     case Target::MLIR_CPU:
       return Target::MLIR_CPU;
 #   endif
-#   ifdef TOMEK_EDIT_CPU_GENERATED
+#   ifdef TOMEK_EDITV3_CPU_GENERATED
     case Target::CPU:
       return Target::CPU;
 #   endif
@@ -105,40 +105,40 @@ Target Tomek_editIonType::select_target(Target target) const {
   }
 }
 
-void Tomek_editIonType::compute(Target target, int start, int end, IonIfBase& imp_base, GlobalData_t** data) const {
+void Tomek_editv3IonType::compute(Target target, int start, int end, IonIfBase& imp_base, GlobalData_t** data) const {
   IonIfDerived& imp = static_cast<IonIfDerived&>(imp_base);
   switch(target) {
     case Target::AUTO:
-#   ifdef TOMEK_EDIT_MLIR_CUDA_GENERATED
-      compute_Tomek_edit_mlir_gpu_cuda(start, end, imp, data);
-#   elif defined(TOMEK_EDIT_MLIR_ROCM_GENERATED)
-      compute_Tomek_edit_mlir_gpu_rocm(start, end, imp, data);
-#   elif defined(TOMEK_EDIT_MLIR_CPU_GENERATED)
-      compute_Tomek_edit_mlir_cpu(start, end, imp, data);
-#   elif defined(TOMEK_EDIT_CPU_GENERATED)
-      compute_Tomek_edit_cpu(start, end, imp, data);
+#   ifdef TOMEK_EDITV3_MLIR_CUDA_GENERATED
+      compute_Tomek_editv3_mlir_gpu_cuda(start, end, imp, data);
+#   elif defined(TOMEK_EDITV3_MLIR_ROCM_GENERATED)
+      compute_Tomek_editv3_mlir_gpu_rocm(start, end, imp, data);
+#   elif defined(TOMEK_EDITV3_MLIR_CPU_GENERATED)
+      compute_Tomek_editv3_mlir_cpu(start, end, imp, data);
+#   elif defined(TOMEK_EDITV3_CPU_GENERATED)
+      compute_Tomek_editv3_cpu(start, end, imp, data);
 #   else
-#     error "Could not generate method Tomek_editIonType::compute."
+#     error "Could not generate method Tomek_editv3IonType::compute."
 #   endif
       break;
-#   ifdef TOMEK_EDIT_MLIR_CUDA_GENERATED
+#   ifdef TOMEK_EDITV3_MLIR_CUDA_GENERATED
     case Target::MLIR_CUDA:
-      compute_Tomek_edit_mlir_gpu_cuda(start, end, imp, data);
+      compute_Tomek_editv3_mlir_gpu_cuda(start, end, imp, data);
       break;
 #   endif
-#   ifdef TOMEK_EDIT_MLIR_ROCM_GENERATED
+#   ifdef TOMEK_EDITV3_MLIR_ROCM_GENERATED
     case Target::MLIR_ROCM:
-      compute_Tomek_edit_mlir_gpu_rocm(start, end, imp, data);
+      compute_Tomek_editv3_mlir_gpu_rocm(start, end, imp, data);
       break;
 #   endif
-#   ifdef TOMEK_EDIT_MLIR_CPU_GENERATED
+#   ifdef TOMEK_EDITV3_MLIR_CPU_GENERATED
     case Target::MLIR_CPU:
-      compute_Tomek_edit_mlir_cpu(start, end, imp, data);
+      compute_Tomek_editv3_mlir_cpu(start, end, imp, data);
       break;
 #   endif
-#   ifdef TOMEK_EDIT_CPU_GENERATED
+#   ifdef TOMEK_EDITV3_CPU_GENERATED
     case Target::CPU:
-      compute_Tomek_edit_cpu(start, end, imp, data);
+      compute_Tomek_editv3_cpu(start, end, imp, data);
       break;
 #   endif
     default:
@@ -277,7 +277,6 @@ void Tomek_editIonType::compute(Target target, int start, int end, IonIfBase& im
 #define tauCa (GlobalData_t)(0.2)
 #define tauK (GlobalData_t)(2.0)
 #define tauNa (GlobalData_t)(2.0)
-#define tjCa (GlobalData_t)(75.)
 #define trpnmax (GlobalData_t)(0.07)
 #define wCa (GlobalData_t)(6e4)
 #define wNa (GlobalData_t)(6e4)
@@ -325,11 +324,11 @@ void Tomek_editIonType::compute(Target target, int start, int end, IonIfBase& im
 
 
 
-void Tomek_editIonType::initialize_params(IonIfBase& imp_base) const
+void Tomek_editv3IonType::initialize_params(IonIfBase& imp_base) const
 {
   IonIfDerived& imp = static_cast<IonIfDerived&>(imp_base);
   cell_geom* region = &imp.cgeom();
-  Tomek_edit_Params *p = imp.params();
+  Tomek_editv3_Params *p = imp.params();
 
   // Compute the regional constants
   {
@@ -349,6 +348,7 @@ void Tomek_editIonType::initialize_params(IonIfBase& imp_base) const
     else if (flag_set(p->flags, "EPI")) p->celltype = EPI;
     else if (flag_set(p->flags, "MCELL")) p->celltype = MCELL;
     p->thL = 200.;
+    p->tjCa = 75.;
   }
   // Compute the regional initialization
   {
@@ -451,12 +451,12 @@ enum V_TableIndex {
 
 
 
-void Tomek_editIonType::construct_tables(IonIfBase& imp_base) const
+void Tomek_editv3IonType::construct_tables(IonIfBase& imp_base) const
 {
   IonIfDerived& imp = static_cast<IonIfDerived&>(imp_base);
   GlobalData_t dt = imp.get_dt() * 1e0;
   cell_geom* region = &imp.cgeom();
-  Tomek_edit_Params *p = imp.params();
+  Tomek_editv3_Params *p = imp.params();
 
   imp.tables().resize(N_TABS);
 
@@ -480,7 +480,7 @@ void Tomek_editIonType::construct_tables(IonIfBase& imp_base) const
   
   // Create the Cai lookup table
   LUT* Cai_tab = &imp.tables()[Cai_TAB];
-  LUT_alloc(Cai_tab, NROWS_Cai, 1e-6, 1e-2, 1e-6, "Tomek_edit Cai", imp.get_target());
+  LUT_alloc(Cai_tab, NROWS_Cai, 1e-6, 1e-2, 1e-6, "Tomek_editv3 Cai", imp.get_target());
   for (int __i=Cai_tab->mn_ind; __i<=Cai_tab->mx_ind; __i++) {
     double Cai = Cai_tab->res*__i;
     LUT_data_t* Cai_row = Cai_tab->tab[__i];
@@ -496,7 +496,7 @@ void Tomek_editIonType::construct_tables(IonIfBase& imp_base) const
   
   // Create the V lookup table
   LUT* V_tab = &imp.tables()[V_TAB];
-  LUT_alloc(V_tab, NROWS_V, -1000, 1000, 1e-2, "Tomek_edit V", imp.get_target());
+  LUT_alloc(V_tab, NROWS_V, -1000, 1000, 1e-2, "Tomek_editv3 V", imp.get_target());
   for (int __i=V_tab->mn_ind; __i<=V_tab->mx_ind; __i++) {
     double V = V_tab->res*__i;
     LUT_data_t* V_row = V_tab->tab[__i];
@@ -588,14 +588,14 @@ void Tomek_editIonType::construct_tables(IonIfBase& imp_base) const
 
 
 
-void Tomek_editIonType::initialize_sv(IonIfBase& imp_base, GlobalData_t **impdata ) const
+void Tomek_editv3IonType::initialize_sv(IonIfBase& imp_base, GlobalData_t **impdata ) const
 {
   IonIfDerived& imp = static_cast<IonIfDerived&>(imp_base);
   GlobalData_t dt = imp.get_dt() * 1e0;
   cell_geom *region = &imp.cgeom();
-  Tomek_edit_Params *p = imp.params();
+  Tomek_editv3_Params *p = imp.params();
 
-  Tomek_edit_state *sv_base = (Tomek_edit_state *)imp.sv_tab().data();
+  Tomek_editv3_state *sv_base = (Tomek_editv3_state *)imp.sv_tab().data();
   GlobalData_t t = 0;
 
   IonIfDerived* IF = &imp;
@@ -623,7 +623,7 @@ void Tomek_editIonType::initialize_sv(IonIfBase& imp_base, GlobalData_t **impdat
 
   //set the initial values
   for(int __i=0; __i < imp.get_num_node(); __i+=1 ){
-    Tomek_edit_state *sv = sv_base+__i / 1;
+    Tomek_editv3_state *sv = sv_base+__i / 1;
     //Initialize the external vars to their current values
     GlobalData_t Iion = Iion_ext[__i];
     GlobalData_t V = V_ext[__i];
@@ -841,19 +841,19 @@ void Tomek_editIonType::initialize_sv(IonIfBase& imp_base, GlobalData_t **impdat
  * param IF      IMP
  * param plgdata external data needed by IMP
  */
-#ifdef TOMEK_EDIT_CPU_GENERATED
+#ifdef TOMEK_EDITV3_CPU_GENERATED
 extern "C" {
-void compute_Tomek_edit_cpu(int start, int end, IonIfBase& imp_base, GlobalData_t **impdata )
+void compute_Tomek_editv3_cpu(int start, int end, IonIfBase& imp_base, GlobalData_t **impdata )
 {
-  Tomek_editIonType::IonIfDerived& imp = static_cast<Tomek_editIonType::IonIfDerived&>(imp_base);
+  Tomek_editv3IonType::IonIfDerived& imp = static_cast<Tomek_editv3IonType::IonIfDerived&>(imp_base);
   GlobalData_t dt = imp.get_dt()*1e0;
   cell_geom *region = &imp.cgeom();
-  Tomek_edit_Params *p  = imp.params();
-  Tomek_edit_state *sv_base = (Tomek_edit_state *)imp.sv_tab().data();
+  Tomek_editv3_Params *p  = imp.params();
+  Tomek_editv3_state *sv_base = (Tomek_editv3_state *)imp.sv_tab().data();
 
   GlobalData_t t = imp.get_tstp().cnt*dt;
 
-  Tomek_editIonType::IonIfDerived* IF = &imp;
+  Tomek_editv3IonType::IonIfDerived* IF = &imp;
 
   // Define the constants that depend on the parameters.
   GlobalData_t GK1 = ((p->celltype==1.) ? (p->GK1_b*1.2) : ((p->celltype==2.) ? (p->GK1_b*1.3) : p->GK1_b));
@@ -879,7 +879,7 @@ void compute_Tomek_edit_cpu(int start, int end, IonIfBase& imp_base, GlobalData_
 
 #pragma omp parallel for schedule(static)
   for (int __i=(start / 1) * 1; __i<end; __i+=1) {
-    Tomek_edit_state *sv = sv_base+__i / 1;
+    Tomek_editv3_state *sv = sv_base+__i / 1;
                     
     //Initialize the external vars to their current values
     GlobalData_t Iion = Iion_ext[__i];
@@ -1047,7 +1047,7 @@ void compute_Tomek_edit_cpu(int start, int end, IonIfBase& imp_base, GlobalData_
     GlobalData_t diff_fs = ((V_row[fss_idx]-(sv->fs))/V_row[tfs_idx]);
     GlobalData_t diff_hL = ((V_row[hLss_idx]-(sv->hL))/p->thL);
     GlobalData_t diff_hLp = ((V_row[hLssp_idx]-(sv->hLp))/thLp);
-    GlobalData_t diff_jCa = ((V_row[jCass_idx]-(sv->jCa))/tjCa);
+    GlobalData_t diff_jCa = ((V_row[jCass_idx]-(sv->jCa))/p->tjCa);
     GlobalData_t diff_m = ((V_row[mss_idx]-(sv->m))/V_row[tm_idx]);
     GlobalData_t diff_mL = ((V_row[mLss_idx]-(sv->mL))/V_row[tmL_idx]);
     GlobalData_t diff_xs1 = ((V_row[xs1ss_idx]-(sv->xs1))/V_row[txs1_idx]);
@@ -1275,19 +1275,19 @@ void compute_Tomek_edit_cpu(int start, int end, IonIfBase& imp_base, GlobalData_
 
             }
 }
-#endif // TOMEK_EDIT_CPU_GENERATED
+#endif // TOMEK_EDITV3_CPU_GENERATED
 
-bool Tomek_editIonType::has_trace() const {
+bool Tomek_editv3IonType::has_trace() const {
     return true;
 }
 
-void Tomek_editIonType::trace(IonIfBase& imp_base, int node, FILE* file, GlobalData_t** impdata) const
+void Tomek_editv3IonType::trace(IonIfBase& imp_base, int node, FILE* file, GlobalData_t** impdata) const
 {
   IonIfDerived& imp = static_cast<IonIfDerived&>(imp_base);
   static bool first = true;
   if (first) {
     first = false;
-    FILE_SPEC theader = f_open("Tomek_edit_trace_header.txt","wt");
+    FILE_SPEC theader = f_open("Tomek_editv3_trace_header.txt","wt");
     fprintf(theader->fd,
         "Iion\n"
         "V\n"
@@ -1298,11 +1298,11 @@ void Tomek_editIonType::trace(IonIfBase& imp_base, int node, FILE* file, GlobalD
 
   GlobalData_t dt = imp.get_dt() * 1e0;
   cell_geom *region = &imp.cgeom();
-  Tomek_edit_Params *p  = imp.params();
+  Tomek_editv3_Params *p  = imp.params();
 
-  Tomek_edit_state *sv_base = (Tomek_edit_state *)imp.sv_tab().data();
+  Tomek_editv3_state *sv_base = (Tomek_editv3_state *)imp.sv_tab().data();
 
-  Tomek_edit_state *sv = sv_base+node;
+  Tomek_editv3_state *sv = sv_base+node;
   int __i = node;
 
   GlobalData_t t = imp.get_tstp().cnt * dt;
@@ -1491,7 +1491,7 @@ void Tomek_editIonType::trace(IonIfBase& imp_base, int node, FILE* file, GlobalD
   
 
 }
-IonIfBase* Tomek_editIonType::make_ion_if(Target target, int num_node, const std::vector<std::reference_wrapper<IonType>>& plugins) const {
+IonIfBase* Tomek_editv3IonType::make_ion_if(Target target, int num_node, const std::vector<std::reference_wrapper<IonType>>& plugins) const {
         // Place the allocated IonIf in managed memory if a GPU target exists for this model
         // otherwise, place it in main RAM
     IonIfDerived* ptr;
@@ -1509,7 +1509,7 @@ IonIfBase* Tomek_editIonType::make_ion_if(Target target, int num_node, const std
     num_node, plugins);
 }
 
-void Tomek_editIonType::destroy_ion_if(IonIfBase *imp) const {
+void Tomek_editv3IonType::destroy_ion_if(IonIfBase *imp) const {
     // Call destructor and deallocate manually because the object might
     // be located on GPU (delete won't work in this case)
     imp->~IonIfBase();

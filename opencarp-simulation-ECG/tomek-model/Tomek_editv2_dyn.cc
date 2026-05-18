@@ -16,15 +16,15 @@ extern opencarp::FILE_SPEC _nc_logf;
 
 ////////////////////////////////////////////////
 
-#include "Tomek_edit.h"
+#include "Tomek_editv2.h"
 
 
 
 namespace limpet {
 
-void Tomek_editIonType::tune(IonIfBase& iif_base, const char* im_par) const {
+void Tomek_editv2IonType::tune(IonIfBase& iif_base, const char* im_par) const {
   IonIfDerived& iif = static_cast<IonIfDerived&>(iif_base);
-  Tomek_edit_Params *p;							// pointer to parameter structure
+  Tomek_editv2_Params *p;							// pointer to parameter structure
   char parameter[1024], mod[1024];
 
   p = iif.params();
@@ -36,12 +36,12 @@ void Tomek_editIonType::tune(IonIfBase& iif_base, const char* im_par) const {
     if( !strncmp(par, "flags=", 6 ) ) {
 
 
-      bool valid_flags = verify_flags(Tomek_edit_flags, par+6);
+      bool valid_flags = verify_flags(Tomek_editv2_flags, par+6);
       if( !valid_flags ) {
         log_msg(_nc_logf, 5, 0, "Illegal flag specified: %s\n", par );
         exit( 1 );
       }
-      ((Tomek_edit_Params *)p)->flags = dupstr(par+6);
+      ((Tomek_editv2_Params *)p)->flags = dupstr(par+6);
       iif.initialize_params();
 
 
@@ -58,51 +58,55 @@ void Tomek_editIonType::tune(IonIfBase& iif_base, const char* im_par) const {
 
     else if( !strcmp( "CaMKo", parameter ) )
 
-      CHANGE_PARAM( Tomek_edit, p, CaMKo, mod );
+      CHANGE_PARAM( Tomek_editv2, p, CaMKo, mod );
 
     else if( !strcmp( "Cajsr_half", parameter ) )
 
-      CHANGE_PARAM( Tomek_edit, p, Cajsr_half, mod );
+      CHANGE_PARAM( Tomek_editv2, p, Cajsr_half, mod );
 
     else if( !strcmp( "GK1_b", parameter ) )
 
-      CHANGE_PARAM( Tomek_edit, p, GK1_b, mod );
+      CHANGE_PARAM( Tomek_editv2, p, GK1_b, mod );
 
     else if( !strcmp( "GKr_b", parameter ) )
 
-      CHANGE_PARAM( Tomek_edit, p, GKr_b, mod );
+      CHANGE_PARAM( Tomek_editv2, p, GKr_b, mod );
 
     else if( !strcmp( "GKs_b", parameter ) )
 
-      CHANGE_PARAM( Tomek_edit, p, GKs_b, mod );
+      CHANGE_PARAM( Tomek_editv2, p, GKs_b, mod );
 
     else if( !strcmp( "GNaL_b", parameter ) )
 
-      CHANGE_PARAM( Tomek_edit, p, GNaL_b, mod );
+      CHANGE_PARAM( Tomek_editv2, p, GNaL_b, mod );
 
     else if( !strcmp( "Gncx_b", parameter ) )
 
-      CHANGE_PARAM( Tomek_edit, p, Gncx_b, mod );
+      CHANGE_PARAM( Tomek_editv2, p, Gncx_b, mod );
 
     else if( !strcmp( "Gto_b", parameter ) )
 
-      CHANGE_PARAM( Tomek_edit, p, Gto_b, mod );
+      CHANGE_PARAM( Tomek_editv2, p, Gto_b, mod );
 
     else if( !strcmp( "Jrel_b", parameter ) )
 
-      CHANGE_PARAM( Tomek_edit, p, Jrel_b, mod );
+      CHANGE_PARAM( Tomek_editv2, p, Jrel_b, mod );
 
     else if( !strcmp( "Jup_b", parameter ) )
 
-      CHANGE_PARAM( Tomek_edit, p, Jup_b, mod );
+      CHANGE_PARAM( Tomek_editv2, p, Jup_b, mod );
 
     else if( !strcmp( "PNaK_b", parameter ) )
 
-      CHANGE_PARAM( Tomek_edit, p, PNaK_b, mod );
+      CHANGE_PARAM( Tomek_editv2, p, PNaK_b, mod );
 
     else if( !strcmp( "thL", parameter ) )
 
-      CHANGE_PARAM( Tomek_edit, p, thL, mod );
+      CHANGE_PARAM( Tomek_editv2, p, thL, mod );
+
+    else if( !strcmp( "tjCa", parameter ) )
+
+      CHANGE_PARAM( Tomek_editv2, p, tjCa, mod );
 
 
     else if( !strcmp( "flags", parameter ) )
@@ -122,10 +126,10 @@ void Tomek_editIonType::tune(IonIfBase& iif_base, const char* im_par) const {
 
 /** output all parameters which may be tuned for all IMPs
  */
-void Tomek_editIonType::print_params() const {
+void Tomek_editv2IonType::print_params() const {
   IonIfDerived IF{*this, Target::AUTO, 0, {}};
   IF.initialize_params();
-  printf("Name: Tomek_edit\n" );
+  printf("Name: Tomek_editv2\n" );
   printf("\tParameters:\n" );
 
   printf( "\t%32s\t%g\n","CaMKo", IF.params()->CaMKo );
@@ -152,6 +156,8 @@ void Tomek_editIonType::print_params() const {
 
   printf( "\t%32s\t%g\n","thL", IF.params()->thL );
 
+  printf( "\t%32s\t%g\n","tjCa", IF.params()->tjCa );
+
   printf( "\t%32s\t%s\n","flags", "ENDO|EPI|MCELL" );
 
 
@@ -159,13 +165,13 @@ void Tomek_editIonType::print_params() const {
 
 
 
-int Tomek_editIonType::write_svs(IonIfBase& IF_base, FILE *out, int node) const {
+int Tomek_editv2IonType::write_svs(IonIfBase& IF_base, FILE *out, int node) const {
   IonIfDerived& IF = static_cast<IonIfDerived&>(IF_base);
   fprintf( out, "%s\n", IF.get_type().get_name().c_str() );
 
   int inner_id = node % this->dlo_vector_size();
 
-  Tomek_edit_state *sv = IF.sv_tab().data()+(node / (this->dlo_vector_size()));
+  Tomek_editv2_state *sv = IF.sv_tab().data()+(node / (this->dlo_vector_size()));
 
   fprintf( out, "%-20g# C1\n", sv->C1 );
 
@@ -260,7 +266,7 @@ int Tomek_editIonType::write_svs(IonIfBase& IF_base, FILE *out, int node) const 
 
 
 
-int Tomek_editIonType::read_svs(IonIfBase& IF_base, FILE *in) const {
+int Tomek_editv2IonType::read_svs(IonIfBase& IF_base, FILE *in) const {
   IonIfDerived& IF = static_cast<IonIfDerived&>(IF_base);
   const int  BUFSIZE=256;
   char       impname[256], buf[BUFSIZE];
@@ -285,7 +291,7 @@ int Tomek_editIonType::read_svs(IonIfBase& IF_base, FILE *in) const {
   if(!IF.get_num_node())  {
     flg = 1;
   }
-  Tomek_edit_state *sv = IF.sv_tab().data();
+  Tomek_editv2_state *sv = IF.sv_tab().data();
 
   sscanf( fgets(buf,BUFSIZE,in), gdt_sc, &sv->C1 );
 
@@ -379,17 +385,17 @@ int Tomek_editIonType::read_svs(IonIfBase& IF_base, FILE *in) const {
 
 
 
-SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz) const {
+SVgetfcn Tomek_editv2IonType::get_sv_offset(const char *svname, int *off, int *sz) const {
   SVgetfcn retall = (SVgetfcn)(1);
 
 
-        Tomek_edit_state *sv;
+        Tomek_editv2_state *sv;
 
         if( !strcmp(svname,"ALL_SV") )  {
 
           *off  = 0;
 
-          *sz   = sizeof(Tomek_edit_state);
+          *sz   = sizeof(Tomek_editv2_state);
 
           return retall;
 
@@ -397,7 +403,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"C1") )  {
 
-          *off  = offsetof(Tomek_edit_state,C1);
+          *off  = offsetof(Tomek_editv2_state,C1);
 
           *sz   = sizeof  (sv->C1) / this->dlo_vector_size();
 
@@ -407,7 +413,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"C2") )  {
 
-          *off  = offsetof(Tomek_edit_state,C2);
+          *off  = offsetof(Tomek_editv2_state,C2);
 
           *sz   = sizeof  (sv->C2) / this->dlo_vector_size();
 
@@ -417,7 +423,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"C3") )  {
 
-          *off  = offsetof(Tomek_edit_state,C3);
+          *off  = offsetof(Tomek_editv2_state,C3);
 
           *sz   = sizeof  (sv->C3) / this->dlo_vector_size();
 
@@ -427,7 +433,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"CaMKt") )  {
 
-          *off  = offsetof(Tomek_edit_state,CaMKt);
+          *off  = offsetof(Tomek_editv2_state,CaMKt);
 
           *sz   = sizeof  (sv->CaMKt) / this->dlo_vector_size();
 
@@ -437,7 +443,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"Cai") )  {
 
-          *off  = offsetof(Tomek_edit_state,Cai);
+          *off  = offsetof(Tomek_editv2_state,Cai);
 
           *sz   = sizeof  (sv->Cai) / this->dlo_vector_size();
 
@@ -447,7 +453,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"Cajsr") )  {
 
-          *off  = offsetof(Tomek_edit_state,Cajsr);
+          *off  = offsetof(Tomek_editv2_state,Cajsr);
 
           *sz   = sizeof  (sv->Cajsr) / this->dlo_vector_size();
 
@@ -457,7 +463,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"Cansr") )  {
 
-          *off  = offsetof(Tomek_edit_state,Cansr);
+          *off  = offsetof(Tomek_editv2_state,Cansr);
 
           *sz   = sizeof  (sv->Cansr) / this->dlo_vector_size();
 
@@ -467,7 +473,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"Cass") )  {
 
-          *off  = offsetof(Tomek_edit_state,Cass);
+          *off  = offsetof(Tomek_editv2_state,Cass);
 
           *sz   = sizeof  (sv->Cass) / this->dlo_vector_size();
 
@@ -477,7 +483,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"GKs_b") )  {
 
-          *off  = offsetof(Tomek_edit_state,GKs_b);
+          *off  = offsetof(Tomek_editv2_state,GKs_b);
 
           *sz   = sizeof  (sv->GKs_b) / this->dlo_vector_size();
 
@@ -487,7 +493,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"I") )  {
 
-          *off  = offsetof(Tomek_edit_state,I);
+          *off  = offsetof(Tomek_editv2_state,I);
 
           *sz   = sizeof  (sv->I) / this->dlo_vector_size();
 
@@ -497,7 +503,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"Jrel_np") )  {
 
-          *off  = offsetof(Tomek_edit_state,Jrel_np);
+          *off  = offsetof(Tomek_editv2_state,Jrel_np);
 
           *sz   = sizeof  (sv->Jrel_np) / this->dlo_vector_size();
 
@@ -507,7 +513,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"Jrel_p") )  {
 
-          *off  = offsetof(Tomek_edit_state,Jrel_p);
+          *off  = offsetof(Tomek_editv2_state,Jrel_p);
 
           *sz   = sizeof  (sv->Jrel_p) / this->dlo_vector_size();
 
@@ -517,7 +523,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"Ki") )  {
 
-          *off  = offsetof(Tomek_edit_state,Ki);
+          *off  = offsetof(Tomek_editv2_state,Ki);
 
           *sz   = sizeof  (sv->Ki) / this->dlo_vector_size();
 
@@ -527,7 +533,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"Kss") )  {
 
-          *off  = offsetof(Tomek_edit_state,Kss);
+          *off  = offsetof(Tomek_editv2_state,Kss);
 
           *sz   = sizeof  (sv->Kss) / this->dlo_vector_size();
 
@@ -537,7 +543,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"Nai") )  {
 
-          *off  = offsetof(Tomek_edit_state,Nai);
+          *off  = offsetof(Tomek_editv2_state,Nai);
 
           *sz   = sizeof  (sv->Nai) / this->dlo_vector_size();
 
@@ -547,7 +553,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"Nass") )  {
 
-          *off  = offsetof(Tomek_edit_state,Nass);
+          *off  = offsetof(Tomek_editv2_state,Nass);
 
           *sz   = sizeof  (sv->Nass) / this->dlo_vector_size();
 
@@ -557,7 +563,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"O") )  {
 
-          *off  = offsetof(Tomek_edit_state,O);
+          *off  = offsetof(Tomek_editv2_state,O);
 
           *sz   = sizeof  (sv->O) / this->dlo_vector_size();
 
@@ -567,7 +573,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"a") )  {
 
-          *off  = offsetof(Tomek_edit_state,a);
+          *off  = offsetof(Tomek_editv2_state,a);
 
           *sz   = sizeof  (sv->a) / this->dlo_vector_size();
 
@@ -577,7 +583,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"ap") )  {
 
-          *off  = offsetof(Tomek_edit_state,ap);
+          *off  = offsetof(Tomek_editv2_state,ap);
 
           *sz   = sizeof  (sv->ap) / this->dlo_vector_size();
 
@@ -587,7 +593,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"d") )  {
 
-          *off  = offsetof(Tomek_edit_state,d);
+          *off  = offsetof(Tomek_editv2_state,d);
 
           *sz   = sizeof  (sv->d) / this->dlo_vector_size();
 
@@ -597,7 +603,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"fCaf") )  {
 
-          *off  = offsetof(Tomek_edit_state,fCaf);
+          *off  = offsetof(Tomek_editv2_state,fCaf);
 
           *sz   = sizeof  (sv->fCaf) / this->dlo_vector_size();
 
@@ -607,7 +613,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"fCafp") )  {
 
-          *off  = offsetof(Tomek_edit_state,fCafp);
+          *off  = offsetof(Tomek_editv2_state,fCafp);
 
           *sz   = sizeof  (sv->fCafp) / this->dlo_vector_size();
 
@@ -617,7 +623,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"fCas") )  {
 
-          *off  = offsetof(Tomek_edit_state,fCas);
+          *off  = offsetof(Tomek_editv2_state,fCas);
 
           *sz   = sizeof  (sv->fCas) / this->dlo_vector_size();
 
@@ -627,7 +633,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"ff") )  {
 
-          *off  = offsetof(Tomek_edit_state,ff);
+          *off  = offsetof(Tomek_editv2_state,ff);
 
           *sz   = sizeof  (sv->ff) / this->dlo_vector_size();
 
@@ -637,7 +643,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"ffp") )  {
 
-          *off  = offsetof(Tomek_edit_state,ffp);
+          *off  = offsetof(Tomek_editv2_state,ffp);
 
           *sz   = sizeof  (sv->ffp) / this->dlo_vector_size();
 
@@ -647,7 +653,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"fs") )  {
 
-          *off  = offsetof(Tomek_edit_state,fs);
+          *off  = offsetof(Tomek_editv2_state,fs);
 
           *sz   = sizeof  (sv->fs) / this->dlo_vector_size();
 
@@ -657,7 +663,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"h") )  {
 
-          *off  = offsetof(Tomek_edit_state,h);
+          *off  = offsetof(Tomek_editv2_state,h);
 
           *sz   = sizeof  (sv->h) / this->dlo_vector_size();
 
@@ -667,7 +673,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"hL") )  {
 
-          *off  = offsetof(Tomek_edit_state,hL);
+          *off  = offsetof(Tomek_editv2_state,hL);
 
           *sz   = sizeof  (sv->hL) / this->dlo_vector_size();
 
@@ -677,7 +683,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"hLp") )  {
 
-          *off  = offsetof(Tomek_edit_state,hLp);
+          *off  = offsetof(Tomek_editv2_state,hLp);
 
           *sz   = sizeof  (sv->hLp) / this->dlo_vector_size();
 
@@ -687,7 +693,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"hp") )  {
 
-          *off  = offsetof(Tomek_edit_state,hp);
+          *off  = offsetof(Tomek_editv2_state,hp);
 
           *sz   = sizeof  (sv->hp) / this->dlo_vector_size();
 
@@ -697,7 +703,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"iF") )  {
 
-          *off  = offsetof(Tomek_edit_state,iF);
+          *off  = offsetof(Tomek_editv2_state,iF);
 
           *sz   = sizeof  (sv->iF) / this->dlo_vector_size();
 
@@ -707,7 +713,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"iFp") )  {
 
-          *off  = offsetof(Tomek_edit_state,iFp);
+          *off  = offsetof(Tomek_editv2_state,iFp);
 
           *sz   = sizeof  (sv->iFp) / this->dlo_vector_size();
 
@@ -717,7 +723,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"iS") )  {
 
-          *off  = offsetof(Tomek_edit_state,iS);
+          *off  = offsetof(Tomek_editv2_state,iS);
 
           *sz   = sizeof  (sv->iS) / this->dlo_vector_size();
 
@@ -727,7 +733,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"iSp") )  {
 
-          *off  = offsetof(Tomek_edit_state,iSp);
+          *off  = offsetof(Tomek_editv2_state,iSp);
 
           *sz   = sizeof  (sv->iSp) / this->dlo_vector_size();
 
@@ -737,7 +743,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"j") )  {
 
-          *off  = offsetof(Tomek_edit_state,j);
+          *off  = offsetof(Tomek_editv2_state,j);
 
           *sz   = sizeof  (sv->j) / this->dlo_vector_size();
 
@@ -747,7 +753,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"jCa") )  {
 
-          *off  = offsetof(Tomek_edit_state,jCa);
+          *off  = offsetof(Tomek_editv2_state,jCa);
 
           *sz   = sizeof  (sv->jCa) / this->dlo_vector_size();
 
@@ -757,7 +763,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"jp") )  {
 
-          *off  = offsetof(Tomek_edit_state,jp);
+          *off  = offsetof(Tomek_editv2_state,jp);
 
           *sz   = sizeof  (sv->jp) / this->dlo_vector_size();
 
@@ -767,7 +773,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"m") )  {
 
-          *off  = offsetof(Tomek_edit_state,m);
+          *off  = offsetof(Tomek_editv2_state,m);
 
           *sz   = sizeof  (sv->m) / this->dlo_vector_size();
 
@@ -777,7 +783,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"mL") )  {
 
-          *off  = offsetof(Tomek_edit_state,mL);
+          *off  = offsetof(Tomek_editv2_state,mL);
 
           *sz   = sizeof  (sv->mL) / this->dlo_vector_size();
 
@@ -787,7 +793,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"nCa_i") )  {
 
-          *off  = offsetof(Tomek_edit_state,nCa_i);
+          *off  = offsetof(Tomek_editv2_state,nCa_i);
 
           *sz   = sizeof  (sv->nCa_i) / this->dlo_vector_size();
 
@@ -797,7 +803,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"nCa_ss") )  {
 
-          *off  = offsetof(Tomek_edit_state,nCa_ss);
+          *off  = offsetof(Tomek_editv2_state,nCa_ss);
 
           *sz   = sizeof  (sv->nCa_ss) / this->dlo_vector_size();
 
@@ -807,7 +813,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"xs1") )  {
 
-          *off  = offsetof(Tomek_edit_state,xs1);
+          *off  = offsetof(Tomek_editv2_state,xs1);
 
           *sz   = sizeof  (sv->xs1) / this->dlo_vector_size();
 
@@ -817,7 +823,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
         if( !strcmp(svname,"xs2") )  {
 
-          *off  = offsetof(Tomek_edit_state,xs2);
+          *off  = offsetof(Tomek_editv2_state,xs2);
 
           *sz   = sizeof  (sv->xs2) / this->dlo_vector_size();
 
@@ -831,7 +837,7 @@ SVgetfcn Tomek_editIonType::get_sv_offset(const char *svname, int *off, int *sz)
 
 
 
-int Tomek_editIonType::get_sv_list(char*** list) const {
+int Tomek_editv2IonType::get_sv_list(char*** list) const {
 
   *list = (char**)malloc( sizeof(char*)*43 );
 
@@ -929,7 +935,7 @@ int Tomek_editIonType::get_sv_list(char*** list) const {
 
 
 #define BOGUSTYPE -1
-int Tomek_editIonType::get_sv_type(const char *svname, int *type, char **Typename) const
+int Tomek_editv2IonType::get_sv_type(const char *svname, int *type, char **Typename) const
 {
   *type = BOGUSTYPE;
   if (0) ;
@@ -1072,7 +1078,7 @@ int Tomek_editIonType::get_sv_type(const char *svname, int *type, char **Typenam
 
 
 
-void Tomek_editIonType::print_metadata() const {
+void Tomek_editv2IonType::print_metadata() const {
   printf("Metadata:\n");
   printf("\tAuthors: Jakub Tomek, Alfonso Bueno-Orovio, Elisa Passini, Xin Zhou, Ana Minchole, Oliver Britton, Chiara Bartolucci, Stefano Severi, Alvin Shrier, Laszlo Virag, Andras Varro, Blanca Rodriguez\n");
   printf("\tYear: 2019\n");
@@ -1088,8 +1094,8 @@ void Tomek_editIonType::print_metadata() const {
         
 
 extern "C" {
-    limpet::Tomek_editIonType* __new_IonType(bool plugin) {
-              return new limpet::Tomek_editIonType(plugin);
+    limpet::Tomek_editv2IonType* __new_IonType(bool plugin) {
+              return new limpet::Tomek_editv2IonType(plugin);
     }
 }
     

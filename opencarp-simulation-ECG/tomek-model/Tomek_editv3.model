@@ -22,16 +22,20 @@ celltype = ENDO; .flag(ENDO,EPI,MCELL);
 group {
     GNaL_b;   thL;        # INaL  — corrente Na tardiva
     Gto_b;                # Ito   — transitoria outward
-    GK1_b;                # IK1   — inward rectifier
-    GKr_b;                # IKr   — K rapida
+	GKs_b;
+    GK1_b;           	 # IK1   — inward rectifier
+	GKr_b;             	 # IKr   — K rapida
     Gncx_b;               # INCX  — scambiatore Na/Ca
     PNaK_b;               # INaK  — pompa Na/K
     Jup_b;    Cajsr_half; # SERCA / soglia RyR
     Jrel_b;               # RyR   — ampiezza rilascio
     CaMKo;                # CaMKII baseline
+	tjCa;
 } .param();
 
 # Constants
+GKs_b = 0.0011; .units(mS/uF);
+GK1_b = 0.6992; .units(mS/uF);               
 Nao = 140.0; .units(mmol/L);
 Cao = 1.8; .units(mmol/L);
 Ko = 5.0; .units(mmol/L);
@@ -84,8 +88,6 @@ ICaL_fractionSS = 0.8; .units(unitless);
 GKr_b = 0.0321; .units(mS/uF);
 alpha_1 = 0.154375; .units(unitless/ms);
 beta_1 = 0.1911; .units(unitless/ms);
-GKs_b = 0.0011; .units(mS/uF);
-GK1_b = 0.6992; .units(mS/uF);
 INaCa_fractionSS = 0.35; .units(unitless);
 KNa1 = 15; .units(unitless/ms);
 KNa2 = 5; .units(unitless/ms);
@@ -595,6 +597,10 @@ group{
 	Jrel_np;
 	Jrel_p;
 }.lb(0); .ub(1);
+
+group {
+    GKs_b;
+}.nodal();
 
 group{
   V;

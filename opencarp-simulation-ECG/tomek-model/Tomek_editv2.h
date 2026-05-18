@@ -31,38 +31,38 @@
 //// HEADER GUARD ///////////////////////////
 // If automatically generated, keep above
 // comment as first line in file.
-#ifndef __TOMEK_EDIT_H__
-#define __TOMEK_EDIT_H__
+#ifndef __TOMEK_EDITV2_H__
+#define __TOMEK_EDITV2_H__
 //// HEADER GUARD ///////////////////////////
 // DO NOT EDIT THIS SOURCE CODE FILE
 // ANY CHANGES TO THIS FILE WILL BE OVERWRITTEN!!!!
 
 #include "ION_IF.h"
 
-#if !(defined(TOMEK_EDIT_CPU_GENERATED)    || defined(TOMEK_EDIT_MLIR_CPU_GENERATED)    || defined(TOMEK_EDIT_MLIR_ROCM_GENERATED)    || defined(TOMEK_EDIT_MLIR_CUDA_GENERATED))
+#if !(defined(TOMEK_EDITV2_CPU_GENERATED)    || defined(TOMEK_EDITV2_MLIR_CPU_GENERATED)    || defined(TOMEK_EDITV2_MLIR_ROCM_GENERATED)    || defined(TOMEK_EDITV2_MLIR_CUDA_GENERATED))
 #ifdef MLIR_CPU_GENERATED
-#define TOMEK_EDIT_MLIR_CPU_GENERATED
+#define TOMEK_EDITV2_MLIR_CPU_GENERATED
 #endif
 
 #ifdef MLIR_ROCM_GENERATED
-#define TOMEK_EDIT_MLIR_ROCM_GENERATED
+#define TOMEK_EDITV2_MLIR_ROCM_GENERATED
 #endif
 
 #ifdef MLIR_CUDA_GENERATED
-#define TOMEK_EDIT_MLIR_CUDA_GENERATED
+#define TOMEK_EDITV2_MLIR_CUDA_GENERATED
 #endif
 #endif
 
 #ifdef CPU_GENERATED
-#define TOMEK_EDIT_CPU_GENERATED
+#define TOMEK_EDITV2_CPU_GENERATED
 #endif
 
 namespace limpet {
 
-#define Tomek_edit_REQDAT Vm_DATA_FLAG
-#define Tomek_edit_MODDAT Iion_DATA_FLAG
+#define Tomek_editv2_REQDAT Vm_DATA_FLAG
+#define Tomek_editv2_MODDAT Iion_DATA_FLAG
 
-struct Tomek_edit_Params {
+struct Tomek_editv2_Params {
     GlobalData_t CaMKo;
     GlobalData_t Cajsr_half;
     GlobalData_t GK1_b;
@@ -75,16 +75,17 @@ struct Tomek_edit_Params {
     GlobalData_t Jup_b;
     GlobalData_t PNaK_b;
     GlobalData_t thL;
+    GlobalData_t tjCa;
     
     // UNMODIFIABLE BELOW HERE
     GlobalData_t celltype;
     char* flags;
 
 };
-static const char* Tomek_edit_flags = "ENDO|EPI|MCELL";
+static const char* Tomek_editv2_flags = "ENDO|EPI|MCELL";
 
 
-struct Tomek_edit_state {
+struct Tomek_editv2_state {
     GlobalData_t C1;
     GlobalData_t C2;
     GlobalData_t C3;
@@ -131,13 +132,13 @@ struct Tomek_edit_state {
 
 };
 
-class Tomek_editIonType : public IonType {
+class Tomek_editv2IonType : public IonType {
 public:
-    using IonIfDerived = IonIf<Tomek_editIonType>;
-    using params_type = Tomek_edit_Params;
-    using state_type = Tomek_edit_state;
+    using IonIfDerived = IonIf<Tomek_editv2IonType>;
+    using params_type = Tomek_editv2_Params;
+    using state_type = Tomek_editv2_state;
 
-    Tomek_editIonType(bool plugin);
+    Tomek_editv2IonType(bool plugin);
 
     size_t params_size() const override;
 
@@ -187,18 +188,18 @@ public:
 // This needs to be extern C in order to be linked correctly with the MLIR code
 extern "C" {
 
-//void compute_Tomek_edit(int, int, IonIfBase&, GlobalData_t**);
-#ifdef TOMEK_EDIT_CPU_GENERATED
-void compute_Tomek_edit_cpu(int, int, IonIfBase&, GlobalData_t**);
+//void compute_Tomek_editv2(int, int, IonIfBase&, GlobalData_t**);
+#ifdef TOMEK_EDITV2_CPU_GENERATED
+void compute_Tomek_editv2_cpu(int, int, IonIfBase&, GlobalData_t**);
 #endif
-#ifdef TOMEK_EDIT_MLIR_CPU_GENERATED
-void compute_Tomek_edit_mlir_cpu(int, int, IonIfBase&, GlobalData_t**);
+#ifdef TOMEK_EDITV2_MLIR_CPU_GENERATED
+void compute_Tomek_editv2_mlir_cpu(int, int, IonIfBase&, GlobalData_t**);
 #endif
-#ifdef TOMEK_EDIT_MLIR_ROCM_GENERATED
-void compute_Tomek_edit_mlir_gpu_rocm(int, int, IonIfBase&, GlobalData_t**);
+#ifdef TOMEK_EDITV2_MLIR_ROCM_GENERATED
+void compute_Tomek_editv2_mlir_gpu_rocm(int, int, IonIfBase&, GlobalData_t**);
 #endif
-#ifdef TOMEK_EDIT_MLIR_CUDA_GENERATED
-void compute_Tomek_edit_mlir_gpu_cuda(int, int, IonIfBase&, GlobalData_t**);
+#ifdef TOMEK_EDITV2_MLIR_CUDA_GENERATED
+void compute_Tomek_editv2_mlir_gpu_cuda(int, int, IonIfBase&, GlobalData_t**);
 #endif
 
 }

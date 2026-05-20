@@ -249,6 +249,15 @@ def tag_vol_region_from_tm(input_vtu, output_vtk):
     print(f"Mesh scalata salvata in: {output_vtk}")
     print("Mesh taggata salvata con successo!")
 
+def export_electrodes_to_csv(input_vtk, output_csv, scale=0.1):
+    mesh = pv.read(input_vtk)
+    if mesh.n_points == 0:
+        raise RuntimeError(f"No points found in {input_vtk}")
+    pts = mesh.points * scale
+    with open(output_csv, "w") as f:
+        #f.write(f"{pts.shape[0]}\n")
+        np.savetxt(f, pts, fmt="%.6f", delimiter=",")
+
 def tag_vol_region_from_tm_fastendo(input_vtu, output_vtk, input_vtp, endo_lv_tag, endo_rv_tag, tag_array_name, fastendo_thickness=500.0):
     # carica la mesh volumetrica con le coord cobiveco
     mesh = pv.read(input_vtu)
@@ -308,38 +317,45 @@ if __name__ == "__main__":
     input_path = input_dir + input_filename
     out_filename = subject_name+'_1500cm_fibers.vtu'
     out_path = input_dir + out_filename
-    scale_mesh_mantaining_point_data(input_path, out_path, scale=0.1)
+    #scale_mesh_mantaining_point_data(input_path, out_path, scale=0.1)
 
     input_filename = subject_name+'_1500mm.vtp'
     input_path = input_dir + input_filename
     out_filename = subject_name+'_1500cm.vtp'
     out_path = input_dir + out_filename
-    scale_mesh_mantaining_point_data(input_path, out_path, scale=0.1)
+    #scale_mesh_mantaining_point_data(input_path, out_path, scale=0.1)
 
     input_filename = subject_name+'_500mm.vtp'
     input_path = input_dir + input_filename
     out_filename = subject_name+'_500um.vtp'
     out_path = input_dir + out_filename
-    scale_mesh_mantaining_point_data(input_path, out_path, scale=1000)
+    #scale_mesh_mantaining_point_data(input_path, out_path, scale=1000)
 
     #scaling mesh fine da mm a um per opencarp 
     input_filename = subject_name+'_500mm_fibers.vtk'
     input_path = input_dir + input_filename
     out_filename = subject_name+'_500um_fibers.vtk'
     out_path = input_dir + out_filename
-    scale_mesh_mantaining_point_data(input_path, out_path, scale=1000)
+    #scale_mesh_mantaining_point_data(input_path, out_path, scale=1000)
 
     # EXPORT CSV nodi, tetra, coordinate cobiveco e fibre per mesh coarse
     vtu_filename = subject_name+'_1500cm_fibers.vtu'
-    save_vtk_vtu_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
-    save_vtu_arrays_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
+    #save_vtk_vtu_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
+    #save_vtu_arrays_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
 
     #export CSV solo nodi e tetra per mesh fine
     fine_resolution = 'fine500um'
     fine_vtk_filename = subject_name+'_500um_fibers.vtk'
-    save_vtk_vtu_to_csv(subject_name, geometric_data_dir, fine_resolution, fine_vtk_filename)
-    save_vtu_arrays_to_csv(subject_name, geometric_data_dir, fine_resolution, fine_vtk_filename)
+    #save_vtk_vtu_to_csv(subject_name, geometric_data_dir, fine_resolution, fine_vtk_filename)
+    #save_vtu_arrays_to_csv(subject_name, geometric_data_dir, fine_resolution, fine_vtk_filename)
     
+    electrodes_vtk_name = subject_name + '_ECG_ELECTRODESmm.vtk'
+    input_dir = geometric_data_dir + subject_name + '/'
+    electrodes_vtk_path = input_dir + electrodes_vtk_name
+    output_dir = input_dir
+    csv_output = input_dir +subject_name+'_electrode_xyz.csv'
+    export_electrodes_to_csv(electrodes_vtk_path, csv_output, scale=0.1)  
+
     #export nodi endo rv e lv mesh coarse
     input_dir = geometric_data_dir + subject_name + '/'
     vtu_path = input_dir + vtu_filename
@@ -351,7 +367,7 @@ if __name__ == "__main__":
     TAG_LV_ENDO = 3  # Valore per Endocardio LV
     TAG_RV_ENDO = 4  # Valore per Endocardio RV
     TAG_ARRAY_NAME = 'class'
-
+'''
     extract_ids_from_tagged_vtp(
         vtu_path=vtu_path,
         vtp_path=vtp_path,
@@ -367,3 +383,4 @@ if __name__ == "__main__":
         target_tag_value=TAG_RV_ENDO,
         output_csv=os.path.join(output_dir, subject_name + '_' + target_resolution + '_boundarynodefield' + '_rvendo' + '.csv')
     )
+'''

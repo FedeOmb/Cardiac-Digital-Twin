@@ -3,15 +3,15 @@ import numpy as np
 import pyvista as pv
 from scipy.spatial import cKDTree
 
-merged_mesh_path = os.path.join(".", "sb3901_torso", "sb3901_finalmeshum_torsobiv.vtk")
+merged_mesh_path = os.path.join(".", "sb3901","sb3901_torso", "sb3901_finalmeshum_torsobiv_v2.vtk")
 merged_mesh = pv.read(merged_mesh_path)
 
 # Estrai punti e tag delle celle
 merged_pts = np.array(merged_mesh.points)            
 cell_tags  = np.array(merged_mesh.cell_data["elemTag"]) 
 
-# --- Filtra le celle miocardiche (tag 1,2,3) ---
-myo_cell_ids = np.where((cell_tags >= 1) & (cell_tags <= 3))[0]
+# --- Filtra le celle miocardiche (tag 1,2,3,4) ---
+myo_cell_ids = np.where((cell_tags >= 1) & (cell_tags <= 4))[0]
 
 # Raccogli i nodi unici di quelle celle usando pyvista threshold
 myo_submesh = merged_mesh.extract_cells(myo_cell_ids)
@@ -30,10 +30,10 @@ _, global_idx = tree_merged.query(myo_pts)
 
 # --- KD-tree sui nodi miocardici, risultato in indici globali ---
 # Leggi i root nodes dalla mesh BIV originale
-biv_mesh_path = os.path.join(".","sb3901_meshes", "sb3901_500um_tagged.vtk")
+biv_mesh_path = os.path.join(".", "sb3901","sb3901_meshes", "sb3901_500um_taggedv2_fastendo.vtk")
 biv_mesh    = pv.read(biv_mesh_path)
 biv_pts     = np.array(biv_mesh.points)
-root_nodes_path = os.path.join(".", "sb3901_rootnodes","sb3901_fine500um_active_root_nodes.vtx")
+root_nodes_path = os.path.join(".", "sb3901","sb3901_rootnodes","sb3901_fine500um_candidate_root_nodes.vtx")
 root_idx    = np.loadtxt(root_nodes_path, dtype=int)
 root_coords = biv_pts[root_idx]
 
@@ -65,7 +65,7 @@ for j, (ni, dist) in enumerate(zip(new_indices[:5], distances[:5])):  # mostra p
     print(f"  Root {j}: nodo globale {ni}, distanza {dist:.4f} mm")
 '''
 # --- Salva in formato .vtx per openCARP ---
-with open(os.path.join(".", "sb3901_rootnodes","sb3901_root_nodes_mapping_torsobiv.vtx"), "w") as f:
+with open(os.path.join(".", "sb3901","sb3901_rootnodes","sb3901_root_nodes_mapping_torsobiv_v2.vtx"), "w") as f:
     for i in new_indices:
         f.write(f"{i}\n")
 #np.savetxt("sb301_root_nodes_mapping_torsobiv.dat", new_indices, fmt="%d")

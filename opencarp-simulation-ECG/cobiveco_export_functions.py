@@ -8,17 +8,17 @@ from vtkmodules.vtkIOXML import vtkXMLUnstructuredGridReader
 from vtkmodules.util import numpy_support as VN
 
 def save_vtk_vtu_to_csv(anatomy_subject_name, geometric_data_dir, target_resolution, vtk_filename):
-    input_dir = geometric_data_dir + anatomy_subject_name + '/'
-    output_dir = geometric_data_dir + anatomy_subject_name + '/' + anatomy_subject_name + '_' + target_resolution + '/'
+    input_dir = os.path.join(geometric_data_dir, anatomy_subject_name)
+    output_dir = os.path.join(geometric_data_dir, anatomy_subject_name, anatomy_subject_name + '_' + target_resolution)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
-    if os.path.exists(input_dir + vtk_filename):
+    if os.path.exists(os.path.join(input_dir, vtk_filename)):
         reader = vtkUnstructuredGridReader()
         if vtk_filename.endswith('.vtu'):
             reader = vtkXMLUnstructuredGridReader()
         else:
             reader = vtkUnstructuredGridReader()
-        reader.SetFileName(input_dir + vtk_filename)
+        reader.SetFileName(os.path.join(input_dir, vtk_filename))
         if not vtk_filename.endswith('.vtu'):
             reader.ReadAllVectorsOn()
             reader.ReadAllScalarsOn()
@@ -27,17 +27,16 @@ def save_vtk_vtu_to_csv(anatomy_subject_name, geometric_data_dir, target_resolut
         unprocessed_node_xyz = VN.vtk_to_numpy(data.GetPoints().GetData())
         print(unprocessed_node_xyz.shape)
         # Save node xyz coordinates
-        np.savetxt( output_dir + anatomy_subject_name + '_'
-                   + target_resolution + '_xyz.csv', unprocessed_node_xyz, delimiter=',', fmt='%.16f')
+        np.savetxt( os.path.join(output_dir, anatomy_subject_name + '_' + target_resolution + '_xyz.csv'), unprocessed_node_xyz, delimiter=',', fmt='%.16f')
         n_tetra = data.GetNumberOfCells()
         unprocessed_tetra = np.reshape(VN.vtk_to_numpy(data.GetCells().GetConnectivityArray()), [n_tetra, 4])
         print(unprocessed_tetra.shape)
         # Save tetra
-        np.savetxt(output_dir + anatomy_subject_name + '_' + target_resolution + '_tetra.csv', unprocessed_tetra, delimiter=',', fmt='%d')
+        np.savetxt(os.path.join(output_dir, anatomy_subject_name + '_' + target_resolution + '_tetra.csv'), unprocessed_tetra, delimiter=',', fmt='%d')
 
 def save_vtu_arrays_to_csv(anatomy_subject_name, geometric_data_dir, target_resolution, vtu_filename):
-    input_dir = geometric_data_dir + anatomy_subject_name + '/'
-    output_dir = geometric_data_dir + anatomy_subject_name + '/' + anatomy_subject_name + '_' + target_resolution + '/'
+    input_dir = os.path.join(geometric_data_dir, anatomy_subject_name)
+    output_dir = os.path.join(geometric_data_dir, anatomy_subject_name, anatomy_subject_name + '_' + target_resolution)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -46,7 +45,7 @@ def save_vtu_arrays_to_csv(anatomy_subject_name, geometric_data_dir, target_reso
         reader = vtkXMLUnstructuredGridReader()
     else:
         reader = vtkUnstructuredGridReader()
-    reader.SetFileName(input_dir + vtu_filename)
+    reader.SetFileName(os.path.join(input_dir, vtu_filename))
     if not vtu_filename.endswith('.vtu'):
         reader.ReadAllVectorsOn()
         reader.ReadAllScalarsOn()
@@ -82,9 +81,9 @@ def save_vtu_arrays_to_csv(anatomy_subject_name, geometric_data_dir, target_reso
 
 #Estrae i nodi delle superfici LV e RV da una mesh VTU.
 def save_endo_nodes_to_csv(anatomy_subject_name, geometric_data_dir, target_resolution, vtu_filename, lv_tag, rv_tag, tag_array_name='class'):
-    input_dir = geometric_data_dir + anatomy_subject_name + '/'
-    vtu_path = input_dir + vtu_filename
-    output_dir = geometric_data_dir + anatomy_subject_name + '/' + anatomy_subject_name + '_' + target_resolution + '/'
+    input_dir = os.path.join(geometric_data_dir, anatomy_subject_name)
+    vtu_path = os.path.join(input_dir, vtu_filename)
+    output_dir = os.path.join(geometric_data_dir, anatomy_subject_name, anatomy_subject_name + '_' + target_resolution)
     print(f"Caricamento mesh: {vtu_path}...")
     mesh = pv.read(vtu_path)
     
@@ -308,60 +307,60 @@ def tag_vol_region_from_tm_fastendo(input_vtu, output_vtk, input_vtp, endo_lv_ta
     print("Mesh taggata salvata con successo!")
 
 if __name__ == "__main__":
-    geometric_data_dir = '../cardiac-data/meta_data/geometric_data/'
-    subject_name = 'sb3901'
+    geometric_data_dir = os.path.join('..','cardiac-data','meta_data','geometric_data')
+    subject_name = 'sb4201'
     target_resolution = 'coarse1500cm'
     #SCALING MESH coarse da mm a cm per framework CDT
-    input_dir = geometric_data_dir + subject_name + '/'
+    input_dir = os.path.join(geometric_data_dir, subject_name)
     input_filename = subject_name+'_1500mm_fibers.vtu'
-    input_path = input_dir + input_filename
+    input_path = os.path.join(input_dir, input_filename)
     out_filename = subject_name+'_1500cm_fibers.vtu'
-    out_path = input_dir + out_filename
-    #scale_mesh_mantaining_point_data(input_path, out_path, scale=0.1)
+    out_path = os.path.join(input_dir, out_filename)
+    scale_mesh_mantaining_point_data(input_path, out_path, scale=0.1)
 
     input_filename = subject_name+'_1500mm.vtp'
-    input_path = input_dir + input_filename
+    input_path = os.path.join(input_dir, input_filename)
     out_filename = subject_name+'_1500cm.vtp'
-    out_path = input_dir + out_filename
-    #scale_mesh_mantaining_point_data(input_path, out_path, scale=0.1)
+    out_path = os.path.join(input_dir, out_filename)
+    scale_mesh_mantaining_point_data(input_path, out_path, scale=0.1)
 
     input_filename = subject_name+'_500mm.vtp'
-    input_path = input_dir + input_filename
+    input_path = os.path.join(input_dir, input_filename)
     out_filename = subject_name+'_500um.vtp'
-    out_path = input_dir + out_filename
-    #scale_mesh_mantaining_point_data(input_path, out_path, scale=1000)
+    out_path = os.path.join(input_dir, out_filename)
+    scale_mesh_mantaining_point_data(input_path, out_path, scale=1000)
 
     #scaling mesh fine da mm a um per opencarp 
     input_filename = subject_name+'_500mm_fibers.vtk'
-    input_path = input_dir + input_filename
+    input_path = os.path.join(input_dir, input_filename)
     out_filename = subject_name+'_500um_fibers.vtk'
-    out_path = input_dir + out_filename
-    #scale_mesh_mantaining_point_data(input_path, out_path, scale=1000)
+    out_path = os.path.join(input_dir, out_filename)
+    scale_mesh_mantaining_point_data(input_path, out_path, scale=1000)
 
     # EXPORT CSV nodi, tetra, coordinate cobiveco e fibre per mesh coarse
     vtu_filename = subject_name+'_1500cm_fibers.vtu'
-    #save_vtk_vtu_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
-    #save_vtu_arrays_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
+    save_vtk_vtu_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
+    save_vtu_arrays_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename)
 
     #export CSV solo nodi e tetra per mesh fine
     fine_resolution = 'fine500um'
     fine_vtk_filename = subject_name+'_500um_fibers.vtk'
-    #save_vtk_vtu_to_csv(subject_name, geometric_data_dir, fine_resolution, fine_vtk_filename)
-    #save_vtu_arrays_to_csv(subject_name, geometric_data_dir, fine_resolution, fine_vtk_filename)
+    save_vtk_vtu_to_csv(subject_name, geometric_data_dir, fine_resolution, fine_vtk_filename)
+    save_vtu_arrays_to_csv(subject_name, geometric_data_dir, fine_resolution, fine_vtk_filename)
     
     electrodes_vtk_name = subject_name + '_ECG_ELECTRODESmm.vtk'
-    input_dir = geometric_data_dir + subject_name + '/'
-    electrodes_vtk_path = input_dir + electrodes_vtk_name
+    input_dir = os.path.join(geometric_data_dir, subject_name)
+    electrodes_vtk_path = os.path.join(input_dir, electrodes_vtk_name)
     output_dir = input_dir
-    csv_output = input_dir +subject_name+'_electrode_xyz.csv'
+    csv_output = os.path.join(input_dir, subject_name + '_electrode_xyz.csv')
     export_electrodes_to_csv(electrodes_vtk_path, csv_output, scale=0.1)  
 
     #export nodi endo rv e lv mesh coarse
-    input_dir = geometric_data_dir + subject_name + '/'
-    vtu_path = input_dir + vtu_filename
-    output_dir = geometric_data_dir + subject_name + '/' + subject_name + '_' + target_resolution + '/'
+    input_dir = os.path.join(geometric_data_dir, subject_name)
+    vtu_path = os.path.join(input_dir, vtu_filename)
+    output_dir = os.path.join(geometric_data_dir, subject_name, subject_name + '_' + target_resolution)
     vtp_filename = subject_name+'_1500cm.vtp'
-    vtp_path = input_dir + vtp_filename
+    vtp_path = os.path.join(input_dir, vtp_filename)
    # save_endo_nodes_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename, lv_tag=3, rv_tag=2, tag_array_name='class')
 
     TAG_LV_ENDO = 3  # Valore per Endocardio LV

@@ -3,5 +3,6 @@
 *_meshes/
 *_rootnodes/
 test_monodomain_*/
+test_mono_*/
 test_pseudobidomain_*/
 *_sim_results/

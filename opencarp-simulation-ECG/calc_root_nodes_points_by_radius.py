@@ -21,11 +21,11 @@ def get_nodes_in_radius_by_tag(vtk_file, center_node, endo_tag, radius_um=1500):
 
     return endo_pt_ids[mask]
 
-mapped_rn_path = os.path.join(".","sb3901_rootnodes","sb3901_root_nodes_mapping_torsobiv.vtx")
+mapped_rn_path = os.path.join(".","sb3901","sb3901_rootnodes","sb3901_root_nodes_mapping_torsobiv_v2.vtx")
 nodes = np.loadtxt(mapped_rn_path, dtype=int)  
-vtx_dir = os.path.join(".","sb3901_rootnodes", 'sb3901_rootnodes_mapped_torsobiv')
+vtx_dir = os.path.join(".","sb3901","sb3901_rootnodes", 'sb3901_rootnodes_mapped_torsobiv_v2')
 os.makedirs(vtx_dir, exist_ok=True)
-torso_biv_mesh_path = os.path.join(".", "sb3901_torso", "sb3901_finalmeshum_torsobiv.vtk")
+torso_biv_mesh_path = os.path.join(".", "sb3901","sb3901_torso", "sb3901_finalmeshum_torsobiv_v2.vtk")
 stim_cmds = ['-num_stim', len(nodes)]
 for i, node in enumerate(nodes):
     nearby_nodes = get_nodes_in_radius_by_tag(torso_biv_mesh_path, node, endo_tag=3, radius_um=2000)

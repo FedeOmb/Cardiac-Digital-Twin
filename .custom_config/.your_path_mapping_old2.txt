@@ -1,0 +1,1 @@
+{"data_path":"/data/Cardiac-Digital-Twin/cardiac-data/meta_data/","results_path":"/data/Cardiac-Digital-Twin/cardiac-data/meta_data/results_test/"}

@@ -6,7 +6,9 @@ matplotlib.rcParams['text.usetex'] = False
 matplotlib.rcParams['font.family'] = 'DejaVu Sans'
 import matplotlib.pyplot as plt
 plt.switch_backend('Agg')# backend non-interattivo per ambiente headless
-igb_path = os.path.join(".", "test_monodomain_torord_sb3901_norm1","sb3901_phie_recovery_norm1.igb")
+subject_name = "sb3901"
+sim_folder_name = "test_monodomain_torord_sb3901_norm5_CVminchole_fast3x_realprep_stim1mm"
+igb_path = os.path.join(".", subject_name, sim_folder_name, "sb3901_phie_recovery_norm2_prep_fast.igb")
 
 # 1. Leggi il file igb prodotto dalla phie recovery
 t, datadict = ecg.readfile(igb_path, sample_time=1.0, silent=False)
@@ -26,14 +28,14 @@ outdata_filt = ecg.filter_std_ecg(
     freq_bandstop=None
 )
 
-out_path = os.path.join(".", "test_monodomain_torord_sb3901_norm1","output_ecg")
+out_path = os.path.join(".", subject_name, sim_folder_name, "output_ecg")
 if not os.path.exists(out_path):
     os.makedirs(out_path)
 
 # 4. Salva derivazioni
 ecg.save_std_ecg(t, outdata, outdata_filt,
                   filepath=out_path,
-                  filebase="sb301_phierec_ecgexport")
+                  filebase="sb3901_phierec_ecgexport")
 
 # 5. Calcola features (QRS, QT, PR, asse...)
 features = ecg.calc_ecg_features(t, outdata_filt, datadict['vm'],

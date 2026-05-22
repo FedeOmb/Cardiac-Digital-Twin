@@ -22,10 +22,10 @@ if __name__ == "__main__":
 
     # Esempio di scaling (se necessario)
     geometric_data_dir = os.path.join('..',"cardiac-data","meta_data","geometric_data")
-    subject_name = 'sb3901'
+    subject_name = 'sb4201'
    # input_filename = 'sb301_coarse1500_cmcoord.vtu'
     sim_folder = os.path.join(".", subject_name)
-    sim_meshes_folder = os.path.join(sim_folder, subject_name,'_meshes')
+    sim_meshes_folder = os.path.join(sim_folder, subject_name+'_meshes')
     sim_rn_folder = os.path.join(sim_folder, subject_name+'_rootnodes')
 
     if not os.path.exists(sim_folder):
@@ -41,29 +41,29 @@ if __name__ == "__main__":
    # input_path = input_dir + input_filename
     input_vtk_filename = subject_name + '_500um_fibers.vtk'
     input_vtk_path = os.path.join(input_dir, input_vtk_filename)
-    input_vtp_filename = 'sb3901_500um.vtp'
+    input_vtp_filename = subject_name + '_500um.vtp'
     input_vtp_path = os.path.join(input_dir, input_vtp_filename)
     #scale_mesh_mantaining_point_data(input_path, scaled_out_path, scale=10000)
-    tagged_filename = subject_name + '_500um_taggedv2_fastendo'
-    tagged_out_vtk_path = os.path.join(input_dir, tagged_filename+'.vtk')
+    tagged_filename_noext = subject_name + '_500um_taggedv2_fastendo'
+    tagged_out_vtk_path = os.path.join(input_dir, tagged_filename_noext+'.vtk')
     #tag_vol_region_from_tm(input_vtk_path, tagged_out_vtk_path)
     #scaled_out_vtp_filename = 'sb3901_500um.vtp'
     #scaled_out_vtp_path = input_dir + scaled_out_vtp_filename
     #scale_mesh_mantaining_point_data(input_vtp_path, scaled_out_vtp_path, scale=1000)
     tag_vol_region_from_tm_fastendo(input_vtk_path, tagged_out_vtk_path, input_vtp_path, TAG_LV_ENDO, TAG_RV_ENDO, TAG_ARRAY_NAME, fastendo_thickness=400.0)
 
-    shutil.move( tagged_out_vtk_path, os.path.join(sim_meshes_folder, tagged_filename+'.vtk'))
+    shutil.move( tagged_out_vtk_path, os.path.join(sim_meshes_folder, tagged_filename_noext+'.vtk'))
 
     cmd_convert =[
         'opencarp-docker',
         'meshtool', 'convert',
-        '-imsh=' + os.path.join(sim_meshes_folder, tagged_filename+'.vtk'),
-        '-omsh=' + os.path.join(sim_meshes_folder, tagged_filename),
-        '-ofmt=carp_txt',
+        '-imsh=' + os.path.join(sim_meshes_folder, tagged_filename_noext+'.vtk'),
+        '-omsh=' + os.path.join(sim_meshes_folder, tagged_filename_noext),
+        '-ofmt=carp_txt'
     ] 
     print("Running command:", " ".join(cmd_convert))
     subprocess.run(cmd_convert, check=True)
-    lon_file_path = os.path.join(sim_meshes_folder, tagged_filename+'.lon')
+    lon_file_path = os.path.join(sim_meshes_folder, tagged_filename_noext+'.lon')
     if os.path.exists(lon_file_path):
         os.remove(lon_file_path)
     shutil.copy( os.path.join(input_dir, subject_name + '_500mm_fibersOpencarp.lon'), lon_file_path)
@@ -77,8 +77,8 @@ if __name__ == "__main__":
 
    # scale_vtksurfmesh(torso_input_path, torso_scaled_out_path, scale=1000)
 
-    electrodes_input_filename = 'ECG_ELECTRODES.vtk'
-    electrodes_input_path = './sb4101_meshes/' + electrodes_input_filename
-    electrodes_output_filename = 'sb4101_electrodes_um.pts'
-    electrodes_output_path = './sb4101_meshes/' + electrodes_output_filename
-#    vtk_poly_to_pts(electrodes_input_path, electrodes_output_path, scale=1000)
+    electrodes_input_filename = subject_name + '_ECG_ELECTRODESmm.vtk'
+    electrodes_input_path = os.path.join(input_dir, electrodes_input_filename)
+    electrodes_output_filename = subject_name + '_electrodes_um.pts'
+    electrodes_output_path = os.path.join(sim_meshes_folder, electrodes_output_filename)
+    vtk_poly_to_pts(electrodes_input_path, electrodes_output_path, scale=1000)

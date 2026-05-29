@@ -11,7 +11,7 @@ from utils import get_xyz_name_list, map_indexes
 
 #geometric_data_dir = '/home/federico/Cardiac-Digital-Twin/cardiac-data/meta_data/geometric_data/'
 #geometric_data_dir = os.path.join(os.path.expanduser("~"), "Desktop", "digital-twin-framework-camps", "Cardiac-Digital-Twin", "cardiac-data", "meta_data", "geometric_data/")
-source_resolution = 'coarse1500'
+source_resolution = 'coarse1500cm'
 
 def generate_dummy_fiber_files(subject_name, geometric_data_dir, resolution):
     """Genera file dummy per fibre, sheet, normal e material se mancanti."""
@@ -55,9 +55,9 @@ def generate_dummy_fiber_files(subject_name, geometric_data_dir, resolution):
         print(f"Generazione file dummy elettrodi: {electrode_path}")
         np.savetxt(electrode_path, np.array([[0.0, 0.0, 0.0]]), delimiter=',')
 
-def generate_purkinje_network(subject_name, geometric_data_dir, resolution):
+def generate_purkinje_network(subject_name, geometric_data_dir, resolution, lv_inter_node_dist=2.5, rv_inter_node_dist=2.5, output_dir_name="putkinje"):
 
-    output_dir = os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{resolution}", "purkinje/")
+    output_dir = os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{resolution}", f"{output_dir_name}/")
     print(f"Output directory: {output_dir}")
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)    
@@ -84,8 +84,8 @@ def generate_purkinje_network(subject_name, geometric_data_dir, resolution):
     random_node_distance = np.random.uniform(1.5, 4.0) # Esempio: tra 1.5mm e 4mm
 
     approx_djikstra_purkinje_max_path_len = 200
-    lv_inter_root_node_distance = 2.5  
-    rv_inter_root_node_distance = 2.5 
+    lv_inter_root_node_distance = lv_inter_node_dist 
+    rv_inter_root_node_distance = rv_inter_node_dist 
     
     conduction_system = PurkinjeSystemVC(
         approx_djikstra_purkinje_max_path_len=approx_djikstra_purkinje_max_path_len, 
@@ -108,16 +108,19 @@ def generate_purkinje_network(subject_name, geometric_data_dir, resolution):
     write_purkinje_vtk(edge_list=lv_candidate_purkinje_edge, filename=subject_name + '_' + resolution + '_candidate_LV_Purkinje', node_xyz=node_xyz,
                             verbose=verbose, visualisation_dir=output_dir)
     lv_candidate_root_node_index, rv_candidate_root_node_index = geometry.get_lv_rv_candidate_root_node_index()
-    write_root_node_csv(filename=subject_name + '_' + resolution + '_candidate_LV_root_nodes.csv', node_vc_list=node_vc_list, node_xyz=node_xyz,
+    write_root_node_csv(filename=subject_name + '_' + resolution + '_candidate_LV_root_nodes_coords.csv', node_vc_list=node_vc_list, node_xyz=node_xyz,
                     root_node_index_list=lv_candidate_root_node_index, vc_name_list=vc_name_list, verbose=verbose,
                     visualisation_dir=output_dir, xyz_name_list=get_xyz_name_list())
     # RV
     write_purkinje_vtk(edge_list=rv__candidate_purkinje_edge, filename=subject_name + '_' + resolution + '_candidate_RV_Purkinje', node_xyz=node_xyz,
                             verbose=verbose, visualisation_dir=output_dir)
-    write_root_node_csv(filename=subject_name + '_' + resolution + '_candidate_RV_root_nodes.csv', node_vc_list=node_vc_list, node_xyz=node_xyz,
+    write_root_node_csv(filename=subject_name + '_' + resolution + '_candidate_RV_root_nodes_coords.csv', node_vc_list=node_vc_list, node_xyz=node_xyz,
                     root_node_index_list=rv_candidate_root_node_index, vc_name_list=vc_name_list, verbose=verbose,
                     visualisation_dir=output_dir, xyz_name_list=get_xyz_name_list())
-    
+    vtx_lv_filename = os.path.join(output_dir, f"{subject_name}_candidate_LV_root_nodes_index.vtx")
+    np.savetxt(vtx_lv_filename, lv_candidate_root_node_index, fmt='%d')
+    vtx_rv_filename = os.path.join(output_dir, f"{subject_name}_candidate_RV_root_nodes_index.vtx")
+    np.savetxt(vtx_rv_filename, rv_candidate_root_node_index, fmt='%d')
     # 4. Randomizzazione Attivazione root nodes
     all_candidate_root_nodes_index = geometry.get_candidate_root_node_index()
     num_candidate_root_nodes = len(all_candidate_root_nodes_index)
@@ -145,7 +148,7 @@ def generate_purkinje_network(subject_name, geometric_data_dir, resolution):
     print(f"Generati {len(all_candidate_root_nodes_index)} root nodes candidati e salvati per opencarp in {vtx_filename}")
 
     # 6. Seleziona 9 root nodes casuali dai candidati e salva separatamente (vtx + tempi)
-    nb_selected = 9
+    nb_selected = 8
     if num_candidate_root_nodes == 0:
         print("Nessun root node candidato trovato.")
     elif num_candidate_root_nodes <= nb_selected: 
@@ -158,6 +161,7 @@ def generate_purkinje_network(subject_name, geometric_data_dir, resolution):
     elif num_candidate_root_nodes > nb_selected:
         print(f"Selezionando casualmente {nb_selected} root nodes tra {num_candidate_root_nodes} candidati.")
         selection_mask = select_random_root_nodes(nb_root_nodes=nb_selected, candidate_root_node_indexes=all_candidate_root_nodes_index)
+        print(selection_mask)
         active_root_nodes = all_candidate_root_nodes_index[selection_mask]
         lv_purkinje_edge, rv_purkinje_edge = geometry.get_lv_rv_selected_purkinje_edge(root_node_meta_index=selection_mask)
         activation_times_selected = geometry.get_selected_root_node_time(root_node_meta_index=selection_mask, purkinje_speed=purkinje_speed)
@@ -254,11 +258,13 @@ if __name__ == "__main__":
     geometric_data_dir = data_dir + 'geometric_data/'
 
     subject_name = 'sb4101'
-    output_dir = 'purkinje/'
+    output_dir_name = 'purkinje'
     coarse_resolution = 'coarse1500cm'
     fine_resolution = 'fine500um'
 
-    geometry, active_root_nodes, candidate_root_nodes, activation_times_selected, activation_times_candidates = generate_purkinje_network(subject_name=subject_name, geometric_data_dir=geometric_data_dir, resolution=coarse_resolution)
+    geometry, active_root_nodes, candidate_root_nodes, activation_times_selected, activation_times_candidates = generate_purkinje_network(
+                                                    subject_name=subject_name, geometric_data_dir=geometric_data_dir, resolution=coarse_resolution, 
+                                                    lv_inter_node_dist=2.5, rv_inter_node_dist=2.5, output_dir_name=output_dir_name)
     
     # Mappatura su fine
     if os.path.exists(os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{fine_resolution}")):

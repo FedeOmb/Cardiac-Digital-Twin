@@ -1,5 +1,6 @@
 import multiprocessing
 import os
+import resource
 import sys
 from warnings import warn
 import matplotlib.pyplot as plt
@@ -10,8 +11,8 @@ from datetime import datetime
 
 if __name__ == '__main__':
     if len(sys.argv) < 2:
-        anatomy_subject_name = 'DTI004'
-        ecg_subject_name = 'DTI004'  # Allows using a different ECG for the personalisation than for the anatomy
+        anatomy_subject_name = 'sb4201'
+        ecg_subject_name = 'sb4201'  # Allows using a different ECG for the personalisation than for the anatomy
     else:
         anatomy_subject_name = sys.argv[1]
         ecg_subject_name = sys.argv[1]
@@ -20,9 +21,9 @@ if __name__ == '__main__':
     # ####################################################################################################################
     # # TODO THIs kills all the processes every time you run the inference because it tries to exceed the allowed memory
     # # Set the memory limit to 100GB (in bytes) - Heartsrv has 126GB
-    # memory_limit = 60 * 1024 * 1024 * 1024
+    memory_limit = 50 * 1024 * 1024 * 1024
     # # Set the memory limit for the current process
-    # resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
+    resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
     # ####################################################################################################################
     print(
         'Caution, all the hyper-parameters are set assuming resolutions of 1000 Hz in all time-series.')  # TODO: make hyper-parameters relative to the time series resolutions.
@@ -51,7 +52,7 @@ if __name__ == '__main__':
     from inference_functions import sample_theta_uniform, ContinuousSMCABC
     from propagation_models import PrescribedLAT
     from path_config import get_path_mapping
-    from io_functions import save_dictionary, write_geometry_to_ensight_with_fields, read_csv_file
+    from io_functions import save_dictionary, write_geometry_to_ensight_with_fields, read_csv_file, read_pandas
     from utils import get_vc_ab_name, get_vc_aprt_name, get_vc_rt_name, get_vc_rvlv_name, get_vc_tm_name, \
     get_fibre_speed_name, get_sheet_speed_name, get_normal_speed_name, get_vc_ab_cut_name, get_apd90_biomarker_name, \
     get_sf_iks_biomarker_name
@@ -71,11 +72,11 @@ if __name__ == '__main__':
     ####################################################################################################################
     # Step 1: Define paths and other environment variables.
     # General settings:
-    resolution = 'coarse'
+    resolution = 'coarse1500cm'
     verbose = True
     # Input Paths:
     data_dir = path_dict["data_path"]
-    clinical_data_filename = 'clinical_data/' + ecg_subject_name + '_clinical_full_ecg.csv'
+    clinical_data_filename = 'clinical_data/' + ecg_subject_name + '_scaled_norm7_CVcampsv2_fast4x_prep0.csv'
     clinical_data_filename_path = data_dir + clinical_data_filename
     # if ecg_subject_name == 'DTI004':
     #     clinical_qrs_offset = 100
@@ -93,6 +94,8 @@ if __name__ == '__main__':
         heart_rate = 48
     elif anatomy_subject_name == 'DTI032':  # Subject 3
         heart_rate = 74
+    
+    heart_rate = 74
     cycle_length = get_cycle_length(heart_rate=heart_rate)
     cycle_length_str = str(int(cycle_length))
     print('cycle_length ', cycle_length)
@@ -137,6 +140,9 @@ if __name__ == '__main__':
     result_tag = experiment_type
     qrs_lat_prescribed_filename = anatomy_subject_name + '_' + resolution + '_nodefield_' + result_tag + '-lat.csv'
     qrs_lat_prescribed_filename_path = results_dir_qrs + qrs_lat_prescribed_filename
+
+    qrs_best_param_filename = anatomy_subject_name + '_' + resolution + '_personalisation-best-parameter.csv'
+    qrs_best_param_filename_path = results_dir_qrs + qrs_best_param_filename
     results_dir_qrs = None  # Clear Arguments to prevent Argument recycling
     if not os.path.isfile(qrs_lat_prescribed_filename_path):
         raise Exception(
@@ -329,22 +335,35 @@ if __name__ == '__main__':
     ####################################################################################################################
     # Step 4: Prepare smoothing configuration to resemble diffusion effects
     print('Step 4: Prepare smoothing configuration to resemble diffusion effects.')
+    fibre_speed_name = get_fibre_speed_name()
+    sheet_speed_name = get_sheet_speed_name()
+    normal_speed_name = get_normal_speed_name()
+    qrs_best_parameter = pd.read_csv(qrs_best_param_filename_path)
+    print(qrs_best_parameter)
+    qrs_best_parameter = qrs_best_parameter.to_dict(orient='records')[0]  # Convert the single row dataframe to a dictionary
+    fibre_speed = qrs_best_parameter[fibre_speed_name]
+    sheet_speed = qrs_best_parameter[sheet_speed_name]
+    normal_speed = qrs_best_parameter[normal_speed_name]
+    print('sheet_speed', sheet_speed)
+    print('fibre_speed', fibre_speed)
+    print('normal_speed', normal_speed)
     # Define the speeds used during the fibre-based smoothing
     warn('Inference from QT can, but does NOT, update the speeds in the smoothing function!\nAlso, it requires some initial fixed values!')
     # TODO in the case of doing the inference sequentially, first the QRS and later the T wave, we could use the inferred speed values in here!!
-    fibre_speed = 0.065  # Taggart et al. (2000) https://doi.org/10.1006/jmcc.2000.1105
+    #fibre_speed = 0.065  # Taggart et al. (2000) https://doi.org/10.1006/jmcc.2000.1105
     #TODO What should be transmural and what should be sheet? These two words mean different things?
     warn('What should be transmural and what should be sheet?')
     # sheet_speed = 0.051  # Taggart et al. (2000) https://doi.org/10.1006/jmcc.2000.1105
     # TODO make code to automatically read these values from the inference results
     # Mannually taken from the inference results
-    if anatomy_subject_name == 'DTI024':
-        sheet_speed = 0.036
-    elif anatomy_subject_name == 'DTI004':
-        sheet_speed = 0.027
-    elif anatomy_subject_name == 'DTI032':
-        sheet_speed = 0.04
-    normal_speed = 0.048  # Taggart et al. (2000) https://doi.org/10.1006/jmcc.2000.1105
+    # if anatomy_subject_name == 'DTI024':
+    #     sheet_speed = 0.036
+    # elif anatomy_subject_name == 'DTI004':
+    #     sheet_speed = 0.027
+    # elif anatomy_subject_name == 'DTI032':
+    #     sheet_speed = 0.04
+        
+    #normal_speed = 0.048  # Taggart et al. (2000) https://doi.org/10.1006/jmcc.2000.1105
     # makes sure that the spatial smoothing is based on distance instead of adjacentcies - smooth twice
     # TODO the following value is the strenght of the smoothing and it depends on the resolution of the monodomain simulation?
     # TODO this distance scaling should be directly proportional to dt_smoothing, right?
@@ -354,9 +373,7 @@ if __name__ == '__main__':
         fibre_speed=fibre_speed, sheet_speed=sheet_speed, normal_speed=normal_speed,
         ghost_distance_to_self=smoothing_ghost_distance_to_self)
     # Save hyperparameters for reproducibility
-    fibre_speed_name = get_fibre_speed_name()
-    sheet_speed_name = get_sheet_speed_name()
-    normal_speed_name = get_normal_speed_name()
+
     hyperparameter_dict['fibre_speed_name'] = fibre_speed_name
     hyperparameter_dict['sheet_speed_name'] = sheet_speed_name
     hyperparameter_dict['normal_speed_name'] = normal_speed_name
@@ -457,7 +474,7 @@ if __name__ == '__main__':
         warn(
             'The hyper-parameter frequency is only used for filtering! If you dont use 1000 Hz in any time-series in the code, the other hyper-parameters will not give the expected outcome!')
     low_freq_cut = 0.001#0.5
-    high_freq_cut = 100#150
+    high_freq_cut = 150 #150
     I_name = 'I'
     II_name = 'II'
     v3_name = 'V3'
@@ -671,8 +688,8 @@ if __name__ == '__main__':
 
     ## -----------------------------------
     ## CONFIGURAZIONE SEMPLIFICATA TEST ##
-    population_size = 120
-    max_mcmc_steps = 50
+    population_size = 80
+    max_mcmc_steps = 60
     ## ----------------   
     #  
     keep_fraction = max((population_size - 2 * multiprocessing.cpu_count()) / population_size,  0.5)  # 0.75)   # without the max() function it can go negative when the population size is smaller than the number of threads
@@ -724,7 +741,7 @@ if __name__ == '__main__':
 
     ## -----------------------------------
     ## CONFIGURAZIONE SEMPLIFICATA TEST ##
-    desired_discrepancy = 2.0 
+    desired_discrepancy = 0.5 
     max_process_alive_time = 20.
     visualisation_count = 5   
     ## ----------------

@@ -10,7 +10,7 @@ import personalise_to_Twave
 
 
 if __name__ == '__main__':
-    anatomy_subject_name_list = ['DTI004']# ['UKB_1000268', 'UKB_1002772', 'UKB_1010096', 'UKB_1005678', 'UKB_1008115', 'UKB_1044063', 'UKB_1011367']
+    anatomy_subject_name_list = ['sb4301']# ['UKB_1000268', 'UKB_1002772', 'UKB_1010096', 'UKB_1005678', 'UKB_1008115', 'UKB_1044063', 'UKB_1011367']
     # anatomy_subject_name_list = ['UKB_1000268']#, 'UKB_1002772', 'UKB_1010096', 'UKB_1005678', 'UKB_1008115', 'UKB_1044063', 'UKB_1011367']
     for anatomy_subject_name in anatomy_subject_name_list:
         anatomy_subject_name = anatomy_subject_name
@@ -78,12 +78,12 @@ if __name__ == '__main__':
         ####################################################################################################################
         # Step 1: Define paths and other environment variables.
         # General settings:
-        source_resolution = 'coarse'
+        source_resolution = 'coarse1500cm'
         verbose = True
         # Input Paths:
         data_dir = path_dict["data_path"]
         # TODO revert back to using the qrs only for this script. This is a temporary hack to test UKB subjects.
-        clinical_data_filename = 'clinical_data/' + ecg_subject_name + '_clinical_qrs_ecg.csv'#'_clinical_qrs_ecg.csv'
+        clinical_data_filename = 'clinical_data/' + ecg_subject_name + '_scaled_norm9_CVcamps2_fast4x_grad30_purk300.csv'#'_clinical_qrs_ecg.csv'
         clinical_data_filename_path = data_dir + clinical_data_filename
         geometric_data_dir = data_dir + 'geometric_data/'
         # Output Paths:
@@ -211,8 +211,8 @@ if __name__ == '__main__':
         print('Step 4: Create rule-based Purkinje network using ventricular coordinates.')
         # Arguments for Conduction system:
         approx_djikstra_purkinje_max_path_len = 200
-        lv_inter_root_node_distance = 1.  # 1.5 cm    # TODO: Calibrate this hyper-parameter using sensitivity analysis
-        rv_inter_root_node_distance = 1.  # 1.5 cm    # TODO: Calibrate this hyper-parameter using sensitivity analysis
+        lv_inter_root_node_distance = 1.5  # 1.5 cm    # TODO: Calibrate this hyper-parameter using sensitivity analysis
+        rv_inter_root_node_distance = 1.5  # 1.5 cm    # TODO: Calibrate this hyper-parameter using sensitivity analysis
         # Create conduction system
         conduction_system = PurkinjeSystemVC(
             approx_djikstra_purkinje_max_path_len=approx_djikstra_purkinje_max_path_len, geometry=geometry,
@@ -304,8 +304,8 @@ if __name__ == '__main__':
         # function as the AP's upstroke.
         print('Step 7: Create ECG calculation method. Using step function.')
         # Arguments for ECG calculation:
-        filtering = True
-        max_len_qrs = 256  # This hyper-paramter is used when paralelising the ecg computation, because it needs a structure to synchronise the results from the multiple threads.
+        filtering = False
+        max_len_qrs = 200  # This hyper-paramter is used when paralelising the ecg computation, because it needs a structure to synchronise the results from the multiple threads.
         max_len_ecg = max_len_qrs
         normalise = True
         zero_align = True
@@ -313,7 +313,7 @@ if __name__ == '__main__':
         if frequency != 1000:
             warn('The hyper-parameter frequency is only used for filtering! If you dont use 1000 Hz in any time-series in the code, the other hyper-parameters will not give the expected outcome!')
         low_freq_cut = 0.001  # 0.5
-        high_freq_cut = 100  # 150
+        high_freq_cut = 150  # 150
         I_name = 'I'
         II_name = 'II'
         v3_name = 'V3'
@@ -329,7 +329,8 @@ if __name__ == '__main__':
         print('clinical_ecg_raw ', clinical_ecg_raw.shape)
         # TODO revert this change, this is only needed when using an ECG that has the full beat instead of a trimmed QRS, and the
         # TODO cutting point will change from subject to subject, either have an automatic delineator, or preprocess the QRS beforehand
-        # clinical_ecg_raw = clinical_ecg_raw[:, :max_len_qrs]  # TODO remove this line
+        clinical_ecg_raw = clinical_ecg_raw[:, :max_len_qrs]  # TODO remove this line
+        print('clinical_qrs_raw_trimmed ', clinical_ecg_raw.shape)
         # Create ECG model
         ecg_model = PseudoQRSTetFromStepFunction(electrode_positions=geometry.electrode_xyz, filtering=filtering,
                                                  frequency=frequency, high_freq_cut=high_freq_cut, lead_names=lead_names,
@@ -502,8 +503,8 @@ if __name__ == '__main__':
         sparse_endo_speed_prior = None
 
         ### Define SMC-ABC configuration
-        population_size = 256  # 512   # Rule of thumb number    # TODO: Calibrate this hyper-parameter using sensitivity analysis
-        max_mcmc_steps = 100    # This number allows for extensive exploration
+        population_size = 120  # 512   # Rule of thumb number    # TODO: Calibrate this hyper-parameter using sensitivity analysis
+        max_mcmc_steps = 50    # This number allows for extensive exploration
         # Specify the "retain ratio". This is the proportion of samples that would match the current data in the case of N_on = 1 and all particles having the same variable switched on. That is to say,
         # it is an approximate chance of choosing "random updates" over the particle information
         retain_ratio = 0.5  # original value in Brodie's code
@@ -511,8 +512,8 @@ if __name__ == '__main__':
         
         ## -----------------------------------
         ## CONFIGURAZIONE SEMPLIFICATA TEST ##
-        population_size = 128
-        max_mcmc_steps = 100
+        #population_size = 128
+        #max_mcmc_steps = 100
         ## ----------------    
         
         keep_fraction = max((population_size - 2 * multiprocessing.cpu_count()) / population_size, 0.5)   # without the max() function it can go negative when the population size is smaller than the number of threads
@@ -566,16 +567,16 @@ if __name__ == '__main__':
         verbose = None
         ####################################################################################################################
         # Step 13: Run the inference process.
-        desired_discrepancy = 0.5 #1. #0.1 # This value needs to be changed with respect of what discrepancy metric you want to use.  # this value is for the DTW metric was 0.35  # After several tests was found good with the latest discrepancy metric strategy
-        max_process_alive_time = 24.  # hours, in Supercomputers, usually there is a maximum 24 hour limit on any job that you submit.
+        desired_discrepancy = 1.0 #1. #0.1 # This value needs to be changed with respect of what discrepancy metric you want to use.  # this value is for the DTW metric was 0.35  # After several tests was found good with the latest discrepancy metric strategy
+        max_process_alive_time = 20.  # hours, in Supercomputers, usually there is a maximum 24 hour limit on any job that you submit.
         unique_stopping_ratio = 0.5  # if only 50% of the population is unique, then terminate the inference and consider that it has converged.
         visualisation_count = 50  # Minimum of 1 to avoid division by zero
         
         ## CONFIGURAZIONE SEMPLIFICATA TEST ##
-        desired_discrepancy = 0.5
-        max_process_alive_time = 2. 
-        unique_stopping_ratio = 0.5 
-        visualisation_count = 50     
+        #desired_discrepancy = 0.5
+        #max_process_alive_time = 2. 
+        #unique_stopping_ratio = 0.5 
+        #visualisation_count = 50     
         ## ----------------
         
         # Save geometry as a check point

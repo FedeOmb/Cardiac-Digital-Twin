@@ -100,28 +100,26 @@ class ElectrophysiologyUpstrokeStepFunction(Electrophysiology):
 
     def simulate_electrophysiology_population(self, parameter_population_modules_dict):
         lat_population = self.propagation_model.simulate_propagation_population(parameter_population_modules_dict=parameter_population_modules_dict)
-        lat_population_unique, unique_inverse_indexes = np.unique(lat_population, return_inverse=True, axis=0)
-        simulation_time = int(math.ceil(np.amax(lat_population_unique) + 1))
-        vm_population_unique = pymp.shared.array((lat_population_unique.shape[0], lat_population_unique.shape[1],
+        
+        # Removed np.unique since uniqueness is handled natively upstream by the Evaluator
+        simulation_time = int(math.ceil(np.amax(lat_population) + 1))
+        vm_population = pymp.shared.array((lat_population.shape[0], lat_population.shape[1],
                                                   simulation_time), dtype=np.float32)
-        vm_population_unique[:, :, :] = get_nan_value() # TODO be careful that there are no NAN values in the ECG calculation
+        vm_population[:, :, :] = get_nan_value() # TODO be careful that there are no NAN values in the ECG calculation
         resting_vm = self.cellular_model.get_resting_vm()
         upstroke_vm = self.cellular_model.get_upstroke_vm()
         threads_num = multiprocessing.cpu_count()
-        # Uncomment the following lines to turn off the parallelisation.
-        # if True:
-        #     print('Parallel loop turned off in module: ' + self.module_name)
-        #     for conf_i in range(vm_population_unique.shape[0]):
-        with pymp.Parallel(min(threads_num, vm_population_unique.shape[0])) as p1:
-            for conf_i in p1.range(vm_population_unique.shape[0]):
-                vm = np.zeros((lat_population_unique.shape[1], simulation_time))
-                vm_simulated = calculate_node_vm_from_upstroke_step_function(lat=lat_population_unique[conf_i, :],
+        
+        with pymp.Parallel(min(threads_num, vm_population.shape[0])) as p1:
+            for conf_i in p1.range(vm_population.shape[0]):
+                vm = np.zeros((lat_population.shape[1], simulation_time))
+                vm_simulated = calculate_node_vm_from_upstroke_step_function(lat=lat_population[conf_i, :],
                                                                              resting_vm=resting_vm,
                                                                              upstroke_vm=upstroke_vm)
                 vm[:, :vm_simulated.shape[1]] = vm_simulated
                 vm[:, vm_simulated.shape[1]:] = vm_simulated[:, -1, np.newaxis]
-                vm_population_unique[conf_i, :, :] = vm
-        return lat_population, vm_population_unique[unique_inverse_indexes, :, :]
+                vm_population[conf_i, :, :] = vm
+        return lat_population, vm_population
 
 
 class ElectrophysiologySameAP(Electrophysiology):
@@ -143,29 +141,26 @@ class ElectrophysiologySameAP(Electrophysiology):
 
     def simulate_electrophysiology_population(self, parameter_population_modules_dict):
         lat_population = self.propagation_model.simulate_propagation_population(parameter_population_modules_dict=parameter_population_modules_dict)
-        lat_population_unique, unique_inverse_indexes = np.unique(lat_population, return_inverse=True, axis=0)
-        max_lat = int(math.ceil(np.amax(lat_population_unique) + 1))
+        
+        # Removed np.unique since uniqueness is handled natively upstream by the Evaluator
+        max_lat = int(math.ceil(np.amax(lat_population) + 1))
         simulation_time = max_lat + self.action_potential_simulation.shape[0]
-        vm_population_unique = pymp.shared.array((lat_population_unique.shape[0], lat_population_unique.shape[1],
+        vm_population = pymp.shared.array((lat_population.shape[0], lat_population.shape[1],
                                                   simulation_time), dtype=np.float32)
-        # vm_population_unique = np.zeros((lat_population_unique.shape[0], lat_population_unique.shape[1], simulation_time), dtype=np.float64)
-        vm_population_unique[:, :, :] = get_nan_value() # TODO be careful that there are no NAN values in the ECG calculation
+        vm_population[:, :, :] = get_nan_value() # TODO be careful that there are no NAN values in the ECG calculation
         threads_num = multiprocessing.cpu_count()
-        # Uncomment the following lines to turn off the parallelisation.
-        # if True:
-        #     print('Parallel loop turned off in module: ' + self.module_name)
-        #     for conf_i in range(vm_population_unique.shape[0]):
-        with pymp.Parallel(min(threads_num, vm_population_unique.shape[0])) as p1:
-            for conf_i in p1.range(vm_population_unique.shape[0]):
-                vm = np.zeros((lat_population_unique.shape[1], simulation_time))
+        
+        with pymp.Parallel(min(threads_num, vm_population.shape[0])) as p1:
+            for conf_i in p1.range(vm_population.shape[0]):
+                vm = np.zeros((lat_population.shape[1], simulation_time))
                 vm_simulated = calculate_node_vm_from_any_ap(ap=self.action_potential_simulation,
-                                                             lat=lat_population_unique[conf_i, :],
+                                                             lat=lat_population[conf_i, :],
                                                              simulation_time=simulation_time,
                                                              upstroke_index=self.upstroke_index)
                 vm[:, :vm_simulated.shape[1]] = vm_simulated
                 vm[:, vm_simulated.shape[1]:] = vm_simulated[:, -1, np.newaxis]
-                vm_population_unique[conf_i, :, :] = vm
-        return lat_population, vm_population_unique[unique_inverse_indexes, :, :]
+                vm_population[conf_i, :, :] = vm
+        return lat_population, vm_population
 
 
 class ElectrophysiologyAPDmap(Electrophysiology):
@@ -224,49 +219,27 @@ class ElectrophysiologyAPDmap(Electrophysiology):
         lat_population = self.propagation_model.simulate_propagation_population(
             parameter_population_modules_dict=parameter_population_modules_dict)
         parameter_population = self.get_from_module_dict(parameter_population_modules_dict)
-        simulation_configuration_population = np.concatenate((lat_population, parameter_population), axis=1)
-        simulation_configuration_population_unique, unique_indexes, unique_inverse_indexes = np.unique(
-            simulation_configuration_population, return_index=True, return_inverse=True, axis=0)
-        simulation_configuration_population = None  # Clear memory
-        lat_population_unique = lat_population[unique_indexes, :]
-        parameter_population_unique = parameter_population[unique_indexes, :]
-        simulation_configuration_population_unique = None  # Clear memory
-        max_simulation_time = int(math.ceil(np.amax(lat_population_unique))) + self.cellular_model.get_max_action_potential_len()
-        vm_population_unique = pymp.shared.array((parameter_population_unique.shape[0],
-                                                  lat_population_unique.shape[1], max_simulation_time), dtype=np.float32)
-        # simulation_time_list = pymp.shared.array((simulation_configuration_population_unique.shape[0]), dtype=np.int32)
-        # unsmoothed_vm_map_population = np.zeros((simulation_configuration_population_unique.shape[0], lat_population_unique.shape[1], max_simulation_time), dtype=np.float64)
-        vm_population_unique[:, :, :] = get_nan_value()  # TODO be careful that there are no NAN values in the ECG calculation
+        
+        # Removed np.unique since uniqueness is handled natively upstream by the Evaluator
+        max_simulation_time = int(math.ceil(np.amax(lat_population))) + self.cellular_model.get_max_action_potential_len()
+        vm_population = pymp.shared.array((parameter_population.shape[0],
+                                           lat_population.shape[1], max_simulation_time), dtype=np.float32)
+        vm_population[:, :, :] = get_nan_value()  # TODO be careful that there are no NAN values in the ECG calculation
         threads_num = multiprocessing.cpu_count()
-        # Uncomment the following lines to turn off the parallelisation.
-        # print('# TODO Fix this hack!!!')
-        # if True:
-        #     print('Parallel loop turned off in module: ' + self.module_name)
-        #     for conf_i in range(vm_population_unique.shape[0]):
-        with pymp.Parallel(min(threads_num, parameter_population_unique.shape[0])) as p1:
-            for conf_i in p1.range(parameter_population_unique.shape[0]):
-                parameter_particle = parameter_population_unique[conf_i]
+        
+        with pymp.Parallel(min(threads_num, parameter_population.shape[0])) as p1:
+            for conf_i in p1.range(parameter_population.shape[0]):
+                parameter_particle = parameter_population[conf_i]
                 unsmoothed_node_vm = self.generate_node_vm(parameter_particle=parameter_particle,
-                                                           node_lat=lat_population_unique[conf_i],
+                                                           node_lat=lat_population[conf_i],
                                                            node_celltype=node_celltype)
-                # param_dict = self.__repack_particle_params(parameter_particle=parameter_particle)
-                # simulation_time_list[conf_i] = unsmoothed_node_vm.shape[1]
-                # TODO Fix this hack!!!
-                # TODO the speeds should be read from the param_dict somehow, perhaps the speeds are also needed for the
-                # inference of the T wave characteristics and this should be mapped by the Adapter class
-                # fibre_speed = get_nan_value() #6.500000000000000222e-02 #param_dict[self.fibre_speed_name]
-                # sheet_speed = get_nan_value() #2.900000000000000147e-02 #param_dict[self.fibre_speed_name]
-                # normal_speed = get_nan_value() #4.800000000000000100e-02 #param_dict[self.fibre_speed_name]
-                vm_population_unique[conf_i, :, :unsmoothed_node_vm.shape[1]] = self.apply_spatiotemporal_smoothing(
-                    # fibre_speed=fibre_speed,
-                    nodefield=unsmoothed_node_vm #,
-                    # normal_speed=normal_speed,
-                    # sheet_speed=sheet_speed
+                
+                vm_population[conf_i, :, :unsmoothed_node_vm.shape[1]] = self.apply_spatiotemporal_smoothing(
+                    nodefield=unsmoothed_node_vm 
                 )
                 unsmoothed_node_vm = None  # Clear memory
-        # max_simulation_time = int(np.amax(simulation_time_list))
-        # vm_population_unique = vm_population_unique[:, :,        
-        return lat_population, vm_population_unique[unique_inverse_indexes, :, :]
+        
+        return lat_population, vm_population
     
     def __repack_particle_params(self, parameter_particle):
         # TODO use a dictionary that is built using the inputs for the adapter

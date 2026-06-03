@@ -1,5 +1,4 @@
 import time
-import multiprocessing
 
 import numpy as np
 
@@ -88,30 +87,12 @@ class MetricEvaluator(ParameterEvaluator):
 
     def evaluate_parameter_population(self, parameter_population):
         parameter_population_unique, inverse_unique_indexes = np.unique(parameter_population, return_inverse=True, axis=0)
-        # ORIGINAL CODE: crash with large population beacause of memory issues
-        # parameter_population_modules_dict = self.adapter.distribute_parameter_population_to_modules(
-        #     parameter_population=parameter_population_unique)
-        # metric_population_unique = self.metric.evaluate_metric_population(predicted_data_population=self.simulator.simulate_population(
-        #     parameter_population_modules_dict=parameter_population_modules_dict))        
-        # 
-        #WORKAROUD: batch processing
-        batch_size = multiprocessing.cpu_count() * 3
-        n_unique = parameter_population_unique.shape[0]
-        metric_population_unique = None
-        
-        for i in range(0, n_unique, batch_size):
-            batch_params = parameter_population_unique[i:i+batch_size]
-            batch_modules_dict = self.adapter.distribute_parameter_population_to_modules(
-                parameter_population=batch_params)
-            batch_predicted_data = self.simulator.simulate_population(
-                parameter_population_modules_dict=batch_modules_dict)
-            batch_metric = self.metric.evaluate_metric_population(
-                predicted_data_population=batch_predicted_data)
-            if metric_population_unique is None:
-                metric_population_unique = batch_metric
-            else:
-                metric_population_unique = np.concatenate((metric_population_unique, batch_metric), axis=0)
-                
+
+        parameter_population_modules_dict = self.adapter.distribute_parameter_population_to_modules(
+            parameter_population=parameter_population_unique)
+        metric_population_unique = self.metric.evaluate_metric_population(predicted_data_population=self.simulator.simulate_population(
+            parameter_population_modules_dict=parameter_population_modules_dict))        
+
         return metric_population_unique[inverse_unique_indexes]
 
     '''visualisation'''
@@ -152,25 +133,12 @@ class DiscrepancyEvaluator(ParameterEvaluator):
     def evaluate_parameter_population(self, parameter_population):
         parameter_population_unique, inverse_unique_indexes = np.unique(parameter_population, return_inverse=True, axis=0)
         
-        batch_size = multiprocessing.cpu_count() * 2
-        n_unique = parameter_population_unique.shape[0]
-        discrepancy_population_unique = None
-        
-        for i in range(0, n_unique, batch_size):
-            batch_params = parameter_population_unique[i:i+batch_size]
-            parameter_population_modules_dict = self.adapter.distribute_parameter_population_to_modules(
-                parameter_population=batch_params)
-                
-            predicted_data_population = self.simulator.simulate_population(
-                parameter_population_modules_dict=parameter_population_modules_dict)
-                
-            batch_discrepancy = self.discrepancy_metric.evaluate_metric_population(
-                predicted_data_population=predicted_data_population, target_data=self.target_data)
-                
-            if discrepancy_population_unique is None:
-                discrepancy_population_unique = batch_discrepancy
-            else:
-                discrepancy_population_unique = np.concatenate((discrepancy_population_unique, batch_discrepancy), axis=0)
+        parameter_population_modules_dict = self.adapter.distribute_parameter_population_to_modules(
+            parameter_population=parameter_population_unique)
+        discrepancy_population_unique = self.discrepancy_metric.evaluate_metric_population(
+            predicted_data_population=self.simulator.simulate_population(
+            parameter_population_modules_dict=parameter_population_modules_dict), target_data=self.target_data)
+
         return discrepancy_population_unique[inverse_unique_indexes]
 
     '''visualisation'''

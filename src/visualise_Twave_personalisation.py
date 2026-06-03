@@ -72,8 +72,8 @@ if __name__ == '__main__':
     ####################################################################################################################
     # Step 1: Define paths and other environment variables.
     # General settings:
-    source_resolution = 'coarse'
-    target_resolution = 'coarse'
+    source_resolution = 'coarse1500cm'
+    target_resolution = 'coarse1500cm'
     verbose = True
     # Input Paths:
     data_dir = path_dict["data_path"]
@@ -88,6 +88,8 @@ if __name__ == '__main__':
         ep_model_twave_name = 'GKs5_GKr0.5_tjca60_CL_810'
     elif anatomy_subject_name == 'DTI004':
         ep_model_twave_name = 'GKs5_GKr0.5_tjca60_CL_1250'
+    elif anatomy_subject_name == 'sb3901':
+        ep_model_twave_name = 'GKs5_GKr0.5_tjca60_CL_810'
     else:
         ep_model_twave_name = 'GKs5_GKr0.5_tjca60_CL_'
     # ep_model_twave_name = 'GKs5_GKr0.6_tjca60'  # 'MitchellSchaefferEP' #'no_rescale' #'GKs5_GKr0.6_tjca60'
@@ -103,7 +105,7 @@ if __name__ == '__main__':
     print(results_dir_part_twave)
     assert os.path.exists(results_dir_part_twave)  # Path should already exist from running the Twave inference
     # Use date to name the result folder to preserve some history of results
-    current_month_text = 'Jan'#datetime.now().strftime('%h')  # e.g., Feb
+    current_month_text = datetime.now().strftime('%h')  # e.g., Feb
     current_year_full = datetime.now().strftime('%Y')  # e.g., 2024
     date_str = current_month_text + '_' + current_year_full
     #results_dir_twave = results_dir_part_twave + date_str + '/'
@@ -340,7 +342,7 @@ if __name__ == '__main__':
                                                           normal_speed_name=normal_speed_name,
                                                           parameter_name_list_in_order=electrophysiology_parameter_name_list_in_order,
                                                           propagation_model=propagation_model,
-                                                          sheet_speed_name=sheet_speed_name,
+                                                          sheet_speed_name=sheet_speed,
                                                           smoothing_dt=smoothing_dt,
                                                           smoothing_ghost_distance_to_self=smoothing_ghost_distance_to_self,
                                                           start_smoothing_time_index=start_smoothing_time_index,

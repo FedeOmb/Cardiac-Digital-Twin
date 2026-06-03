@@ -11,7 +11,7 @@ from datetime import datetime
 
 if __name__ == '__main__':
     #anatomy_subject_name_list = ['DTI024', 'DTI004', 'DTI032']
-    anatomy_subject_name_list = ['DTI004']
+    anatomy_subject_name_list = ['sb3901']
     for anatomy_subject_name in anatomy_subject_name_list:
         if len(sys.argv) < 2:
             anatomy_subject_name = anatomy_subject_name
@@ -79,7 +79,7 @@ if __name__ == '__main__':
         ####################################################################################################################
         # Step 1: Define paths and other environment variables.
         # General settings:
-        inference_resolution = 'coarse'
+        inference_resolution = 'coarse1500cm'
         verbose = True
         # Input Paths:
         data_dir = path_dict["data_path"]
@@ -95,6 +95,7 @@ if __name__ == '__main__':
             heart_rate = 48
         elif anatomy_subject_name == 'DTI032':  # Subject 3
             heart_rate = 74
+        heart_rate = 74
         cycle_length = get_cycle_length(heart_rate=heart_rate)
         cycle_length_str = str(int(cycle_length))
         ep_model_twave_name = 'GKs5_GKr0.5_tjca60_CL_' + cycle_length_str
@@ -117,7 +118,7 @@ if __name__ == '__main__':
         results_dir_part_twave = results_dir_part + 'twave_' + gradient_ion_channel_str + '_' + ep_model_twave_name + '/'
         assert os.path.exists(results_dir_part_twave)  # Path should already exist from running the Twave inference
         # Use date to name the result folder to preserve some history of results
-        current_month_text = 'Jan'  # datetime.now().strftime('%h')  # e.g., Feb
+        current_month_text = datetime.now().strftime('%h')  # e.g., Feb
         current_year_full = datetime.now().strftime('%Y')  # e.g., 2024
         date_str = current_month_text + '_' + current_year_full
         results_dir_twave = results_dir_part_twave + date_str + '_fixed_filter/'
@@ -510,7 +511,7 @@ if __name__ == '__main__':
                 print('generating ecgs for ', population_theta_i)
                 # population_ecg_past = evaluator_ecg.simulate_theta_population(theta_population=population_theta_past)
                 # Batch processing to avoid OOM (Out Of Memory)
-                batch_size = 8  # Process 4 particles at a time (~2.7 GB RAM)
+                batch_size = 120  # Process 4 particles at a time (~2.7 GB RAM)
                 population_size = population_theta_past.shape[0]
                 ecg_batches = []
                 for i in range(0, population_size, batch_size):

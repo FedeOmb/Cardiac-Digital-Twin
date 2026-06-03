@@ -43,13 +43,13 @@ if __name__ == '__main__':
     ####################################################################################################################
     # Step 1: Define paths and other environment variables.
     # General settings:
-    anatomy_subject_name = 'DTI004'
+    anatomy_subject_name = 'sb3901'
     print('anatomy_subject_name: ', anatomy_subject_name)
     data_dir = path_dict["data_path"]
-    ecg_subject_name = 'DTI004'  # Allows using a different ECG for the personalisation than for the anatomy
+    ecg_subject_name = 'sb3901'  # Allows using a different ECG for the personalisation than for the anatomy
     print('ecg_subject_name: ', ecg_subject_name)
-    source_resolution = 'coarse'
-    target_resolution = 'fine'
+    source_resolution = 'coarse1500cm'
+    target_resolution = 'fine1500cm'
     verbose = True
     results_dir_root = path_dict["results_path"]
     # Input Paths:

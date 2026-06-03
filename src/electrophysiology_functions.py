@@ -103,7 +103,7 @@ class ElectrophysiologyUpstrokeStepFunction(Electrophysiology):
         lat_population_unique, unique_inverse_indexes = np.unique(lat_population, return_inverse=True, axis=0)
         simulation_time = int(math.ceil(np.amax(lat_population_unique) + 1))
         vm_population_unique = pymp.shared.array((lat_population_unique.shape[0], lat_population_unique.shape[1],
-                                                  simulation_time), dtype=np.float64)
+                                                  simulation_time), dtype=np.float32)
         vm_population_unique[:, :, :] = get_nan_value() # TODO be careful that there are no NAN values in the ECG calculation
         resting_vm = self.cellular_model.get_resting_vm()
         upstroke_vm = self.cellular_model.get_upstroke_vm()
@@ -147,7 +147,7 @@ class ElectrophysiologySameAP(Electrophysiology):
         max_lat = int(math.ceil(np.amax(lat_population_unique) + 1))
         simulation_time = max_lat + self.action_potential_simulation.shape[0]
         vm_population_unique = pymp.shared.array((lat_population_unique.shape[0], lat_population_unique.shape[1],
-                                                  simulation_time), dtype=np.float64)
+                                                  simulation_time), dtype=np.float32)
         # vm_population_unique = np.zeros((lat_population_unique.shape[0], lat_population_unique.shape[1], simulation_time), dtype=np.float64)
         vm_population_unique[:, :, :] = get_nan_value() # TODO be careful that there are no NAN values in the ECG calculation
         threads_num = multiprocessing.cpu_count()
@@ -233,7 +233,7 @@ class ElectrophysiologyAPDmap(Electrophysiology):
         simulation_configuration_population_unique = None  # Clear memory
         max_simulation_time = int(math.ceil(np.amax(lat_population_unique))) + self.cellular_model.get_max_action_potential_len()
         vm_population_unique = pymp.shared.array((parameter_population_unique.shape[0],
-                                                  lat_population_unique.shape[1], max_simulation_time), dtype=np.float64)
+                                                  lat_population_unique.shape[1], max_simulation_time), dtype=np.float32)
         # simulation_time_list = pymp.shared.array((simulation_configuration_population_unique.shape[0]), dtype=np.int32)
         # unsmoothed_vm_map_population = np.zeros((simulation_configuration_population_unique.shape[0], lat_population_unique.shape[1], max_simulation_time), dtype=np.float64)
         vm_population_unique[:, :, :] = get_nan_value()  # TODO be careful that there are no NAN values in the ECG calculation
@@ -265,29 +265,8 @@ class ElectrophysiologyAPDmap(Electrophysiology):
                 )
                 unsmoothed_node_vm = None  # Clear memory
         # max_simulation_time = int(np.amax(simulation_time_list))
-        # vm_population_unique = vm_population_unique[:, :, :max_simulation_time]
-        
-        #original code: crash if allocating 30gb of memory at once
-        #return lat_population, vm_population_unique[unique_inverse_indexes, :, :]
-
-        ##WORKAROUND1: fill array incrementally
-        # # 1. Calcola le dimensioni dell'array
-        # n_pop = len(unique_inverse_indexes)
-        # n_nodes = vm_population_unique.shape[1]
-        # n_time = vm_population_unique.shape[2]
-        # # 2. Definisci il percorso per il file mappato sull'SSD
-        # mmap_path = '/data/TEMP/vm_population_mapped.dat'
-        # # 3. Alloca l'array direttamente sul disco fisso (bypassa completamente la RAM)
-        # vm_population = np.memmap(mmap_path, dtype=vm_population_unique.dtype, mode='w+', shape=(n_pop, n_nodes, n_time))
-        # # 4. Riempi l'array copiando i dati
-        # for i, idx in enumerate(unique_inverse_indexes):
-        #     vm_population[i, :, :] = vm_population_unique[idx, :, :]
-        # # Opzionale: assicura che i dati siano scritti su disco prima di proseguire
-        # vm_population.flush()
-        # return lat_population, vm_population
-
-        ##WORKAROUND2: convert to float32
-        return lat_population, vm_population_unique.astype(np.float32)[unique_inverse_indexes, :, :]
+        # vm_population_unique = vm_population_unique[:, :,        
+        return lat_population, vm_population_unique[unique_inverse_indexes, :, :]
     
     def __repack_particle_params(self, parameter_particle):
         # TODO use a dictionary that is built using the inputs for the adapter

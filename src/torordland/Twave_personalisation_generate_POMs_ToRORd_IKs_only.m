@@ -4,6 +4,7 @@ close all
 nb_models = 10000;
 stimAmp_step = [-53]; 
 % stimAmp_diffusion = (2:0.1:2.5);%-53*(0.5:0.3:1.5); 
+cycle_length = 810;
 
 t = 0:100;
 Istim = get_diffusion_current(t, 1);
@@ -13,7 +14,7 @@ max_Istim = max(Istim);
 stimAmp_diffusion = [11]; % Calibrated to achieve stimulation of all POMs for epi and endo and mid. 
 stimulus_function_str_list = {'diffusion'}; %, 'step'};
 simulation_protocol_list = {'not_converged'}; %, 'converged'};
-celltype_list = {'endo'}; %, 'epi', 'mid'};
+celltype_list = {'endo', 'epi', 'mid'};
 rng(1);
 for simulation_protocol_i =1:length(simulation_protocol_list)  % simulation protocol
     simulation_protocol = simulation_protocol_list{simulation_protocol_i};
@@ -27,8 +28,8 @@ for simulation_protocol_i =1:length(simulation_protocol_list)  % simulation prot
         for stimAmp_i = 1:length(stimAmp_list)  % stimulus amplitude
             stimAmp = stimAmp_list(stimAmp_i);
             stimAmp = round(stimAmp);
-            result_dir = ['/data/Personalisation_projects/meta_data/cellular_data/' ...
-                simulation_protocol '_' stimulus_function_str '_' num2str(abs(stimAmp)) '_GKs_only_GKs5_GKr0.5_tjca60_visualisation'];
+            result_dir = ['./data/cellular_data/' ...
+                simulation_protocol '_' stimulus_function_str '_' num2str(abs(stimAmp)) '_GKs_only_GKs5_GKr0.5_tjca60_CL_' num2str(cycle_length)];
             if ~isfolder(result_dir)
                 mkdir(result_dir);
             end
@@ -36,7 +37,7 @@ for simulation_protocol_i =1:length(simulation_protocol_list)  % simulation prot
                 for celltype_i = 1:length(celltype_list)
                     celltype = celltype_list{celltype_i};
                     if strcmp(simulation_protocol, 'not_converged')
-                        Twave_personalisation_POMs_ToRORd_IKs_only_not_converged(nb_models, celltype, stimAmp, stimulus_function_str, result_dir);
+                        Twave_personalisation_POMs_ToRORd_IKs_only_not_converged(nb_models, celltype, stimAmp, stimulus_function_str, result_dir, cycle_length);
                     elseif strcmp(simulation_protocol, 'converged')
                         Twave_personalisation_POMs_ToRORd_converged(nb_models, celltype, stimAmp, stimulus_function_str, result_dir);
                     end

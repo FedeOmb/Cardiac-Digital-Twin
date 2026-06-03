@@ -1018,7 +1018,7 @@ classdef DataReporter
         function apd = getAPD_ignore_first_10ms(time_original, membranePotential_original, level, varargin)
             % returns APD at the desired level of repolarisation. Can be
             % also used for CaT duration
-            shift_idx = find(time_original > 10);
+            shift_idx = find(time_original > 10, 1);
             membranePotential = membranePotential_original(shift_idx:end);
             time = time_original(shift_idx:end);
             
@@ -1273,4 +1273,3 @@ classdef DataReporter
     end
     
 end
-

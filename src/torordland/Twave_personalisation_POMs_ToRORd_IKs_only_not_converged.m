@@ -1,8 +1,8 @@
-        function [] = Twave_personalisation_POMs_ToRORd_IKs_not_converged(nb_models, celltype, stimAmp, stimulus_function_str, result_dir)
+function [] = Twave_personalisation_POMs_ToRORd_IKs_only_not_converged(nb_models, celltype, stimAmp, stimulus_function_str, result_dir, cycle_length)
     % Population of models generation for T-wave personalisation
     % Adapted from scriptDemonstration_2_ParameterComparison.m:
     %% Setting parameters
-    param_baseline.bcl = 800; % basic cycle length in ms
+    param_baseline.bcl = cycle_length; % basic cycle length in ms
     param_baseline.model = @model_ToRORd_step_stimulus_rescaled_IKs_60_percent_GKr; %@model_ToRORd_rescaled_IKs; % which model is to be used
     
     %%
@@ -40,7 +40,7 @@
     % parallel-for loop.
     param_dictionary.bcl = param_baseline.bcl; % basic cycle length in ms
     if strcmp(stimulus_function_str, 'step')
-        param_dictionary.model = @model_ToRORd_step_stimulus_rescaled_IKs_60_percent_GKrr; % which model is to be used
+        param_dictionary.model = @model_ToRORd_step_stimulus_rescaled_IKs_60_percent_GKr; % which model is to be used
     elseif strcmp(stimulus_function_str, 'diffusion')
         param_dictionary.model = @model_ToRORd_diffusion_current_rescaled_IKs_60_percent_GKr; % which model is to be used
     end

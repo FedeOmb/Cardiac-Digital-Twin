@@ -1,10 +1,10 @@
-        function [] = Twave_personalisation_POMs_ToRORd_IKr_not_converged(nb_models, celltype, stimAmp, stimulus_function_str, result_dir)
+function [] = Twave_personalisation_POMs_ToRORd_IKr_only_not_converged(nb_models, celltype, stimAmp, stimulus_function_str, result_dir)
     % Population of models generation for T-wave personalisation
     % Adapted from scriptDemonstration_2_ParameterComparison.m:
     %% Setting parameters
     param_baseline.bcl = 800; % basic cycle length in ms
     param_baseline.model = @model_ToRORd_step_stimulus_rescaled_IKs; %@model_ToRORd_rescaled_IKs; % which model is to be used
-    param_baseline.verbose = false; % printing numbers of beats simulated.
+    param_baseline.verbose = true; % printing numbers of beats simulated.
     param_baseline.stimAmp = -53;
     options = [];
     beats = 100;

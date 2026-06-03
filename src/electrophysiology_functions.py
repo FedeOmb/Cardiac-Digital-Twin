@@ -266,8 +266,29 @@ class ElectrophysiologyAPDmap(Electrophysiology):
                 unsmoothed_node_vm = None  # Clear memory
         # max_simulation_time = int(np.amax(simulation_time_list))
         # vm_population_unique = vm_population_unique[:, :, :max_simulation_time]
-        return lat_population, vm_population_unique[unique_inverse_indexes, :, :]
+        
+        #original code: crash if allocating 30gb of memory at once
+        #return lat_population, vm_population_unique[unique_inverse_indexes, :, :]
 
+        ##WORKAROUND1: fill array incrementally
+        # # 1. Calcola le dimensioni dell'array
+        # n_pop = len(unique_inverse_indexes)
+        # n_nodes = vm_population_unique.shape[1]
+        # n_time = vm_population_unique.shape[2]
+        # # 2. Definisci il percorso per il file mappato sull'SSD
+        # mmap_path = '/data/TEMP/vm_population_mapped.dat'
+        # # 3. Alloca l'array direttamente sul disco fisso (bypassa completamente la RAM)
+        # vm_population = np.memmap(mmap_path, dtype=vm_population_unique.dtype, mode='w+', shape=(n_pop, n_nodes, n_time))
+        # # 4. Riempi l'array copiando i dati
+        # for i, idx in enumerate(unique_inverse_indexes):
+        #     vm_population[i, :, :] = vm_population_unique[idx, :, :]
+        # # Opzionale: assicura che i dati siano scritti su disco prima di proseguire
+        # vm_population.flush()
+        # return lat_population, vm_population
+
+        ##WORKAROUND2: convert to float32
+        return lat_population, vm_population_unique.astype(np.float32)[unique_inverse_indexes, :, :]
+    
     def __repack_particle_params(self, parameter_particle):
         # TODO use a dictionary that is built using the inputs for the adapter
         # TODO enable handling multiple parameters that all refer to the same vc coordinate (e.g., sf GKs and sf Ito)

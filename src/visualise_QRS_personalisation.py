@@ -67,8 +67,8 @@ if __name__ == '__main__':
     ####################################################################################################################
     # Step 1: Define paths and other environment variables.
     # General settings:
-    source_resolution = 'coarse'
-    target_resolution = 'coarse'
+    source_resolution = 'coarse1500cm'
+    target_resolution = 'coarse1500cm'
     verbose = True
     # Input Paths:
     data_dir = path_dict["data_path"]
@@ -184,6 +184,7 @@ if __name__ == '__main__':
     # Read hyperparameters
     fibre_speed_name = hyperparameter_dict['fibre_speed_name']
     sheet_speed_name = hyperparameter_dict['sheet_speed_name']
+    print('sheet_speed_name: ', sheet_speed_name)
     normal_speed_name = hyperparameter_dict['normal_speed_name']
     endo_dense_speed_name = hyperparameter_dict['endo_dense_speed_name']
     endo_sparse_speed_name = hyperparameter_dict['endo_sparse_speed_name']

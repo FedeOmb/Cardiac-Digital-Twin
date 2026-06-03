@@ -486,7 +486,7 @@ vc_rt_name = 'rt'
 vc_ranges[vc_rt_name] = [-1., 1.]    # When working with closed geometries, they have -1 values in the valves!
 valid_vc_rt_range = [0., 1.]
 # lv-to-rv (Projection) - LV=0, RV=1
-vc_rvlv_name = 'rvlv'
+vc_rvlv_name = 'lvrv'
 vc_ranges[vc_rvlv_name] = [0., 1.]
 # transmural (RV Septum as 0) - Epi=0, Endo=1
 vc_tm_name = 'tm'

@@ -95,7 +95,7 @@ class MetricEvaluator(ParameterEvaluator):
         #     parameter_population_modules_dict=parameter_population_modules_dict))        
         # 
         #WORKAROUD: batch processing
-        batch_size = multiprocessing.cpu_count() * 2
+        batch_size = multiprocessing.cpu_count() * 3
         n_unique = parameter_population_unique.shape[0]
         metric_population_unique = None
         

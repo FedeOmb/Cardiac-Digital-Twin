@@ -12,7 +12,7 @@ from path_config import get_path_mapping
 
 from conduction_system import EmptyConductionSystem
 
-batch_size = multiprocessing.cpu_count() * 2
+batch_size = multiprocessing.cpu_count() * 3
 
 class Simulator:
     def __init__(self, verbose):

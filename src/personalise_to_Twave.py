@@ -95,7 +95,7 @@ if __name__ == '__main__':
     elif anatomy_subject_name == 'DTI032':  # Subject 3
         heart_rate = 74
     
-    heart_rate = 74
+    heart_rate = 60     #fixed heart rate = cycle length 1000 ms
     cycle_length = get_cycle_length(heart_rate=heart_rate)
     cycle_length_str = str(int(cycle_length))
     print('cycle_length ', cycle_length)

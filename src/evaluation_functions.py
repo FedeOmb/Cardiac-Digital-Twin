@@ -3,6 +3,7 @@ import multiprocessing
 
 import numpy as np
 
+batch_size = multiprocessing.cpu_count() * 3
 
 class ParameterSimulator:
     def __init__(self, adapter, simulator, verbose):
@@ -95,7 +96,6 @@ class MetricEvaluator(ParameterEvaluator):
         #     parameter_population_modules_dict=parameter_population_modules_dict))        
         # 
         #WORKAROUD: batch processing
-        batch_size = multiprocessing.cpu_count() * 3
         n_unique = parameter_population_unique.shape[0]
         metric_population_unique = None
         

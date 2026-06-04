@@ -95,7 +95,7 @@ if __name__ == '__main__':
     elif anatomy_subject_name == 'DTI032':  # Subject 3
         heart_rate = 74
     
-    heart_rate = 74
+    heart_rate = 60
     cycle_length = get_cycle_length(heart_rate=heart_rate)
     cycle_length_str = str(int(cycle_length))
     print('cycle_length ', cycle_length)
@@ -367,7 +367,7 @@ if __name__ == '__main__':
     # makes sure that the spatial smoothing is based on distance instead of adjacentcies - smooth twice
     # TODO the following value is the strenght of the smoothing and it depends on the resolution of the monodomain simulation?
     # TODO this distance scaling should be directly proportional to dt_smoothing, right?
-    smoothing_ghost_distance_to_self = 0.01 #0.05  # cm # This parameter enables to control how much spatial smoothing happens and
+    smoothing_ghost_distance_to_self = 0.05 #0.05  # cm # This parameter enables to control how much spatial smoothing happens and
     print('Precompuing the smoothing, change this please!')
     geometry.precompute_spatial_smoothing_using_adjacentcies_orthotropic_fibres(
         fibre_speed=fibre_speed, sheet_speed=sheet_speed, normal_speed=normal_speed,
@@ -418,7 +418,7 @@ if __name__ == '__main__':
     # smoothing_ghost_distance_to_self = 0.05  # cm # This parameter enables to control how much spatial smoothing happens and
     # TODO WE ARE NO LONGER USING TEMPORAL SMOOTHING
     # smoothing_past_present_window = [0.0, 1.0]#[0.05, 0.95]    # Weight the past as 5% and the present as 95%
-    start_smoothing_time_index = 100  # (ms) assumming 1000Hz
+    start_smoothing_time_index = 150  # (ms) assumming 1000Hz
     end_smoothing_time_index = 450#400  # (ms) assumming 1000Hz
     # fibre_speed_name = 'fibre_speed'
     # sheet_speed_name = 'sheet_speed'
@@ -463,7 +463,7 @@ if __name__ == '__main__':
     # Step 6: Create ECG calculation method.
     print('Step 6: Create ECG calculation method.')
     # Arguments for ECG calculation:
-    filtering = True
+    filtering = False
     max_len_qrs = 200#256  # can use 200 to save memory space # This hyper-paramter is used when paralelising the ecg computation, because it needs a structure to synchronise the results from the multiple threads.
     max_len_st = 300#512  # can use 200 to save memory space
     max_len_ecg = max_len_qrs + max_len_st

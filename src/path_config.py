@@ -7,7 +7,7 @@ def set_path_mapping(path_mapping_json):
     # parse json:
     path_dict = json.loads(path_mapping_json)
     # the result is a Python dictionary:
-    print(path_dict["data_path"]) # Test that your path is correct
+    print(path_dict)
     with open('../.custom_config/.your_path_mapping.txt', 'w') as f:
         f.write(path_mapping_json)
 

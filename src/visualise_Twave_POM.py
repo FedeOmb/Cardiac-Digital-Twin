@@ -41,12 +41,12 @@ if __name__ == '__main__':
     ####################################################################################################################
     # Step 1: Define paths and other environment variables.
     # General settings:
-    anatomy_subject_name = 'DTI004'
+    anatomy_subject_name = 'sb3901'
     print('anatomy_subject_name: ', anatomy_subject_name)
-    ecg_subject_name = 'DTI004'  # Allows using a different ECG for the personalisation than for the anatomy
+    ecg_subject_name = 'sb3901'  # Allows using a different ECG for the personalisation than for the anatomy
     print('ecg_subject_name: ', ecg_subject_name)
-    source_resolution = 'coarse'
-    target_resolution = 'fine'
+    source_resolution = 'coarse1500cm'
+    target_resolution = 'fine500um'
     verbose = True
     # Input Paths:
     data_dir = path_dict["data_path"]
@@ -55,11 +55,11 @@ if __name__ == '__main__':
     results_dir_root = path_dict["results_path"]
     # Intermediate Paths: # e.g., results from the QRS inference
     experiment_type = 'personalisation'
-    ep_model = 'GKs5_GKr0.6_tjca60'
+    ep_model = 'GKs5_GKr0.5_tjca60'
     gradient_ion_channel_list = ['sf_IKs']
     gradient_ion_channel_str = '_'.join(gradient_ion_channel_list)
     results_dir = results_dir_root + experiment_type + '_data/' + anatomy_subject_name + '/twave_' \
-                  + gradient_ion_channel_str + '_' + ep_model + '/only_endo/'
+                  + gradient_ion_channel_str + '_' + ep_model #+ '/only_endo/'
     # Read hyperparamter dictionary
     hyperparameter_result_file_name = results_dir + anatomy_subject_name + '_' + source_resolution + '_hyperparameter.txt'
     hyperparameter_dict = read_dictionary(filename=hyperparameter_result_file_name)

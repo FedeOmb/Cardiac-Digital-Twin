@@ -20,8 +20,8 @@ from electrophysiology_functions import ElectrophysiologyAPDmap
 from io_functions import save_dictionary, read_pandas, read_dictionary
 # from utils import TestFailed
 from postprocess_functions import scatter_visualise_field
-from utils import get_biomarker_lead_name, get_qt_dur_name, get_t_pe_name, get_t_peak_name, get_qtpeak_dur_name, \
-    get_t_polarity_name, get_tpeak_dispersion_name, translate_from_pandas_to_array, get_vc_ab_name, get_vc_aprt_name, \
+from utils import get_biomarker_lead_name, get_qtc_dur_name, get_t_pe_name, get_t_peak_name, get_qtpeak_dur_name, \
+    get_t_polarity_name, get_tpeak_dispersion_name, get_vc_ab_cut_name, translate_from_pandas_to_array, get_vc_ab_name, get_vc_aprt_name, \
     get_vc_rt_name, get_vc_rvlv_name, get_vc_tm_name, get_vc_tv_name
 
 if __name__ == '__main__':
@@ -48,29 +48,29 @@ if __name__ == '__main__':
     ####################################################################################################################
     # Step 1: Define paths and other environment variables.
     # General settings:
-    anatomy_subject_name = 'DTI004'
+    anatomy_subject_name = 'sb3901'
     print('anatomy_subject_name: ', anatomy_subject_name)
-    ecg_subject_name = 'DTI004'  # Allows using a different ECG for the personalisation than for the anatomy
+    ecg_subject_name = 'sb3901'  # Allows using a different ECG for the personalisation than for the anatomy
     print('ecg_subject_name: ', ecg_subject_name)
-    resolution = 'coarse'
+    resolution = 'coarse1500cm'
     verbose = True
     # Input Paths:
     data_dir = path_dict["data_path"]
     cellular_data_dir = data_dir + 'cellular_data/'
-    clinical_data_filename = 'clinical_data/' + ecg_subject_name + '_clinical_full_ecg.csv'
+    clinical_data_filename = 'clinical_data/' + ecg_subject_name + '_scaled_sim_ecg_norm2_fast_latcalc'
     clinical_data_filename_path = data_dir + clinical_data_filename
-    clinical_qrs_offset = 100 # ms TODO This could be calculated automatically and potentially, the clinical ECG could be trimmed to start with the QRS at time zero
+    clinical_qrs_offset = 10 # ms TODO This could be calculated automatically and potentially, the clinical ECG could be trimmed to start with the QRS at time zero
     geometric_data_dir = data_dir + 'geometric_data/'
     # Intermediate Paths: # e.g., results from the QRS inference
     results_dir_root = path_dict["results_path"]
-    qrs_lat_prescribed_filename = 'personalisation_data/' + anatomy_subject_name + '/qrs/' + anatomy_subject_name \
-                                  + '_' + resolution + '_nodefield_inferred-lat.csv'
+    qrs_lat_prescribed_filename = 'personalisation_data/' + anatomy_subject_name + '/qrs_stepFunction/May_2026/best_discrepancy/' + anatomy_subject_name \
+                                  + '_' + resolution + '_nodefield_personalisation-lat.csv'
     qrs_lat_prescribed_filename_path = results_dir_root + qrs_lat_prescribed_filename
     # qrs_lat_prescribed_file_name = path_dict["results_path"] + 'personalisation_data/' + anatomy_subject_name + '/qrs/' \
     #                                + anatomy_subject_name + '_' + resolution + '_nodefield_inferred-lat.csv'
     # Output Paths:
     experiment_type = 'sa'
-    ep_model = 'GKs5_GKr0.6_tjca60'
+    ep_model = 'GKs5_GKr0.5_tjca60'
     gradient_ion_channel_list = ['sf_IKs']
     gradient_ion_channel_str = '_'.join(gradient_ion_channel_list)
     results_dir = path_dict["results_path"] + experiment_type + '_data/' + anatomy_subject_name + '/twave_' \
@@ -119,7 +119,8 @@ if __name__ == '__main__':
     cellular_model_name = 'torord_calibrated_pom_1000Hz'
     endo_celltype_name = 'endo'
     epi_celltype_name = 'epi'
-    list_celltype_name = [endo_celltype_name, epi_celltype_name]
+    #list_celltype_name = [endo_celltype_name, epi_celltype_name]
+    list_celltype_name = [endo_celltype_name]
     biomarker_upstroke_name = 'activation_time'
     biomarker_apd90_name = 'apd90'
     biomarker_celltype_name = 'celltype'
@@ -179,7 +180,7 @@ if __name__ == '__main__':
     # Step 3: Generate a cardiac geometry that cannot run the Eikonal.
     # Argument setup: (in Alphabetical order)
     print('Step 3: Generate a cardiac geometry that cannot run the Eikonal.')
-    vc_ab_name = get_vc_ab_name()
+    vc_ab_name = get_vc_ab_cut_name()
     vc_aprt_name = get_vc_aprt_name()
     vc_rt_name = get_vc_rt_name()
     vc_rvlv_name = get_vc_rvlv_name()

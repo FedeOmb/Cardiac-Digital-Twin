@@ -7,6 +7,7 @@ import pymp
 import pandas as pd
 from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
 from vtkmodules.util import numpy_support as VN
+from datetime import datetime
 
 from io_functions import export_ensight_initialise_case, export_ensight_add_case_node, export_ensight_geometry, \
     export_ensight_scalar_per_node, export_ensight_timeseries_case, read_dictionary, write_list_to_file, \
@@ -19,7 +20,7 @@ from cellular_models import CellularModelBiomarkerDictionary, MitchellSchaefferA
 from conduction_system import EmptyConductionSystem
 from discrepancy_functions import DiscrepancyECG
 from evaluation_functions import DiscrepancyEvaluator, ParameterSimulator
-from ecg_functions import PseudoEcgTetFromVM
+from ecg_functions import PseudoEcgTetFromVM, get_cycle_length
 from geometry_functions import EikonalGeometry
 from propagation_models import PrescribedLAT
 from simulator_functions import SimulateECG, SimulateEP
@@ -57,12 +58,33 @@ if __name__ == '__main__':
     geometric_data_dir = data_dir + 'geometric_data/'
     # Intermediate Paths: # e.g., results from the QRS inference
     experiment_type = 'personalisation'
+    heart_rate = 74
+    cycle_length = get_cycle_length(heart_rate=heart_rate)
+    cycle_length_str = str(int(cycle_length))
     ep_model = 'GKs5_GKr0.5_tjca60'
+    ep_model_twave_name = ep_model + '_CL_' + cycle_length_str
+    print('ep_model_twave_name ', ep_model_twave_name)
+
     gradient_ion_channel_list = ['sf_IKs']
     gradient_ion_channel_str = '_'.join(gradient_ion_channel_list)
-    results_dir = results_dir_root + experiment_type + '_data/' + anatomy_subject_name + '/twave_' \
-                  + gradient_ion_channel_str + '_' + ep_model + '/smoothing_fibre_256_64_05/' #+ '/smoothing_fibre_256_64_05/' #+ '/smoothing_fibre/' #'/only_endo/'
+    # Build results folder structure
+    results_dir_part = results_dir_root + experiment_type + '_data/'
+    assert os.path.exists(results_dir_part)  # Path should already exist from running the Twave inference
+    results_dir_part = results_dir_part + anatomy_subject_name + '/'
+    assert os.path.exists(results_dir_part)  # Path should already exist from running the Twave inference
+    results_dir_part_twave = results_dir_part + 'twave_' + gradient_ion_channel_str + '_' + ep_model_twave_name + '/'
+    assert os.path.exists(results_dir_part_twave)  # Path should already exist from running the Twave inference
+    # Use date to name the result folder to preserve some history of results
+    current_month_text = datetime.now().strftime('%h')  # e.g., Feb
+    current_year_full = datetime.now().strftime('%Y')  # e.g., 2024
+    date_str = current_month_text + '_' + current_year_full
+    results_dir_twave = results_dir_part_twave + date_str + '_fixed_filter/'
+    assert os.path.exists(results_dir_twave)  # Path should already exist from running the Twave inference
+    results_dir_part_twave = None  # Clear Arguments to prevent Argument recycling
     # Read hyperparamter dictionary
+    hyperparameter_result_file_name = results_dir_twave + anatomy_subject_name + '_' + inference_resolution + '_hyperparameter.txt'
+    hyperparameter_dict = read_dictionary(filename=hyperparameter_result_file_name)
+        # Read hyperparamter dictionary
     hyperparameter_result_file_name = results_dir + anatomy_subject_name + '_' + source_resolution + '_hyperparameter.txt'
     hyperparameter_dict = read_dictionary(filename=hyperparameter_result_file_name)
     result_tag = hyperparameter_dict['result_tag']

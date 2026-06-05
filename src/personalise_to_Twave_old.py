@@ -9,7 +9,13 @@ import pandas as pd
 from datetime import datetime
 
 
-def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        anatomy_subject_name = 'sb4201'
+        ecg_subject_name = 'sb4201'  # Allows using a different ECG for the personalisation than for the anatomy
+    else:
+        anatomy_subject_name = sys.argv[1]
+        ecg_subject_name = sys.argv[1]
     print('anatomy_subject_name: ', anatomy_subject_name)
     print('ecg_subject_name: ', ecg_subject_name)
     # ####################################################################################################################
@@ -66,35 +72,34 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     ####################################################################################################################
     # Step 1: Define paths and other environment variables.
     # General settings:
-    resolution =  kwargs.get('source_resolution', 'coarse1500cm')
-    verbose = kwargs.get('verbose', True)
+    resolution = 'coarse1500cm'
+    verbose = True
     # Input Paths:
-    clinical_data_dir = data_dir + 'clinical_data/'
-    clinical_data_filename = kwargs.get('clinical_ecg_filename', ecg_subject_name + '_clinical_ecg.csv')  # '_clinical_qrs_ecg.csv'
-    clinical_data_filename_path = clinical_data_dir + clinical_data_filename
-    geometric_data_dir = data_dir + 'geometric_data/'
+    data_dir = path_dict["data_path"]
+    clinical_data_filename = 'clinical_data/' + ecg_subject_name + '_scaled_norm7_CVcampsv2_fast4x_prep0.csv'
+    clinical_data_filename_path = data_dir + clinical_data_filename
     # if ecg_subject_name == 'DTI004':
     #     clinical_qrs_offset = 100
     # else:
     #     clinical_qrs_offset = 0 # 100  # ms TODO This could be calculated automatically and potentially, the clinical ECG could be trimmed to start with the QRS at time zero
     # print('clinical_qrs_offset ', clinical_qrs_offset)
+    geometric_data_dir = data_dir + 'geometric_data/'
     # Output Paths:
     experiment_type = 'personalisation'
     # TODO have a single definition of the heart rate or the cycle length for the whole pipeline
     # TODO the heart rate is clinical data and should be stored in the clinical data folder
-    # if anatomy_subject_name == 'DTI024':  # Subject 1
-    #     heart_rate = 66
-    # elif anatomy_subject_name == 'DTI004':  # Subject 2
-    #     heart_rate = 48
-    # elif anatomy_subject_name == 'DTI032':  # Subject 3
-    #     heart_rate = 74
+    if anatomy_subject_name == 'DTI024':  # Subject 1
+        heart_rate = 66
+    elif anatomy_subject_name == 'DTI004':  # Subject 2
+        heart_rate = 48
+    elif anatomy_subject_name == 'DTI032':  # Subject 3
+        heart_rate = 74
     
-    heart_rate = kwargs.get('heart_rate', 60)
-    print('heart_rate ', heart_rate)
+    heart_rate = 60
     cycle_length = get_cycle_length(heart_rate=heart_rate)
     cycle_length_str = str(int(cycle_length))
     print('cycle_length ', cycle_length)
-    ep_model_twave_name = kwargs.get('ep_model_twave_name', 'GKs5_GKr0.5_tjca60_CL_' + cycle_length_str)
+    ep_model_twave_name = 'GKs5_GKr0.5_tjca60_CL_' + cycle_length_str
     #     ep_model_twave_name = 'GKs5_GKr0.5_tjca60_CL_909'
     # elif anatomy_subject_name == 'DTI032':
     #     ep_model_twave_name = 'GKs5_GKr0.5_tjca60_CL_810'
@@ -122,7 +127,7 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     # Use date to name the result folder to preserve some history of results
     current_month_text = datetime.now().strftime('%h')  # e.g., Feb
     current_year_full = datetime.now().strftime('%Y')  # e.g., 2024
-    date_str = kwargs.get('exp_unique_tag', current_month_text + '_' + current_year_full)
+    date_str = current_month_text + '_' + current_year_full
     results_dir_twave = results_dir_part_twave + date_str + '_fixed_filter/'
     # Create results directory
     if not os.path.exists(results_dir_twave):
@@ -218,7 +223,18 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     # Arguments for cellular model:
     print('Step 2: Create Cellular Electrophysiology model, using a ToROrd APD dictionary.')
     # TODO link the cycle lenght with the heart rates and read them from somewhere
-
+    # if anatomy_subject_name == 'DTI024':
+    #     # cellular_model_name = 'torord_calibrated_pom_CL909'
+    #     heart_rate = 66
+    # elif anatomy_subject_name == 'DTI032':
+    #     heart_rate = 74
+    #     # cellular_model_name = 'torord_calibrated_pom_CL810'
+    # elif anatomy_subject_name == 'DTI004':
+    #     heart_rate = 48
+    #     # cellular_model_name = 'torord_calibrated_pom_CL1250'
+    # else:
+    #     cellular_model_name = 'torord_calibrated_pom_CL'
+    # cycle_length = get_cycle_length(heart_rate=heart_rate)
     cellular_model_name = 'torord_calibrated_pom_CL' + cycle_length_str
     print('cellular_model_name ', cellular_model_name)
     # cellular_model_name = 'torord_calibrated_pom_CL909'#'torord_calibrated_pom_1000Hz'
@@ -351,7 +367,7 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     # makes sure that the spatial smoothing is based on distance instead of adjacentcies - smooth twice
     # TODO the following value is the strenght of the smoothing and it depends on the resolution of the monodomain simulation?
     # TODO this distance scaling should be directly proportional to dt_smoothing, right?
-    smoothing_ghost_distance_to_self = kwargs.get('smoothing_ghost_distance_to_self', 0.05) # #0.05  # cm # This parameter enables to control how much spatial smoothing happens and
+    smoothing_ghost_distance_to_self = 0.05 #0.05  # cm # This parameter enables to control how much spatial smoothing happens and
     print('Precompuing the smoothing, change this please!')
     geometry.precompute_spatial_smoothing_using_adjacentcies_orthotropic_fibres(
         fibre_speed=fibre_speed, sheet_speed=sheet_speed, normal_speed=normal_speed,
@@ -402,8 +418,8 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     # smoothing_ghost_distance_to_self = 0.05  # cm # This parameter enables to control how much spatial smoothing happens and
     # TODO WE ARE NO LONGER USING TEMPORAL SMOOTHING
     # smoothing_past_present_window = [0.0, 1.0]#[0.05, 0.95]    # Weight the past as 5% and the present as 95%
-    start_smoothing_time_index = kwargs.get('start_smoothing_time_index', 150)  # (ms) assumming 1000Hz
-    end_smoothing_time_index = kwargs.get('end_smoothing_time_index', 450)  # (ms) assumming 1000Hz
+    start_smoothing_time_index = 150  # (ms) assumming 1000Hz
+    end_smoothing_time_index = 450#400  # (ms) assumming 1000Hz
     # fibre_speed_name = 'fibre_speed'
     # sheet_speed_name = 'sheet_speed'
     # normal_speed_name = 'normal_speed'
@@ -447,24 +463,23 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     # Step 6: Create ECG calculation method.
     print('Step 6: Create ECG calculation method.')
     # Arguments for ECG calculation:
-    filtering = kwargs.get('filtering', False)
-    max_len_qrs = kwargs.get('max_len_qrs', 200) #256  # can use 200 to save memory space # This hyper-paramter is used when paralelising the ecg computation, because it needs a structure to synchronise the results from the multiple threads.
-    max_len_st = kwargs.get('max_len_st', 300) #512  # can use 200 to save memory space
+    filtering = False
+    max_len_qrs = 200#256  # can use 200 to save memory space # This hyper-paramter is used when paralelising the ecg computation, because it needs a structure to synchronise the results from the multiple threads.
+    max_len_st = 300#512  # can use 200 to save memory space
     max_len_ecg = max_len_qrs + max_len_st
-    normalise = kwargs.get('normalise', True)
-    zero_align = kwargs.get('zero_align', True)
-    frequency = kwargs.get('frequency', 1000)  # Hz
+    normalise = True
+    zero_align = True
+    frequency = 1000  # Hz
     if frequency != 1000:
         warn(
             'The hyper-parameter frequency is only used for filtering! If you dont use 1000 Hz in any time-series in the code, the other hyper-parameters will not give the expected outcome!')
-    low_freq_cut = kwargs.get('low_freq_cut', 0.5)  # 001  # 0.5
-    high_freq_cut = kwargs.get('high_freq_cut', 150)  # 150
+    low_freq_cut = 0.001#0.5
+    high_freq_cut = 150 #150
     I_name = 'I'
     II_name = 'II'
     v3_name = 'V3'
     v5_name = 'V5'
-    default_lead_names = ['I', 'II', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6']
-    lead_names = kwargs.get('lead_names', default_lead_names)
+    lead_names = [I_name, II_name, 'V1', 'V2', v3_name, 'V4', v5_name, 'V6']
     nb_leads = len(lead_names)
     # Read clinical data
     # TODO This code may not work well for an ECG with only one lead!!
@@ -626,31 +641,31 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     # Arguments for Bayesian Inference method:
     # Population ranges and priors
     '''apd'''
-    apd_exploration_margin = kwargs.get('apd_exploration_margin', 80)      # ms     # TODO Could be informed using ECG metrics
+    apd_exploration_margin = 80   # ms     # TODO Could be informed using ECG metrics
     apd_max_range = [apd_max_max - apd_exploration_margin, apd_max_max]  # cm/ms
-    apd_max_prior = kwargs.get('apd_max_prior', None)   # [mean, std]
+    apd_max_prior = None  # [mean, std]
     apd_min_range = [apd_min_min, apd_min_min + apd_exploration_margin]  # cm/ms
-    apd_min_prior = kwargs.get('apd_min_prior', None)  # [mean, std]
+    apd_min_prior = None  # [mean, std]
     '''ab'''
     gab_max = 1
     gab_min = -1
-    g_vc_ab_range = kwargs.get('g_vc_ab_range', [gab_min, gab_max])  # cm/ms
-    g_vc_ab_prior = kwargs.get('g_vc_ab_prior', None)  # [mean, std]
+    g_vc_ab_range = [gab_min, gab_max]  # cm/ms
+    g_vc_ab_prior = None  # [mean, std]
     '''aprt'''
     gaprt_max = 1
     gaprt_min = -1
-    g_vc_aprt_range = kwargs.get('g_vc_aprt_range', [gaprt_min, gaprt_max])  # cm/ms
-    g_vc_aprt_prior = kwargs.get('g_vc_aprt_prior', None)  # [mean, std]
+    g_vc_aprt_range = [gaprt_min, gaprt_max]  # cm/ms
+    g_vc_aprt_prior = None  # [mean, std]
     '''rvlv'''
     grvlv_max = 1
     grvlv_min = -1
-    g_vc_rvlv_range = kwargs.get('g_vc_rvlv_range', [grvlv_min, grvlv_max])  # cm/ms
-    g_vc_rvlv_prior = kwargs.get('g_vc_rvlv_prior', None)  # [mean, std]
+    g_vc_rvlv_range = [grvlv_min, grvlv_max]  # cm/ms
+    g_vc_rvlv_prior = None  # [mean, std]
     '''tm'''
     gtm_max = 1
     gtm_min = -1    # the findings in the lit review suggest that it can go both ways
-    g_vc_tm_range = kwargs.get('g_vc_tm_range', [gtm_min, gtm_max])  # cm/ms
-    g_vc_tm_prior = kwargs.get('g_vc_tm_prior', None)  # [mean, std]
+    g_vc_tm_range = [gtm_min, gtm_max]  # cm/ms
+    g_vc_tm_prior = None  # [mean, std]
     # Aggregate ranges and priors
     boundaries_continuous_theta = [apd_max_range, apd_min_range, g_vc_ab_range, g_vc_aprt_range, g_vc_rvlv_range,
                                    g_vc_tm_range]
@@ -663,14 +678,20 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
         raise Exception("Not a consistent number of parameters for the inference.")
     ### Define SMC-ABC configuration
     # TODO use a max_memory_population_size parameter that the machine can handle to enable larger population sizes to be split internally!!
-    population_size = kwargs.get('population_size', 120)  # 512   # Rule of thumb number (at least x2 number of processes)    # TODO: Calibrate this hyper-parameter using sensitivity analysis
-    max_mcmc_steps = kwargs.get('max_mcmc_steps', 50)  # This number allows for extensive exploration
-    unique_stopping_ratio = kwargs.get('unique_stopping_ratio', 0.5)  # if only 50% of the population is unique, then terminate the inference and consider that it has converged.
+    population_size = 120  # 512   # Rule of thumb number (at least x2 number of processes)    # TODO: Calibrate this hyper-parameter using sensitivity analysis
+    max_mcmc_steps = 50  # This number allows for extensive exploration
+    unique_stopping_ratio = 0.5  # if only 50% of the population is unique, then terminate the inference and consider that it has converged.
     # Specify the "retain ratio". This is the proportion of samples that would match the current data in the case of N_on = 1 and all particles having the same variable switched on. That is to say,
     # it is an approximate chance of choosing "random updates" over the particle information
-    retain_ratio = kwargs.get('retain_ratio', 0.5)  # original value in Brodie's code
-    max_root_node_jiggle_rate = kwargs.get('max_root_node_jiggle_rate', 0.1)
+    retain_ratio = 0.5  # original value in Brodie's code
+    max_root_node_jiggle_rate = 0.1
 
+    ## -----------------------------------
+    ## CONFIGURAZIONE SEMPLIFICATA TEST ##
+    population_size = 120
+    max_mcmc_steps = 50
+    ## ----------------   
+    #  
     keep_fraction = max((population_size - 2 * multiprocessing.cpu_count()) / population_size,  0.5)  # 0.75)   # without the max() function it can go negative when the population size is smaller than the number of threads
     if verbose:
         print('multiprocessing.cpu_count() ', multiprocessing.cpu_count())
@@ -714,10 +735,16 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     ####################################################################################################################
     # Step 12: Run the inference process.
     print('Step 12: Run the inference process.')
-    desired_discrepancy = kwargs.get('desired_discrepancy', 1.0)  #0.5  # used to be 0.1 # This value needs to be changed with respect of what discrepancy metric you want to use.  # this value is for the DTW metric was 0.35  # After several tests was found good with the latest discrepancy metric strategy
-    max_process_alive_time = kwargs.get('max_process_alive_time', 24.)  # hours, in Supercomputers, usually there is a maximum 24 hour limit on any job that you submit.
-    visualisation_count = kwargs.get('visualisation_count', 5)     # Minimum of 1 to avoid division by zero
+    desired_discrepancy = 0.5 #0.5  # used to be 0.1 # This value needs to be changed with respect of what discrepancy metric you want to use.  # this value is for the DTW metric was 0.35  # After several tests was found good with the latest discrepancy metric strategy
+    max_process_alive_time = 20.  # hours, in Supercomputers, usually there is a maximum 24 hour limit on any job that you submit.
+    visualisation_count = 5     # Minimum of 1 to avoid division by zero
 
+    ## -----------------------------------
+    ## CONFIGURAZIONE SEMPLIFICATA TEST ##
+    desired_discrepancy = 1.0
+    max_process_alive_time = 20.
+    visualisation_count = 20   
+    ## ----------------
     # Save geometry as a check point
     geometry = inference_method.evaluator.simulator.electrophysiology_model.propagation_model.geometry
     # geometry.node_xyz = geometry.get_node_xyz() - np.amin(geometry.get_node_xyz(), axis=0)
@@ -790,15 +817,7 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     plt.figure()
     plt.show(block=True)
 
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        anatomy_subject_name = 'sb4201'
-        ecg_subject_name = 'sb4201'  # Allows using a different ECG for the personalisation than for the anatomy
-    else:
-        anatomy_subject_name = sys.argv[1]
-        ecg_subject_name = sys.argv[1]
 
-    run_twave_personalization(anatomy_subject_name=anatomy_subject_name, ecg_subject_name=ecg_subject_name)
 # EOF
 
 

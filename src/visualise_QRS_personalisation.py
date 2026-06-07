@@ -6,13 +6,7 @@ import numpy as np
 import pandas as pd
 from datetime import datetime
 
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        anatomy_subject_name = 'DTI004'
-        ecg_subject_name = 'DTI004' # Allows using a different ECG for the personalisation than for the anatomy
-    else:
-        anatomy_subject_name = sys.argv[1]
-        ecg_subject_name = sys.argv[1]
+def visualise_qrs_personalisation(anatomy_subject_name, ecg_subject_name, **kwargs):        
     print('anatomy_subject_name: ', anatomy_subject_name)
     print('ecg_subject_name: ', ecg_subject_name)
     # ####################################################################################################################
@@ -67,9 +61,9 @@ if __name__ == '__main__':
     ####################################################################################################################
     # Step 1: Define paths and other environment variables.
     # General settings:
-    source_resolution = 'coarse1500cm'
-    target_resolution = 'coarse1500cm'
-    verbose = True
+    source_resolution = kwargs.get('source_resolution', 'coarse1500cm')
+    target_resolution = kwargs.get('target_resolution', 'coarse1500cm')
+    verbose = kwargs.get('verbose', True)
     # Input Paths:
     data_dir = path_dict["data_path"]
     geometric_data_dir = data_dir + 'geometric_data/'
@@ -87,7 +81,8 @@ if __name__ == '__main__':
     # Use date to name the result folder to preserve some history of results
     current_month_text = datetime.now().strftime('%h')  # Feb
     current_year_full = datetime.now().strftime('%Y')  # 2024
-    results_dir = results_dir_part + current_month_text + '_' + current_year_full + '/'
+    exp_unique_tag = kwargs.get('exp_unique_tag', current_month_text + '_' + current_year_full)
+    results_dir = results_dir_part + exp_unique_tag + '/'
     assert os.path.exists(results_dir)
     results_dir_part = None  # Clear Arguments to prevent Argument recycling
     # Continue defining results paths and configuration
@@ -114,7 +109,7 @@ if __name__ == '__main__':
     electrophysiology_module_name = 'electrophysiology_module'
     # Read hyperparameters
     clinical_data_filename = hyperparameter_dict['clinical_data_filename']
-    clinical_data_filename_path = data_dir + clinical_data_filename
+    clinical_data_filename_path = data_dir + 'clinical_data/'+ clinical_data_filename
     # Clear Arguments to prevent Argument recycling
     clinical_data_filename = None
     cellular_model_convergence = None
@@ -440,5 +435,15 @@ if __name__ == '__main__':
     print('END')
     plt.figure()
     plt.show(block=True)
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        anatomy_subject_name = 'DTI004'
+        ecg_subject_name = 'DTI004' # Allows using a different ECG for the personalisation than for the anatomy
+    else:
+        anatomy_subject_name = sys.argv[1]
+        ecg_subject_name = sys.argv[1]
+
+    visualise_qrs_personalisation(anatomy_subject_name=anatomy_subject_name, ecg_subject_name=ecg_subject_name)
 
 # EOF

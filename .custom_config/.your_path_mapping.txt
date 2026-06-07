@@ -1,1 +1,1 @@
-{"data_path":"/data/Cardiac-Digital-Twin/cardiac-data/meta_data/","results_path":"/data/Cardiac-Digital-Twin/cardiac-data/meta_data/results_test/"}
+{"cobiveco_output_path": "/mnt/data-vm2/Cobiveco/input-data", "torso_output_path": "/mnt/data-vm2/TORSO-MPP/data-fitted", "data_path": "/mnt/cardiac-data/meta_data/", "results_path": "/data/Cardiac-Digital-Twin/cardiac-data/meta_data/results_test/"}

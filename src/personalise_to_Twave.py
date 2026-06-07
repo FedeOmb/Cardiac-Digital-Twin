@@ -69,6 +69,7 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     resolution =  kwargs.get('source_resolution', 'coarse1500cm')
     verbose = kwargs.get('verbose', True)
     # Input Paths:
+    data_dir = path_dict["data_path"]
     clinical_data_dir = data_dir + 'clinical_data/'
     clinical_data_filename = kwargs.get('clinical_ecg_filename', ecg_subject_name + '_clinical_ecg.csv')  # '_clinical_qrs_ecg.csv'
     clinical_data_filename_path = clinical_data_dir + clinical_data_filename
@@ -89,7 +90,7 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     # elif anatomy_subject_name == 'DTI032':  # Subject 3
     #     heart_rate = 74
     
-    heart_rate = kwargs.get('heart_rate', 60)
+    heart_rate = kwargs.get('heart_rate', 74)
     print('heart_rate ', heart_rate)
     cycle_length = get_cycle_length(heart_rate=heart_rate)
     cycle_length_str = str(int(cycle_length))
@@ -173,8 +174,9 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     cellular_stim_amp = 11
     cellular_model_convergence = 'not_converged'
     stimulation_protocol = 'diffusion'
-    cellular_data_relative_path = 'cellular_data/' + cellular_model_convergence + '_' + stimulation_protocol + '_' + str(
-        cellular_stim_amp) + '_' + gradient_ion_channel_str + '_' + ep_model_twave_name + '/'
+    cellular_data_relative_path = kwargs.get('cellular_data_relative_path',
+                                             'cellular_data/' + cellular_model_convergence + '_' + stimulation_protocol + '_' 
+                                             + str(cellular_stim_amp) + '_' + gradient_ion_channel_str + '_' + ep_model_twave_name + '/')
     cellular_data_dir_complete = data_dir + cellular_data_relative_path
     # Directory to save the configuration of the inference before it runs to allow manual inspection:
     visualisation_dir = results_dir_twave + 'checkpoint/'

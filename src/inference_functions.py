@@ -542,7 +542,7 @@ class BayesianInferenceSMCABC(SamplingMethod):
     def get_theta_names(self):
         raise NotImplementedError
 
-    def visualise_theta_population(self, ant_discrepancy_population, ant_theta_population, discrepancy_population, theta_population, worst_keep_index):
+    def visualise_theta_population(self, ant_discrepancy_population, ant_theta_population, discrepancy_population, theta_population, worst_keep_index, history_dir=None, iteration=0):
         theta_population_unique, unique_index, inverse_unique_index = np.unique(theta_population, return_index=True,
                                                                          return_inverse=True, axis=0)
         discrepancy_population_unique = discrepancy_population[unique_index]
@@ -591,6 +591,9 @@ class BayesianInferenceSMCABC(SamplingMethod):
         axs[1, 0].set_ylabel('discrepancy', fontsize=16)
         axs[1, -1].legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=20)
         plt.show()
+        if history_dir is not None:
+            fig.savefig(history_dir + 'population_theta_' + str(iteration) + '.png')
+
 
     def sample(self, desired_discrepancy, max_sampling_time, unique_stopping_ratio, visualisation_count,
                inference_history_dir=None):
@@ -697,7 +700,9 @@ class BayesianInferenceSMCABC(SamplingMethod):
                                                 ant_theta_population=ant_theta_population,
                                                 discrepancy_population=self.population_discrepancy,
                                                 theta_population=self.population_theta,
-                                                worst_keep_index=worst_keep_index)
+                                                worst_keep_index=worst_keep_index, 
+                                                history_dir=inference_history_dir,
+                                                iteration=iteration_count)
             if (nb_unique < unique_lim_nb) or (cuttoff_discrepancy < desired_discrepancy) or (
                     (time.time() - inference_start_time) / 3600 > max_sampling_time):
                 looping = 0

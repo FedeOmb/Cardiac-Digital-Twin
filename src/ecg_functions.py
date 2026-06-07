@@ -931,7 +931,7 @@ class PseudoEcgTetFromVM(CalculateEcg):
         return simulated_ecg
 
     # TODO remove this function and call the visualise_ecg function in the postprocess_functions.py instead.
-    def visualise_ecg(self, discrepancy_population, ecg_population):#, save_dir=None):
+    def visualise_ecg(self, discrepancy_population, ecg_population, save_dir=None):
         warn('This function is outdated! Use the one in preprocessing_functinos.py instead')
         best_index = np.argmin(discrepancy_population)
         if self.verbose:
@@ -1012,8 +1012,8 @@ class PseudoEcgTetFromVM(CalculateEcg):
                 tick.label1.set_fontsize(14)
         axes[lead_i].legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=20)
 
-        # if save_dir is not None:
-        #     plt.savefig(save_dir + 'ecg_inference_result.png')
+        if save_dir is not None:
+            fig.savefig(save_dir + 'ecg_inference_result.png')
         if self.verbose:
             plt.show(block=False)
         return fig

@@ -263,8 +263,7 @@ def visualise_Twave_personalisation_history(anatomy_subject_name, ecg_subject_na
     print('sheet_speed ', sheet_speed)
     normal_speed = hyperparameter_dict[normal_speed_name]
     # makes sure that the spatial smoothing is based on distance instead of adjacentcies - smooth twice
-    smoothing_ghost_distance_to_self = hyperparameter_dict[
-        'smoothing_ghost_distance_to_self']  # cm # This parameter enables to control how much spatial smoothing happens and
+    smoothing_ghost_distance_to_self = 0.01 #hyperparameter_dict['smoothing_ghost_distance_to_self']  # cm # This parameter enables to control how much spatial smoothing happens and
     print('smoothing_ghost_distance_to_self ', smoothing_ghost_distance_to_self)
     geometry.precompute_spatial_smoothing_using_adjacentcies_orthotropic_fibres(
         fibre_speed=fibre_speed, sheet_speed=sheet_speed, normal_speed=normal_speed,

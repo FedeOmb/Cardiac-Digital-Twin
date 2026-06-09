@@ -103,7 +103,7 @@ class ElectrophysiologyUpstrokeStepFunction(Electrophysiology):
         lat_population_unique, unique_inverse_indexes = np.unique(lat_population, return_inverse=True, axis=0)
         simulation_time = int(math.ceil(np.amax(lat_population_unique) + 1))
         vm_population_unique = pymp.shared.array((lat_population_unique.shape[0], lat_population_unique.shape[1],
-                                                  simulation_time), dtype=np.float32)
+                                                  simulation_time), dtype=np.float64)
         vm_population_unique[:, :, :] = get_nan_value() # TODO be careful that there are no NAN values in the ECG calculation
         resting_vm = self.cellular_model.get_resting_vm()
         upstroke_vm = self.cellular_model.get_upstroke_vm()
@@ -147,7 +147,7 @@ class ElectrophysiologySameAP(Electrophysiology):
         max_lat = int(math.ceil(np.amax(lat_population_unique) + 1))
         simulation_time = max_lat + self.action_potential_simulation.shape[0]
         vm_population_unique = pymp.shared.array((lat_population_unique.shape[0], lat_population_unique.shape[1],
-                                                  simulation_time), dtype=np.float32)
+                                                  simulation_time), dtype=np.float64)
         # vm_population_unique = np.zeros((lat_population_unique.shape[0], lat_population_unique.shape[1], simulation_time), dtype=np.float64)
         vm_population_unique[:, :, :] = get_nan_value() # TODO be careful that there are no NAN values in the ECG calculation
         threads_num = multiprocessing.cpu_count()
@@ -233,7 +233,7 @@ class ElectrophysiologyAPDmap(Electrophysiology):
         simulation_configuration_population_unique = None  # Clear memory
         max_simulation_time = int(math.ceil(np.amax(lat_population_unique))) + self.cellular_model.get_max_action_potential_len()
         vm_population_unique = pymp.shared.array((parameter_population_unique.shape[0],
-                                                  lat_population_unique.shape[1], max_simulation_time), dtype=np.float32)
+                                                  lat_population_unique.shape[1], max_simulation_time), dtype=np.float64)
         # simulation_time_list = pymp.shared.array((simulation_configuration_population_unique.shape[0]), dtype=np.int32)
         # unsmoothed_vm_map_population = np.zeros((simulation_configuration_population_unique.shape[0], lat_population_unique.shape[1], max_simulation_time), dtype=np.float64)
         vm_population_unique[:, :, :] = get_nan_value()  # TODO be careful that there are no NAN values in the ECG calculation

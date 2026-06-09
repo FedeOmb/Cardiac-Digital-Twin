@@ -2,7 +2,7 @@
 import os
 import sys
 from warnings import warn
-
+import multiprocessing
 import math
 import numpy as np
 import pandas as pd
@@ -87,8 +87,9 @@ def visualise_Twave_personalisation_history(anatomy_subject_name, ecg_subject_na
     #     heart_rate = 48
     # elif anatomy_subject_name == 'DTI032':  # Subject 3
     #     heart_rate = 74
-    heart_rate = kwargs.get('heart_rate', 74)
-    cycle_length = get_cycle_length(heart_rate=heart_rate)
+    heartrate = 74 ##kwargs.get('heart_rate', 74)
+    print('heart_rate ', heartrate)
+    cycle_length = get_cycle_length(heart_rate=heartrate)
     cycle_length_str = str(int(cycle_length))
     ep_model_twave_name = kwargs.get('ep_model_twave_name', 'GKs5_GKr0.5_tjca60_CL_' + cycle_length_str)
     print('ep_model_twave_name ', ep_model_twave_name)
@@ -504,7 +505,7 @@ def visualise_Twave_personalisation_history(anatomy_subject_name, ecg_subject_na
             print('generating ecgs for ', population_theta_i)
             # population_ecg_past = evaluator_ecg.simulate_theta_population(theta_population=population_theta_past)
             # Batch processing to avoid OOM (Out Of Memory)
-            batch_size = 120  # Process 4 particles at a time (~2.7 GB RAM)
+            batch_size = multiprocessing.cpu_count() * 3
             population_size = population_theta_past.shape[0]
             ecg_batches = []
             for i in range(0, population_size, batch_size):
@@ -620,9 +621,9 @@ def visualise_Twave_personalisation_history(anatomy_subject_name, ecg_subject_na
                                     ecg_color=str(history_colour_list[iteration_history_i]), fig=fig, label_list=None,
                                     linewidth=1.)
     # # Plot the best discreancy ECG trace after the last iteration
-    # axes, fig = visualise_ecg(ecg_list=[ecg_list[best_discrepancy_index, :, :]], lead_name_list=lead_names, axes=axes,
-    #                           ecg_color='cyan', fig=fig, label_list=['Best'],
-    #                           linewidth=2.)
+    axes, fig = visualise_ecg(ecg_list=[ecg_list[best_discrepancy_index, :, :]], lead_name_list=lead_names, axes=axes,
+                              ecg_color='cyan', fig=fig, label_list=['Best'],
+                               linewidth=2.)
     # Plot the clinical trace after the last iteration
     axes, fig = visualise_ecg(ecg_list=[clinical_ecg], lead_name_list=lead_names, axes=axes,
                                 ecg_color='lime', fig=fig, label_list=['Clinical'],

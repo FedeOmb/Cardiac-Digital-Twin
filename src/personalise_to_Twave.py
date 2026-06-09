@@ -15,7 +15,7 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     # ####################################################################################################################
     # # TODO THIs kills all the processes every time you run the inference because it tries to exceed the allowed memory
     # # Set the memory limit to 100GB (in bytes) - Heartsrv has 126GB
-    memory_limit = 50 * 1024 * 1024 * 1024
+    memory_limit = 60 * 1024 * 1024 * 1024
     # # Set the memory limit for the current process
     resource.setrlimit(resource.RLIMIT_AS, (memory_limit, memory_limit))
     # ####################################################################################################################

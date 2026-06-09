@@ -152,7 +152,6 @@ class DiscrepancyEvaluator(ParameterEvaluator):
     def evaluate_parameter_population(self, parameter_population):
         parameter_population_unique, inverse_unique_indexes = np.unique(parameter_population, return_inverse=True, axis=0)
         
-        batch_size = multiprocessing.cpu_count() * 2
         n_unique = parameter_population_unique.shape[0]
         discrepancy_population_unique = None
         

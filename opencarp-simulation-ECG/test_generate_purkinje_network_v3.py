@@ -133,8 +133,7 @@ def generate_purkinje_network(subject_name, geometric_data_dir, resolution, lv_i
                                    subject_name=subject_name, vc_name_list=vc_name_list, verbose=verbose)
 
     # 2. Genera la Rete di Purkinje (Candidate Network)
-    random_node_distance = np.random.uniform(1.5, 4.0) # Esempio: tra 1.5mm e 4mm
-
+    purkinje_speed = 0.3 #cm/ms
     approx_djikstra_purkinje_max_path_len = 200
     lv_inter_root_node_distance = lv_inter_node_dist 
     rv_inter_root_node_distance = rv_inter_node_dist 
@@ -190,7 +189,7 @@ def generate_purkinje_network(subject_name, geometric_data_dir, resolution, lv_i
    # active_root_nodes = all_candidate_root_nodes_index #attivazione di tutti i root nodes
   #  lv_purkinje_edge = lv_candidate_purkinje_edge
   #  rv_purkinje_edge = rv__candidate_purkinje_edge
-    purkinje_speed = 0.3 #cm/ms
+
     activation_times_candidates = geometry.get_candidate_root_node_time(purkinje_speed=purkinje_speed)
     # 5. Esportazione per openCARP (.vtx) - candidate root nodes
     vtx_filename = os.path.join(output_dir, f"{subject_name}_candidate_root_nodes.vtx")
@@ -224,15 +223,34 @@ def generate_purkinje_network(subject_name, geometric_data_dir, resolution, lv_i
     np.savetxt(sel_vtx_filename, active_root_nodes, fmt='%d')
     sel_times_filename = os.path.join(output_dir, f"{subject_name}_selected_root_nodes_times.csv")
     np.savetxt(sel_times_filename, activation_times_selected, fmt='%.4f', header="activation_time_ms", comments='')
-    print(f"Selezionati {len(active_root_nodes)} root nodes casuali e salvati in {sel_vtx_filename}")
+    print(f"Selezionati {len(active_root_nodes)} root nodes e salvati in {sel_vtx_filename}")
     write_root_node_csv(filename=subject_name + '_' + resolution + '_selected_root_nodes_coords.csv', node_vc_list=node_vc_list, node_xyz=node_xyz,
                     root_node_index_list=active_root_nodes, vc_name_list=vc_name_list, verbose=verbose,
                     visualisation_dir=output_dir, xyz_name_list=get_xyz_name_list())
-    return geometry, active_root_nodes, all_candidate_root_nodes_index, activation_times_selected, activation_times_candidates
+
+    # Separa i nodi selezionati e i relativi tempi per LV e RV
+    lv_selection_mask, rv_selection_mask = geometry.get_lv_rv_selected_root_node_meta_index(root_node_meta_index=selection_mask)
+    active_lv_root_nodes = all_candidate_root_nodes_index[lv_selection_mask]
+    active_rv_root_nodes = all_candidate_root_nodes_index[rv_selection_mask]
+    activation_times_lv_selected = geometry.get_selected_root_node_time(root_node_meta_index=lv_selection_mask, purkinje_speed=purkinje_speed)
+    activation_times_rv_selected = geometry.get_selected_root_node_time(root_node_meta_index=rv_selection_mask, purkinje_speed=purkinje_speed)
+
+    # Separa i tempi dei nodi candidati per LV e RV (i candidate root node index sono concatenati in ordine LV-RV)
+    nb_lv_candidate = len(lv_candidate_root_node_index)
+    activation_times_lv_candidates = activation_times_candidates[:nb_lv_candidate]
+    activation_times_rv_candidates = activation_times_candidates[nb_lv_candidate:]
+
+    return (geometry, active_lv_root_nodes, active_rv_root_nodes,
+            lv_candidate_root_node_index, rv_candidate_root_node_index,
+            activation_times_lv_selected, activation_times_rv_selected,
+            activation_times_lv_candidates, activation_times_rv_candidates)
 
 
 def map_purkinje_to_fine(subject_name, geometric_data_dir, coarse_resolution, fine_resolution, 
-                         coarse_geometry, active_root_nodes, candidate_root_nodes, activation_times_selected, activation_times_candidates, 
+                         coarse_geometry, lv_selected_root_nodes_index, rv_selected_root_nodes_index, 
+                         lv_candidate_root_node_index, rv_candidate_root_node_index, 
+                         activation_times_lv_selected, activation_times_rv_selected, 
+                         activation_times_lv_candidates, activation_times_rv_candidates,
                          coarse_units="cm", fine_units="um", output_dir_name="purkinje"):
     print(f"Mappatura della rete di Purkinje da {coarse_resolution} a {fine_resolution}...")
     
@@ -265,27 +283,51 @@ def map_purkinje_to_fine(subject_name, geometric_data_dir, coarse_resolution, fi
     # 3. Mappa gli edges (connettività)
    # lv_pk_edge_fine = coarse_to_fine_mapping[lv_pk_edge]
    # rv_pk_edge_fine = coarse_to_fine_mapping[rv_pk_edge]
-    
+    all_candidate_root_node_index = np.concatenate((lv_candidate_root_node_index, rv_candidate_root_node_index), axis=0)
+    all_selected_root_node_index = np.concatenate((lv_selected_root_nodes_index, rv_selected_root_nodes_index), axis=0)
+    all_activation_times_candidates = np.concatenate((activation_times_lv_candidates, activation_times_rv_candidates), axis=0)
+    all_activation_times_selected = np.concatenate((activation_times_lv_selected, activation_times_rv_selected), axis=0)
+
     # 4. Mappa i root nodes
-    active_root_nodes_fine = coarse_to_fine_mapping[active_root_nodes]
-    candidate_root_nodes_fine = coarse_to_fine_mapping[candidate_root_nodes]
+    candidate_root_nodes_fine = coarse_to_fine_mapping[all_candidate_root_node_index]
+    selected_root_nodes_fine = coarse_to_fine_mapping[all_selected_root_node_index]
+    selected_lv_root_nodes_fine = coarse_to_fine_mapping[lv_selected_root_nodes_index]
+    selected_rv_root_nodes_fine = coarse_to_fine_mapping[rv_selected_root_nodes_index]
+    candidate_lv_root_nodes_fine = coarse_to_fine_mapping[lv_candidate_root_node_index]
+    candidate_rv_root_nodes_fine = coarse_to_fine_mapping[rv_candidate_root_node_index]
+
     # 5. Salva i risultati
     output_dir = os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{fine_resolution}", output_dir_name)
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
-    vtx_filename = os.path.join(output_dir, f"{subject_name}_{fine_resolution}_active_root_nodes.vtx")
-    np.savetxt(vtx_filename, active_root_nodes_fine, fmt='%d')
-    print(f"Salvati {len(active_root_nodes_fine)} root nodes mappati in {vtx_filename}")
+    vtx_filename = os.path.join(output_dir, f"{subject_name}_{fine_resolution}_selected_root_nodes.vtx")
+    np.savetxt(vtx_filename, selected_root_nodes_fine, fmt='%d')
+    print(f"Salvati {len(selected_root_nodes_fine)} root nodes mappati in {vtx_filename}")
 
     vtx_filename = os.path.join(output_dir, f"{subject_name}_{fine_resolution}_candidate_root_nodes.vtx")
     np.savetxt(vtx_filename, candidate_root_nodes_fine, fmt='%d')
     print(f"Salvati {len(candidate_root_nodes_fine)} candidate root nodes mappati in {vtx_filename}")
 
     sel_times_filename = os.path.join(output_dir, f"{subject_name}_selected_root_nodes_times.csv")
-    np.savetxt(sel_times_filename, activation_times_selected, fmt='%.4f', header="activation_time_ms", comments='')
+    np.savetxt(sel_times_filename, all_activation_times_selected, fmt='%.4f', header="activation_time_ms", comments='')
     cand_times_filename = os.path.join(output_dir, f"{subject_name}_candidate_root_nodes_times.csv")
-    np.savetxt(cand_times_filename, activation_times_candidates, fmt='%.4f', header="activation_time_ms", comments='')
+    np.savetxt(cand_times_filename, all_activation_times_candidates, fmt='%.4f', header="activation_time_ms", comments='')
+
+    # Salva indici e tempi separati per LV e RV
+    # Selezionati
+    np.savetxt(os.path.join(output_dir, f"{subject_name}_{fine_resolution}_selected_LV_root_nodes.vtx"), selected_lv_root_nodes_fine, fmt='%d')
+    np.savetxt(os.path.join(output_dir, f"{subject_name}_{fine_resolution}_selected_RV_root_nodes.vtx"), selected_rv_root_nodes_fine, fmt='%d')
+    np.savetxt(os.path.join(output_dir, f"{subject_name}_{fine_resolution}_selected_LV_root_nodes_times.csv"), activation_times_lv_selected, fmt='%.4f', header="activation_time_ms", comments='')
+    np.savetxt(os.path.join(output_dir, f"{subject_name}_{fine_resolution}_selected_RV_root_nodes_times.csv"), activation_times_rv_selected, fmt='%.4f', header="activation_time_ms", comments='')
+    print(f"Saved {len(selected_lv_root_nodes_fine)} selected LV and {len(selected_rv_root_nodes_fine)} selected RV root nodes mapped.")
+
+    # Candidati
+    np.savetxt(os.path.join(output_dir, f"{subject_name}_{fine_resolution}_candidate_LV_root_nodes.vtx"), candidate_lv_root_nodes_fine, fmt='%d')
+    np.savetxt(os.path.join(output_dir, f"{subject_name}_{fine_resolution}_candidate_RV_root_nodes.vtx"), candidate_rv_root_nodes_fine, fmt='%d')
+    np.savetxt(os.path.join(output_dir, f"{subject_name}_{fine_resolution}_candidate_LV_root_nodes_times.csv"), activation_times_lv_candidates, fmt='%.4f', header="activation_time_ms", comments='')
+    np.savetxt(os.path.join(output_dir, f"{subject_name}_{fine_resolution}_candidate_RV_root_nodes_times.csv"), activation_times_rv_candidates, fmt='%.4f', header="activation_time_ms", comments='')
+    print(f"Saved {len(candidate_lv_root_nodes_fine)} candidate LV and {len(candidate_rv_root_nodes_fine)} candidate RV root nodes mapped.")
 
 if __name__ == "__main__":
 
@@ -309,13 +351,18 @@ if __name__ == "__main__":
     coarse_resolution = 'coarse1500cm'
     fine_resolution = 'fine500um'
 
-
-    geometry, active_root_nodes, candidate_root_nodes, activation_times_selected, activation_times_candidates = generate_purkinje_network(
+    (geometry, active_lv_root_nodes, active_rv_root_nodes,
+    candidate_lv_root_nodes, candidate_rv_root_nodes,
+    activation_times_lv_selected, activation_times_rv_selected,
+    activation_times_lv_candidates, activation_times_rv_candidates) = generate_purkinje_network(
                                                     subject_name=subject_name, geometric_data_dir=geometric_data_dir, resolution=coarse_resolution, 
                                                     lv_inter_node_dist=2.5, rv_inter_node_dist=2.5, output_dir_name=output_dir)
     
     # Mappatura su fine
     if os.path.exists(os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{fine_resolution}")):
-        map_purkinje_to_fine(subject_name, geometric_data_dir, coarse_resolution, fine_resolution, geometry, 
-                             active_root_nodes, candidate_root_nodes, activation_times_selected, activation_times_candidates, 
+        map_purkinje_to_fine(subject_name, geometric_data_dir, coarse_resolution, fine_resolution, geometry,
+                            active_lv_root_nodes, active_rv_root_nodes,
+                            candidate_lv_root_nodes, candidate_rv_root_nodes,
+                            activation_times_lv_selected, activation_times_rv_selected,
+                            activation_times_lv_candidates, activation_times_rv_candidates,
                              coarse_units="cm", fine_units="um", output_dir_name=output_dir)

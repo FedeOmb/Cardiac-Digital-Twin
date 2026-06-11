@@ -81,8 +81,16 @@ class SimulateECG(SimulateEP):
             if ecg_population is None:
                 ecg_population = batch_ecg
             else:
+                t_curr = ecg_population.shape[2]
+                t_batch = batch_ecg.shape[2]
+                if t_curr < t_batch:
+                    ecg_population = np.pad(ecg_population, ((0, 0), (0, 0), (0, t_batch - t_curr)), mode='edge')
+                elif t_batch < t_curr:
+                    batch_ecg = np.pad(batch_ecg, ((0, 0), (0, 0), (0, t_curr - t_batch)), mode='edge')
+                    
                 ecg_population = np.concatenate((ecg_population, batch_ecg), axis=0)
                 
+        # TODO replace this function by the postporcessing visualisation of the ECG
         return self.ecg_model.visualise_ecg(discrepancy_population=discrepancy_population, ecg_population=ecg_population)
 
 
@@ -118,6 +126,13 @@ class SimulateECGwithLATmax(SimulateEP):
             if ecg_population is None:
                 ecg_population = batch_ecg
             else:
+                t_curr = ecg_population.shape[2]
+                t_batch = batch_ecg.shape[2]
+                if t_curr < t_batch:
+                    ecg_population = np.pad(ecg_population, ((0, 0), (0, 0), (0, t_batch - t_curr)), mode='edge')
+                elif t_batch < t_curr:
+                    batch_ecg = np.pad(batch_ecg, ((0, 0), (0, 0), (0, t_curr - t_batch)), mode='edge')
+                    
                 ecg_population = np.concatenate((ecg_population, batch_ecg), axis=0)
                 
         return self.ecg_model.visualise_ecg(discrepancy_population=discrepancy_population, ecg_population=ecg_population)

@@ -353,7 +353,7 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     # makes sure that the spatial smoothing is based on distance instead of adjacentcies - smooth twice
     # TODO the following value is the strenght of the smoothing and it depends on the resolution of the monodomain simulation?
     # TODO this distance scaling should be directly proportional to dt_smoothing, right?
-    smoothing_ghost_distance_to_self = kwargs.get('smoothing_ghost_distance_to_self', 0.05) # #0.05  # cm # This parameter enables to control how much spatial smoothing happens and
+    smoothing_ghost_distance_to_self = kwargs.get('smoothing_ghost_distance_to_self', 0.01) # #0.05  # cm # This parameter enables to control how much spatial smoothing happens and
     print('Precompuing the smoothing, change this please!')
     geometry.precompute_spatial_smoothing_using_adjacentcies_orthotropic_fibres(
         fibre_speed=fibre_speed, sheet_speed=sheet_speed, normal_speed=normal_speed,

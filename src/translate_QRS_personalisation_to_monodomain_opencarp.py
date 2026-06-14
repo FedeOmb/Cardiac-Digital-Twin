@@ -524,8 +524,11 @@ if __name__ == '__main__':
     # ####################################################################################################################
     # Step 15: Interpolate simulation results to have the same indexing that the input data files.
     print('15: Interpolate simulation results to have the same indexing that the input data files.')
-    # Interpolate nodefield
-    unprocessed_node_mapping_index = map_indexes(points_to_map_xyz=raw_geometry_point_cloud.get_node_xyz(),
+    # Interpolate nodefield from coarse to fine
+    fine_nodes_xyz_um = raw_geometry_point_cloud.get_node_xyz()
+    fine_nodes_xyz_cm = fine_nodes_xyz_um * 1e-4  #scaling fine coordinates from um to cm for mapping
+
+    unprocessed_node_mapping_index = map_indexes(points_to_map_xyz=fine_nodes_xyz_cm,
                                                  reference_points_xyz=geometry.get_node_xyz())
     # ####################################################################################################################
     # Step 16: Iterate for all particles chosen to represent the uncertainty of the inference.

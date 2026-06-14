@@ -8,6 +8,7 @@ import pymp
 from scipy import signal
 import matplotlib.pyplot as plt
 from warnings import warn
+import neurokit2 as nk
 
 from postprocess_functions import plot_histogram, visualise_ecg
 from utils import get_nan_value, get_nb_precordial_lead, get_lead_V1_index, \
@@ -52,17 +53,27 @@ def normalise_ecg_between_0_and_1(original_ecg):
 def filter_butterworth_ecg(b, a, ecg):
     return signal.filtfilt(b, a, ecg)
 
-
+# QRS onset delineation using neurokit2 library
 def delineate_lead_q_wave_onset(ecg_lead):
-    warn('Currently using Zaragozas Matlab code to delineate the clincial ECG signals')
-    # TODO Implement a strategy for ECG delineation that we can rely on
-    raise NotImplementedError
+    if nk is None:
+        raise ImportError("neurokit2 is required for ECG delineation.")
+    try:
+        # Find R peaks
+        _, rpeaks = nk.ecg_peaks(ecg_lead, sampling_rate=1000)
+        # Delineation using Wavelet transform
+        _, waves_peak = nk.ecg_delineate(ecg_lead, rpeaks['ECG_R_Peaks'], sampling_rate=1000, method="dwt")
+        # extract onset from ECG and return first valid value
+        qrs_onsets = waves_peak['ECG_R_Onsets']
+        valid_onsets = [onset for onset in qrs_onsets if not np.isnan(onset)]
+        return int(valid_onsets[0]) if len(valid_onsets) > 0 else 0
+    except Exception as e:
+        warn(f'NeuroKit2 delineation failed: {e}')
+        return 0
 
 
 def delineate_ecg_q_wave_onset(ecg):
-    warn('Not implemented yet.')
     nb_leads = ecg.shape[0]
-    q_wave_onset_list = np.zeros((nb_leads)) + get_nan_value() # make sure that no value is without defining
+    q_wave_onset_list = np.zeros(nb_leads)
     for lead_i in range(nb_leads):
         q_wave_onset_list[lead_i] = delineate_lead_q_wave_onset(ecg[lead_i, :])
     return q_wave_onset_list

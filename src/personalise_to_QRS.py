@@ -33,7 +33,7 @@ def run_qrs_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     ####################################################################################################################
     # LOAD FUNCTIONS AFTER DEFINING THE WORKING DIRECTORY
     from conduction_system import DjikstraConductionSystemVC, EmptyConductionSystem, PurkinjeSystemVC
-    from ecg_functions import PseudoQRSTetFromStepFunction
+    from ecg_functions import PseudoQRSTetFromStepFunction, delineate_ecg_q_wave_onset
     from geometry_functions import EikonalGeometry
     from propagation_models import EikonalDjikstraTet
     from simulator_functions import SimulateECG
@@ -319,8 +319,13 @@ get_purkinje_speed_name, get_xyz_name_list, unfold_ecg_matrix
     print('clinical_ecg_raw ', clinical_ecg_raw.shape)
     # TODO revert this change, this is only needed when using an ECG that has the full beat instead of a trimmed QRS, and the
     # TODO cutting point will change from subject to subject, either have an automatic delineator, or preprocess the QRS beforehand
-    clinical_ecg_raw = clinical_ecg_raw[:, :max_len_qrs]  # TODO remove this line
-    print('clinical_qrs_raw_trimmed ', clinical_ecg_raw.shape)
+    #clinical_ecg_raw = clinical_ecg_raw[:, :max_len_qrs]  # TODO remove this line
+    #print('clinical_qrs_raw_trimmed ', clinical_ecg_raw.shape)
+    #automatic trimming to qrs onset
+    qrs_onsets = delineate_ecg_q_wave_onset(clinical_ecg_raw)
+    margin = 10  #margin 
+    global_qrs_onset = max(0, int(np.min(qrs_onsets)) - margin)
+    clinical_ecg_raw = clinical_ecg_raw[:, global_qrs_onset:global_qrs_onset + max_len_qrs]
     # Create ECG model
     ecg_model = PseudoQRSTetFromStepFunction(electrode_positions=geometry.electrode_xyz, filtering=filtering,
                                                 frequency=frequency, high_freq_cut=high_freq_cut, lead_names=lead_names,
@@ -341,6 +346,7 @@ get_purkinje_speed_name, get_xyz_name_list, unfold_ecg_matrix
     hyperparameter_dict['nb_leads'] = nb_leads
     hyperparameter_dict['normalise'] = normalise
     hyperparameter_dict['zero_align'] = zero_align
+    hyperparameter_dict['qrs_onset'] = global_qrs_onset
     # Clear Arguments to prevent Argument recycling
     clinical_data_filename_path = None
     clinical_ecg_raw = None

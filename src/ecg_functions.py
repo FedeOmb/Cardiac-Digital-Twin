@@ -79,6 +79,27 @@ def delineate_ecg_q_wave_onset(ecg):
     return q_wave_onset_list
 
 
+def delineate_lead_qrs_offset(ecg_lead):
+    if nk is None:
+        raise ImportError("neurokit2 is required for ECG delineation.")
+    try:
+        _, rpeaks = nk.ecg_peaks(ecg_lead, sampling_rate=1000)
+        _, waves_peak = nk.ecg_delineate(ecg_lead, rpeaks['ECG_R_Peaks'], sampling_rate=1000, method="dwt")
+        qrs_offsets = waves_peak['ECG_R_Offsets']
+        valid_offsets = [offset for offset in qrs_offsets if not np.isnan(offset)]
+        return int(valid_offsets[0]) if len(valid_offsets) > 0 else len(ecg_lead)
+    except Exception as e:
+        warn(f'NeuroKit2 delineation failed: {e}')
+        return len(ecg_lead)
+
+def delineate_ecg_qrs_offset(ecg):
+    nb_leads = ecg.shape[0]
+    qrs_offset_list = np.zeros(nb_leads)
+    for lead_i in range(nb_leads):
+        qrs_offset_list[lead_i] = delineate_lead_qrs_offset(ecg[lead_i, :])
+    return qrs_offset_list
+
+
 # def delineate_ecg_lead_qrs(ecg_lead, max_lat):
 #     return ecg_lead[:int(max_lat)]
 
@@ -1153,8 +1174,3 @@ class PseudoQRSTetFromStepFunction(PseudoEcgTetFromVM):
         return self.preprocess_ecg(simulated_ecg)
 
 # EOF
-
-
-
-
-

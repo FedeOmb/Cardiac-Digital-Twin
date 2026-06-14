@@ -33,7 +33,7 @@ def run_qrs_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     ####################################################################################################################
     # LOAD FUNCTIONS AFTER DEFINING THE WORKING DIRECTORY
     from conduction_system import DjikstraConductionSystemVC, EmptyConductionSystem, PurkinjeSystemVC
-    from ecg_functions import PseudoQRSTetFromStepFunction, delineate_ecg_q_wave_onset
+    from ecg_functions import PseudoQRSTetFromStepFunction, delineate_ecg_q_wave_onset, delineate_ecg_qrs_offset
     from geometry_functions import EikonalGeometry
     from propagation_models import EikonalDjikstraTet
     from simulator_functions import SimulateECG
@@ -321,11 +321,25 @@ get_purkinje_speed_name, get_xyz_name_list, unfold_ecg_matrix
     # TODO cutting point will change from subject to subject, either have an automatic delineator, or preprocess the QRS beforehand
     #clinical_ecg_raw = clinical_ecg_raw[:, :max_len_qrs]  # TODO remove this line
     #print('clinical_qrs_raw_trimmed ', clinical_ecg_raw.shape)
-    #automatic trimming to qrs onset
+    
+    # Automatic trimming to global qrs onset and offset
     qrs_onsets = delineate_ecg_q_wave_onset(clinical_ecg_raw)
-    margin = 10  #margin 
-    global_qrs_onset = max(0, int(np.min(qrs_onsets)) - margin)
-    clinical_ecg_raw = clinical_ecg_raw[:, global_qrs_onset:global_qrs_onset + max_len_qrs]
+    qrs_offsets = delineate_ecg_qrs_offset(clinical_ecg_raw)
+    
+    margin_onset = 10  # ms margin before onset
+    margin_offset = 10 # ms margin after offset
+    
+    global_qrs_onset = max(0, int(np.min(qrs_onsets)) - margin_onset)
+    global_qrs_offset = min(clinical_ecg_raw.shape[1], int(np.max(qrs_offsets)) + margin_offset)
+    
+    # Fallback to  max_len_qrs if delineation fails
+    if global_qrs_offset <= global_qrs_onset:
+        global_qrs_offset = min(clinical_ecg_raw.shape[1], global_qrs_onset + kwargs.get('max_len_qrs', 200))
+        
+    max_len_qrs = global_qrs_offset - global_qrs_onset
+    max_len_ecg = max_len_qrs
+    
+    clinical_ecg_raw = clinical_ecg_raw[:, global_qrs_onset:global_qrs_offset]
     # Create ECG model
     ecg_model = PseudoQRSTetFromStepFunction(electrode_positions=geometry.electrode_xyz, filtering=filtering,
                                                 frequency=frequency, high_freq_cut=high_freq_cut, lead_names=lead_names,

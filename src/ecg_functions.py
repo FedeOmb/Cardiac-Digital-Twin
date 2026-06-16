@@ -54,14 +54,18 @@ def filter_butterworth_ecg(b, a, ecg):
     return signal.filtfilt(b, a, ecg)
 
 # QRS onset delineation using neurokit2 library
-def delineate_lead_q_wave_onset(ecg_lead):
+def delineate_lead_q_wave_onset(ecg_lead, rpeaks=None):
     if nk is None:
         raise ImportError("neurokit2 is required for ECG delineation.")
     try:
-        # Find R peaks
-        _, rpeaks = nk.ecg_peaks(ecg_lead, sampling_rate=1000)
+        if rpeaks is None:
+            # Find R peaks
+            _, rpeaks_dict = nk.ecg_peaks(ecg_lead, sampling_rate=1000)
+            rpeaks = rpeaks_dict['ECG_R_Peaks']
+            if len(rpeaks) == 0:
+                rpeaks = [np.argmax(np.abs(ecg_lead))]
         # Delineation using Wavelet transform
-        _, waves_peak = nk.ecg_delineate(ecg_lead, rpeaks['ECG_R_Peaks'], sampling_rate=1000, method="dwt")
+        _, waves_peak = nk.ecg_delineate(ecg_lead, rpeaks, sampling_rate=1000, method="dwt")
         # extract onset from ECG and return first valid value
         qrs_onsets = waves_peak['ECG_R_Onsets']
         valid_onsets = [onset for onset in qrs_onsets if not np.isnan(onset)]
@@ -74,17 +78,29 @@ def delineate_lead_q_wave_onset(ecg_lead):
 def delineate_ecg_q_wave_onset(ecg):
     nb_leads = ecg.shape[0]
     q_wave_onset_list = np.zeros(nb_leads)
+    
+    # If the signal is short (single beat) find global R peak
+    if ecg.shape[1] < 2000:
+        aggregate = np.mean(np.abs(ecg), axis=0)
+        rpeaks = [int(np.argmax(aggregate))]
+    else:
+        rpeaks = None
+        
     for lead_i in range(nb_leads):
-        q_wave_onset_list[lead_i] = delineate_lead_q_wave_onset(ecg[lead_i, :])
+        q_wave_onset_list[lead_i] = delineate_lead_q_wave_onset(ecg[lead_i, :], rpeaks)
     return q_wave_onset_list
 
 
-def delineate_lead_qrs_offset(ecg_lead):
+def delineate_lead_qrs_offset(ecg_lead, rpeaks=None):
     if nk is None:
         raise ImportError("neurokit2 is required for ECG delineation.")
     try:
-        _, rpeaks = nk.ecg_peaks(ecg_lead, sampling_rate=1000)
-        _, waves_peak = nk.ecg_delineate(ecg_lead, rpeaks['ECG_R_Peaks'], sampling_rate=1000, method="dwt")
+        if rpeaks is None:
+            _, rpeaks_dict = nk.ecg_peaks(ecg_lead, sampling_rate=1000)
+            rpeaks = rpeaks_dict['ECG_R_Peaks']
+            if len(rpeaks) == 0:
+                rpeaks = [np.argmax(np.abs(ecg_lead))]
+        _, waves_peak = nk.ecg_delineate(ecg_lead, rpeaks, sampling_rate=1000, method="dwt")
         qrs_offsets = waves_peak['ECG_R_Offsets']
         valid_offsets = [offset for offset in qrs_offsets if not np.isnan(offset)]
         return int(valid_offsets[0]) if len(valid_offsets) > 0 else len(ecg_lead)
@@ -95,8 +111,17 @@ def delineate_lead_qrs_offset(ecg_lead):
 def delineate_ecg_qrs_offset(ecg):
     nb_leads = ecg.shape[0]
     qrs_offset_list = np.zeros(nb_leads)
+    
+    # If the signal is short (e.g., a single beat), nk.ecg_peaks might fail.
+    # We find the global R peak to help delineate single beats.
+    if ecg.shape[1] < 2000:
+        aggregate = np.mean(np.abs(ecg), axis=0)
+        rpeaks = [int(np.argmax(aggregate))]
+    else:
+        rpeaks = None
+        
     for lead_i in range(nb_leads):
-        qrs_offset_list[lead_i] = delineate_lead_qrs_offset(ecg[lead_i, :])
+        qrs_offset_list[lead_i] = delineate_lead_qrs_offset(ecg[lead_i, :], rpeaks)
     return qrs_offset_list
 
 

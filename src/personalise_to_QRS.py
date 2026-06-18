@@ -323,23 +323,22 @@ get_purkinje_speed_name, get_xyz_name_list, unfold_ecg_matrix
     #print('clinical_qrs_raw_trimmed ', clinical_ecg_raw.shape)
     
     # Automatic trimming to global qrs onset and offset
-    qrs_onsets = delineate_ecg_q_wave_onset(clinical_ecg_raw)
-    qrs_offsets = delineate_ecg_qrs_offset(clinical_ecg_raw)
-    
     margin_onset = 10  # ms margin before onset
     margin_offset = 10 # ms margin after offset
+    qrs_onset_input = kwargs.get('qrs_onset', 0)
+    # if(str(qrs_onset_input) == 'auto'):
+    #     qrs_onsets_leads = delineate_ecg_q_wave_onset(clinical_ecg_raw)
+    #     qrs_offsets_leads = delineate_ecg_qrs_offset(clinical_ecg_raw)
+    #     print(qrs_onsets_leads)
+    #     print(qrs_offsets_leads)
+    #     global_qrs_onset= max(0, int(np.min(qrs_onsets_leads)) - margin_onset)
+
+    #     print("automatic qrs_onset",global_qrs_onset)
+    # else:
+    global_qrs_onset = int(qrs_onset_input)
     
-    global_qrs_onset = max(0, int(np.min(qrs_onsets)) - margin_onset)
-    global_qrs_offset = min(clinical_ecg_raw.shape[1], int(np.max(qrs_offsets)) + margin_offset)
-    
-    # Fallback to  max_len_qrs if delineation fails
-    if global_qrs_offset <= global_qrs_onset:
-        global_qrs_offset = min(clinical_ecg_raw.shape[1], global_qrs_onset + kwargs.get('max_len_qrs', 200))
-        
-    max_len_qrs = global_qrs_offset - global_qrs_onset
-    max_len_ecg = max_len_qrs
-    
-    clinical_ecg_raw = clinical_ecg_raw[:, global_qrs_onset:global_qrs_offset]
+    clinical_ecg_raw = clinical_ecg_raw[:, global_qrs_onset:max_len_qrs]
+    print("clinical ecg trimmed:", clinical_ecg_raw.shape)
     # Create ECG model
     ecg_model = PseudoQRSTetFromStepFunction(electrode_positions=geometry.electrode_xyz, filtering=filtering,
                                                 frequency=frequency, high_freq_cut=high_freq_cut, lead_names=lead_names,
@@ -361,6 +360,7 @@ get_purkinje_speed_name, get_xyz_name_list, unfold_ecg_matrix
     hyperparameter_dict['normalise'] = normalise
     hyperparameter_dict['zero_align'] = zero_align
     hyperparameter_dict['qrs_onset'] = global_qrs_onset
+    #hyperparameter_dict['qrs_offset'] = global_qrs_offset
     # Clear Arguments to prevent Argument recycling
     clinical_data_filename_path = None
     clinical_ecg_raw = None

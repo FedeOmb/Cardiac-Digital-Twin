@@ -87,7 +87,7 @@ def visualise_Twave_personalisation_history(anatomy_subject_name, ecg_subject_na
     #     heart_rate = 48
     # elif anatomy_subject_name == 'DTI032':  # Subject 3
     #     heart_rate = 74
-    heartrate = 74 ##kwargs.get('heart_rate', 74)
+    heartrate = kwargs.get('heart_rate', 74)
     print('heart_rate ', heartrate)
     cycle_length = get_cycle_length(heart_rate=heartrate)
     cycle_length_str = str(int(cycle_length))
@@ -263,7 +263,7 @@ def visualise_Twave_personalisation_history(anatomy_subject_name, ecg_subject_na
     print('sheet_speed ', sheet_speed)
     normal_speed = hyperparameter_dict[normal_speed_name]
     # makes sure that the spatial smoothing is based on distance instead of adjacentcies - smooth twice
-    smoothing_ghost_distance_to_self = 0.01 #hyperparameter_dict['smoothing_ghost_distance_to_self']  # cm # This parameter enables to control how much spatial smoothing happens and
+    smoothing_ghost_distance_to_self = hyperparameter_dict['smoothing_ghost_distance_to_self']  # cm # This parameter enables to control how much spatial smoothing happens and
     print('smoothing_ghost_distance_to_self ', smoothing_ghost_distance_to_self)
     geometry.precompute_spatial_smoothing_using_adjacentcies_orthotropic_fibres(
         fibre_speed=fibre_speed, sheet_speed=sheet_speed, normal_speed=normal_speed,
@@ -343,8 +343,12 @@ def visualise_Twave_personalisation_history(anatomy_subject_name, ecg_subject_na
             'The hyper-parameter frequency is only used for filtering! If you dont use 1000 Hz in any time-series in the code, the other hyper-parameters will not give the expected outcome!')
     low_freq_cut = hyperparameter_dict['low_freq_cut']
     high_freq_cut = hyperparameter_dict['high_freq_cut']
+    global_qrs_onset = hyperparameter_dict['qrs_onset']
     # Read clinical data
     clinical_ecg_raw = np.genfromtxt(clinical_data_filename_path, delimiter=',')
+
+    clinical_ecg_raw = clinical_ecg_raw[:, global_qrs_onset:max_len_ecg]
+    print("clinical ecg trimmed:", clinical_ecg_raw.shape)
     # Create ECG model
     ecg_model = PseudoEcgTetFromVM(electrode_positions=geometry.get_electrode_xyz(), filtering=filtering,
                                     frequency=frequency, high_freq_cut=high_freq_cut, lead_names=lead_names,
@@ -503,8 +507,8 @@ def visualise_Twave_personalisation_history(anatomy_subject_name, ecg_subject_na
         if population_theta_past.shape[0] != population_ecg_past.shape[0]:
             print('generating ecgs for ', population_theta_i)
             # population_ecg_past = evaluator_ecg.simulate_theta_population(theta_population=population_theta_past)
-            # Batch processing to avoid OOM (Out Of Memory)
-            batch_size = multiprocessing.cpu_count() * 3
+            # Batch processing to avoid Out Of Memory
+            batch_size = kwargs.get('batch_size_simulation', multiprocessing.cpu_count() * 2)
             population_size = population_theta_past.shape[0]
             ecg_batches = []
             for i in range(0, population_size, batch_size):
@@ -711,5 +715,5 @@ if __name__ == '__main__':
         else:
             anatomy_subject_name = sys.argv[1]
             ecg_subject_name = sys.argv[1]
-    visualise_Twave_personalisation_history(anatomy_subject_name=anatomy_subject_name,ecg_subject_name=ecg_subject_name)
+        visualise_Twave_personalisation_history(anatomy_subject_name=anatomy_subject_name,ecg_subject_name=ecg_subject_name)
 # EOF

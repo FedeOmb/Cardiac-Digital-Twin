@@ -196,6 +196,7 @@ def visualise_qrs_personalisation(anatomy_subject_name, ecg_subject_name, **kwar
     nb_speed_parameters = None
     ####################################################################################################################
     # Step 6: Create Whole organ Electrophysiology model.
+    print('Step 6: Create Whole organ Electrophysiology model.')    
     electrophysiology_model = ElectrophysiologyUpstrokeStepFunction(
         cellular_model=cellular_model, module_name=electrophysiology_module_name, propagation_model=propagation_model,
         verbose=verbose)
@@ -204,6 +205,7 @@ def visualise_qrs_personalisation(anatomy_subject_name, ecg_subject_name, **kwar
     propagation_model = None
     ####################################################################################################################
     # Step 7: Create ECG calculation method. In this case, the ecg will calculate only the QRS and will use a step
+    print('Step 7: Create ECG calculation method.')    
     # function as the AP's upstroke.
     # Arguments for ECG calculation:
     # Read hyperparameters
@@ -219,8 +221,12 @@ def visualise_qrs_personalisation(anatomy_subject_name, ecg_subject_name, **kwar
     high_freq_cut = hyperparameter_dict['high_freq_cut']
     lead_names = hyperparameter_dict['lead_names']
     nb_leads = hyperparameter_dict['nb_leads']
+    global_qrs_onset = hyperparameter_dict['qrs_onset']
+
     # Read clinical data
     clinical_ecg_raw = np.genfromtxt(clinical_data_filename_path, delimiter=',')
+    clinical_ecg_raw = clinical_ecg_raw[:, global_qrs_onset:max_len_qrs]
+    print("clinical QRS trimmed from ECG:", clinical_ecg_raw.shape)    
     # Create ECG model
     ecg_model = PseudoQRSTetFromStepFunction(electrode_positions=geometry.get_electrode_xyz(), filtering=filtering,
                                              frequency=frequency, high_freq_cut=high_freq_cut, lead_names=lead_names,

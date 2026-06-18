@@ -9,15 +9,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 from datetime import datetime
 
-
-
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        anatomy_subject_name = 'DTI004'
-        ecg_subject_name = 'DTI004'   # Allows using a different ECG for the personalisation than for the anatomy
-    else:
-        anatomy_subject_name = sys.argv[1]
-        ecg_subject_name = sys.argv[1]
+def translate_QRS_pers_to_opencarp(anatomy_subject_name, ecg_subject_name, **kwargs):
     print('anatomy_subject_name: ', anatomy_subject_name)
     print('ecg_subject_name: ', ecg_subject_name)
     # ####################################################################################################################
@@ -77,9 +69,9 @@ if __name__ == '__main__':
     ####################################################################################################################
     # Step 1: Define paths and other environment variables.
     # General settings:
-    inference_resolution = 'coarse1500cm'
-    monodomain_resolution = 'fine500um'
-    verbose = True
+    inference_resolution = kwargs.get('inference_resolution', 'coarse1500cm')
+    monodomain_resolution = kwargs.get('monodomain_resolution', 'fine500um')
+    verbose = kwargs.get('verbose', True)
     # Input Paths:
     data_dir = path_dict["data_path"]
     geometric_data_dir = data_dir + 'geometric_data/'
@@ -97,7 +89,8 @@ if __name__ == '__main__':
     # Use date to name the result folder to preserve some history of results
     current_month_text = datetime.now().strftime('%h')  # Feb
     current_year_full = datetime.now().strftime('%Y')  # 2024
-    results_dir = results_dir_part + current_month_text + '_' + current_year_full + '/'
+    exp_unique_tag = kwargs.get('exp_unique_tag', current_month_text + '_' + current_year_full)
+    results_dir = results_dir_part + exp_unique_tag + '/'
     assert os.path.exists(results_dir)
     results_dir_part = None  # Clear Arguments to prevent Argument recycling
     # Continue defining results paths and configuration
@@ -123,9 +116,15 @@ if __name__ == '__main__':
     for_monodomain_dir = results_dir + 'for_translation_to_monodomain/'
     if not os.path.exists(for_monodomain_dir):
         os.mkdir(for_monodomain_dir)
+    for_monodomain_coarse = for_monodomain_dir + 'coarse/'
+    for_monodomain_fine = for_monodomain_dir + 'fine/'
+    if not os.path.exists(for_monodomain_fine):
+        os.mkdir(for_monodomain_fine)
+    if not os.path.exists(for_monodomain_coarse):
+        os.mkdir(for_monodomain_coarse)        
     for_monodomain_biomarker_result_file_name_start = for_monodomain_dir + anatomy_subject_name + '_' + monodomain_resolution + '_nodefield_' + result_tag + '-biomarker_'
-    for_monodomain_Purkinje_result_file_name_start = for_monodomain_dir + anatomy_subject_name + '_' + monodomain_resolution + '_nodefield_' + result_tag + '-Purkinje_'
-    for_monodomain_root_node_result_file_name_start = for_monodomain_dir + anatomy_subject_name + '_' + monodomain_resolution + '_nodefield_' + result_tag + '-Purkinje_'
+    for_monodomain_Purkinje_result_file_name_start = for_monodomain_dir + anatomy_subject_name + '_' + monodomain_resolution + '_' + result_tag
+    for_monodomain_root_node_result_file_name_start = for_monodomain_dir + anatomy_subject_name + '_' + monodomain_resolution + '_' + result_tag
     for_monodomain_biomarker_result_file_name_end = '.csv'
     for_monodomain_parameter_population_file_name = for_monodomain_dir + anatomy_subject_name + '_' + inference_resolution + '_' + result_tag + '_selected_parameter_population.csv'
     for_monodomain_figure_result_file_name = for_monodomain_dir + anatomy_subject_name + '_' + inference_resolution + '_' + result_tag + '_population.png'
@@ -146,7 +145,8 @@ if __name__ == '__main__':
     electrophysiology_module_name = 'electrophysiology_module'
     # Read hyperparameters
     clinical_data_filename = hyperparameter_dict['clinical_data_filename']
-    clinical_data_filename_path = data_dir + clinical_data_filename
+    clinical_data_dir = data_dir + 'clinical_data' + '/'
+    clinical_data_filename_path = clinical_data_dir + clinical_data_filename
     # Clear Arguments to prevent Argument recycling
     clinical_data_filename = None
     cellular_model_convergence = None
@@ -205,7 +205,7 @@ if __name__ == '__main__':
     # Clear Arguments to prevent Argument recycling
     geometric_data_dir = None
     list_celltype_name = None
-    inference_resolution = None
+    #inference_resolution = None
     # vc_name_list = None
     ####################################################################################################################
     # Step 4: Create conduction system for the propagation model to be initialised.
@@ -302,8 +302,11 @@ if __name__ == '__main__':
             'The hyper-parameter frequency is only used for filtering! If you dont use 1000 Hz in any time-series in the code, the other hyper-parameters will not give the expected outcome!')
     low_freq_cut = hyperparameter_dict['low_freq_cut']
     high_freq_cut = hyperparameter_dict['high_freq_cut']
+    global_qrs_onset = hyperparameter_dict['qrs_onset']
     # Read clinical data
     clinical_ecg_raw = np.genfromtxt(clinical_data_filename_path, delimiter=',')
+    clinical_ecg_raw = clinical_ecg_raw[:, global_qrs_onset:max_len_qrs]
+    print("clinical QRS trimmed from ECG:", clinical_ecg_raw.shape)  
     # Create ECG model
     ecg_model = PseudoQRSTetFromStepFunction(electrode_positions=geometry.get_electrode_xyz(), filtering=filtering,
                                              frequency=frequency, high_freq_cut=high_freq_cut, lead_names=lead_names,
@@ -567,61 +570,94 @@ if __name__ == '__main__':
         # PURKINJE VTK
         lv_pk_edge, rv_pk_edge = geometry.get_lv_rv_selected_purkinje_edge(root_node_meta_index=root_node_meta_index)
         node_xyz = geometry.get_node_xyz()
+        # mapping to fine mesh
+        lv_pk_edge_mapped_fine = unprocessed_node_mapping_index[lv_pk_edge]
+        rv_pk_edge_mapped_fine = unprocessed_node_mapping_index[rv_pk_edge]
         # LV
         write_purkinje_vtk(edge_list=lv_pk_edge,
-                           filename=anatomy_subject_name + '_' + iteration_str_tag + '_LV_Purkinje', node_xyz=node_xyz,
-                           verbose=verbose, visualisation_dir=for_monodomain_dir)
+                           filename=anatomy_subject_name + '_' + iteration_str_tag + '_' + inference_resolution + '_LV_Purkinje', node_xyz=node_xyz,
+                           verbose=verbose, visualisation_dir=for_monodomain_coarse)
+        write_purkinje_vtk(edge_list=lv_pk_edge_mapped_fine,
+                           filename=anatomy_subject_name + '_' + iteration_str_tag + '_' + monodomain_resolution + '_LV_Purkinje', node_xyz=fine_nodes_xyz_um,
+                           verbose=verbose, visualisation_dir=for_monodomain_fine)
         # RV
         write_purkinje_vtk(edge_list=rv_pk_edge,
-                           filename=anatomy_subject_name + '_' + iteration_str_tag + '_RV_Purkinje', node_xyz=node_xyz,
-                           verbose=verbose, visualisation_dir=for_monodomain_dir)
+                           filename=anatomy_subject_name + '_' + iteration_str_tag + '_' + inference_resolution + '_RV_Purkinje', node_xyz=node_xyz,
+                           verbose=verbose, visualisation_dir=for_monodomain_coarse)
+        write_purkinje_vtk(edge_list=rv_pk_edge_mapped_fine,
+                           filename=anatomy_subject_name + '_' + iteration_str_tag + '_' + monodomain_resolution + '_RV_Purkinje', node_xyz=fine_nodes_xyz_um,
+                           verbose=verbose, visualisation_dir=for_monodomain_fine)
         print('Saved Purkinje as .vtk files')
         # ROOT NODES AND THEIR PROPERTIES
         lv_root_node_meta_bool_index, rv_root_node_meta_bool_index = geometry.get_lv_rv_selected_root_node_meta_index(
             root_node_meta_index=root_node_meta_index)
         lv_selected_root_node_index, rv_selected_root_node_index = geometry.get_lv_rv_selected_root_node_index(
             root_node_meta_index=root_node_meta_index)
-        print('lv_candidate_root_node_index ', lv_selected_root_node_index)
-        print('rv_candidate_root_node_index ', rv_selected_root_node_index)
+        print('lv_selected_root_node_index on coarse mesh', lv_selected_root_node_index)
+        print('rv_selected_root_node_index on coarse mesh', rv_selected_root_node_index)
+        lv_selected_root_node_index_fine = unprocessed_node_mapping_index[lv_selected_root_node_index]
+        rv_selected_root_node_index_fine = unprocessed_node_mapping_index[rv_selected_root_node_index]
+        print('lv_selected_root_node_index on fine mesh', lv_selected_root_node_index_fine)
+        print('rv_selected_root_node_index on fine mesh', rv_selected_root_node_index_fine)        
         root_node_field_name_list = ['x', 'y', 'z', 'd', 't'] + vc_name_list
         # LV
-        lv_root_node_filename = for_monodomain_root_node_result_file_name_start + iteration_str_tag + '_LV_root_nodes' + for_monodomain_biomarker_result_file_name_end
-        lv_candidate_root_node_xyz = geometry.get_selected_root_node_xyz(root_node_index=lv_selected_root_node_index)
-        print('lv_candidate_root_node_xyz ', lv_candidate_root_node_xyz.shape)
-        lv_root_node_distance = geometry.get_selected_root_node_distance(root_node_meta_index=lv_root_node_meta_bool_index)
+        lv_root_node_filename_coarse = for_monodomain_coarse + anatomy_subject_name + '_' + inference_resolution +'_'+iteration_str_tag + '_LV_root_nodes' + '.csv'
+        lv_selected_root_node_xyz_coarse = geometry.get_selected_root_node_xyz(root_node_index=lv_selected_root_node_index)
+        lv_root_node_distance_coarse = geometry.get_selected_root_node_distance(root_node_meta_index=lv_root_node_meta_bool_index)
         lv_root_node_time = geometry.get_selected_root_node_time(root_node_meta_index=lv_root_node_meta_bool_index, purkinje_speed=purkinje_speed)
-        print('lv_root_node_distance ', lv_root_node_distance.shape)
-        print('lv_root_node_time ', lv_root_node_time.shape)
-        lv_root_node_data = np.concatenate(
-            (np.concatenate((lv_candidate_root_node_xyz, lv_root_node_distance[:, np.newaxis]), axis=1),
+        lv_root_node_data_coarse = np.concatenate(
+            (np.concatenate((lv_selected_root_node_xyz_coarse, lv_root_node_distance_coarse[:, np.newaxis]), axis=1),
              lv_root_node_time[:, np.newaxis]), axis=1
         )
         for vc_i in range(len(vc_name_list)):
             vc_name = vc_name_list[vc_i]
             node_vc = geometry.get_selected_root_node_vc_field(root_node_index=lv_selected_root_node_index, vc_name=vc_name)
-            lv_root_node_data = np.concatenate((lv_root_node_data, node_vc[:, np.newaxis]), axis=1)
-        print('lv_root_node_data ', lv_root_node_data.shape)
+            lv_root_node_data_coarse = np.concatenate((lv_root_node_data_coarse, node_vc[:, np.newaxis]), axis=1)
         # Save LV root nodes
-        save_csv_file(data=lv_root_node_data, filename=lv_root_node_filename, column_name_list=root_node_field_name_list)
-        print('Saved lv_root_node_filename ', lv_root_node_filename)
+        save_csv_file(data=lv_root_node_data_coarse, filename=lv_root_node_filename_coarse, column_name_list=root_node_field_name_list)
+        print('Saved lv_root_node_filename coarse', lv_root_node_filename_coarse)
+
+        lv_root_nodes_filename_fine = for_monodomain_fine + anatomy_subject_name + '_' + monodomain_resolution +'_'+iteration_str_tag + '_LV_root_nodes' + '.csv'
+        np.savetxt(lv_root_nodes_filename_fine, lv_selected_root_node_index_fine, fmt='%d')
+        print(f"Salvati lv root nodes mappati in {lv_root_nodes_filename_fine}")       
+        lv_root_nodes_times_filename = for_monodomain_fine + anatomy_subject_name + '_' + monodomain_resolution +'_'+iteration_str_tag + '_LV_root_nodes_times' + '.csv'
+        np.savetxt(lv_root_nodes_times_filename, lv_root_node_time, fmt='%.4f')
+        print(f"Salvati lv root nodes times in {lv_root_nodes_times_filename}")
+
         # RV
-        rv_root_node_filename = for_monodomain_root_node_result_file_name_start + iteration_str_tag + '_RV_root_nodes' + for_monodomain_biomarker_result_file_name_end
-        rv_candidate_root_node_xyz = geometry.get_selected_root_node_xyz(root_node_index=rv_selected_root_node_index)
-        rv_root_node_distance = geometry.get_selected_root_node_distance(
+        rv_root_node_filename_coarse = for_monodomain_coarse + anatomy_subject_name + '_' + inference_resolution +'_'+iteration_str_tag + '_RV_root_nodes' + '.csv'
+        rv_candidate_root_node_xyz_coarse = geometry.get_selected_root_node_xyz(root_node_index=rv_selected_root_node_index)
+        rv_root_node_distance_coarse = geometry.get_selected_root_node_distance(
             root_node_meta_index=rv_root_node_meta_bool_index)
         rv_root_node_time = geometry.get_selected_root_node_time(root_node_meta_index=rv_root_node_meta_bool_index,
                                                                  purkinje_speed=purkinje_speed)
-        rv_root_node_data = np.concatenate((np.concatenate((rv_candidate_root_node_xyz, rv_root_node_distance[:, np.newaxis]), axis=1),
+        rv_root_node_data = np.concatenate((np.concatenate((rv_candidate_root_node_xyz_coarse, rv_root_node_distance_coarse[:, np.newaxis]), axis=1),
                                             rv_root_node_time[:, np.newaxis]), axis=1)
         for vc_i in range(len(vc_name_list)):
             vc_name = vc_name_list[vc_i]
             node_vc = geometry.get_selected_root_node_vc_field(root_node_index=rv_selected_root_node_index, vc_name=vc_name)
             rv_root_node_data = np.concatenate((rv_root_node_data, node_vc[:, np.newaxis]), axis=1)
         # Save RV root nodes
-        save_csv_file(data=rv_root_node_data, filename=rv_root_node_filename,
+        save_csv_file(data=rv_root_node_data, filename=rv_root_node_filename_coarse,
                       column_name_list=root_node_field_name_list)
-        print('Saved rv_root_node_filename ', rv_root_node_filename)
+        print('Saved rv_root_node_filename ', rv_root_node_filename_coarse)
+
+        rv_root_nodes_filename_fine = for_monodomain_fine + anatomy_subject_name + '_' + monodomain_resolution +'_'+iteration_str_tag + '_RV_root_nodes' + '.csv'
+        np.savetxt(rv_root_nodes_filename_fine, rv_selected_root_node_index_fine, fmt='%d')
+        print(f"Salvati rv root nodes mappati in {rv_root_nodes_filename_fine}")       
+        rv_root_nodes_times_filename = for_monodomain_fine + anatomy_subject_name + '_' + monodomain_resolution +'_'+iteration_str_tag + '_RV_root_nodes_times' + '.csv'
+        np.savetxt(rv_root_nodes_times_filename, rv_root_node_time, fmt='%.4f')
+        print(f"Salvati rv root nodes times in {rv_root_nodes_times_filename}")
         
+        all_selected_root_node_index = np.concatenate((lv_selected_root_node_index_fine, rv_selected_root_node_index_fine), axis=0)
+        all_activation_times_selected = np.concatenate((lv_root_node_time, rv_root_node_time), axis=0)
+        all_root_nodes_filename_fine = for_monodomain_fine + anatomy_subject_name + '_' + monodomain_resolution +'_'+iteration_str_tag + '_sel_root_nodes' + '.csv'
+        all_root_nodes_times_filename = for_monodomain_fine + anatomy_subject_name + '_' + monodomain_resolution +'_'+iteration_str_tag + '_sel_root_nodes_times' + '.csv'
+        np.savetxt(all_root_nodes_filename_fine, all_selected_root_node_index, fmt='%d')
+        print(f"Salvati selected root nodes RVLV  in {all_root_nodes_filename_fine}")
+        np.savetxt(all_root_nodes_times_filename, all_activation_times_selected, fmt='%.4f')
+        print(f"Salvati selected root nodes times RVLV  in {all_root_nodes_times_filename}")
+
     # # Save precomputed REPOL for the selected particles to translate to monodomain
     # inference_repol_population = np.stack(inference_repol_population)
     # print('inference_repol_population ', inference_repol_population.shape)
@@ -679,6 +715,16 @@ if __name__ == '__main__':
     plt.figure()
     plt.show(block=True)
     print('')
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        anatomy_subject_name = 'DTI004'
+        ecg_subject_name = 'DTI004'   # Allows using a different ECG for the personalisation than for the anatomy
+    else:
+        anatomy_subject_name = sys.argv[1]
+        ecg_subject_name = sys.argv[1]
+
+    translate_QRS_pers_to_opencarp(anatomy_subject_name=anatomy_subject_name, ecg_subject_name=ecg_subject_name)
 
     #EOF
 

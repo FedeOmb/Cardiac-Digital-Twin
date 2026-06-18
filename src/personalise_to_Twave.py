@@ -461,6 +461,7 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
             'The hyper-parameter frequency is only used for filtering! If you dont use 1000 Hz in any time-series in the code, the other hyper-parameters will not give the expected outcome!')
     low_freq_cut = kwargs.get('low_freq_cut', 0.5)  # 001  # 0.5
     high_freq_cut = kwargs.get('high_freq_cut', 150)  # 150
+    qrs_onset = kwargs.get('qrs_onset',0)
     I_name = 'I'
     II_name = 'II'
     v3_name = 'V3'
@@ -471,6 +472,9 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     # Read clinical data
     # TODO This code may not work well for an ECG with only one lead!!
     clinical_ecg_raw = np.genfromtxt(clinical_data_filename_path, delimiter=',')
+    global_qrs_onset = kwargs.get('qrs_onset', 0)
+    clinical_ecg_raw = clinical_ecg_raw[:, global_qrs_onset:max_len_ecg]
+    print("clinical ecg trimmed:", clinical_ecg_raw.shape)
     # Create ECG model
     ecg_model = PseudoEcgTetFromVM(electrode_positions=geometry.get_electrode_xyz(), filtering=filtering,
                                    frequency=frequency, high_freq_cut=high_freq_cut, lead_names=lead_names,
@@ -494,6 +498,7 @@ def run_twave_personalization(anatomy_subject_name, ecg_subject_name, **kwargs):
     hyperparameter_dict['v3_name'] = v3_name
     hyperparameter_dict['v5_name'] = v5_name
     hyperparameter_dict['zero_align'] = zero_align
+    hyperparameter_dict['qrs_onset'] = global_qrs_onset
     # Clear Arguments to prevent Argument recycling
     clinical_data_filename_path = None
     clinical_ecg_raw = None

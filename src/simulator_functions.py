@@ -59,24 +59,24 @@ class SimulateECG(SimulateEP):
             parameter_particle_modules_dict=parameter_particle_modules_dict)
         ecg_simulation = self.ecg_model.calculate_ecg(lat=lat_simulation, vm=vm_simulation)
         return ecg_simulation
-
+    
+    # ORIGINAL FUNCTION: crash for large pupulation beacause of memory issues
+    # def simulate_population(self, parameter_population_modules_dict):
+    #     lat_population, vm_population = self.electrophysiology_model.simulate_electrophysiology_population(
+    #         parameter_population_modules_dict=parameter_population_modules_dict)
+    #     ecg_population = self.ecg_model.calculate_ecg_population(lat_population=lat_population, vm_population=vm_population)
+    #     return ecg_population
+    
+    # --WORKAROUND: batch processing
     def simulate_population(self, parameter_population_modules_dict):
-        lat_population, vm_population = self.electrophysiology_model.simulate_electrophysiology_population(
-            parameter_population_modules_dict=parameter_population_modules_dict)
-        ecg_population = self.ecg_model.calculate_ecg_population(lat_population=lat_population, vm_population=vm_population)
-        return ecg_population
-
-    def visualise_simulation_population(self, discrepancy_population, parameter_population_modules_dict):
-        # ORIGINAL CODE: crash for large pupulation beacause of memory issues
-        # ecg_population = self.simulate_population(parameter_population_modules_dict=parameter_population_modules_dict)
-        # TODO replace this function by the postporcessing visualisation of the ECG
-        # WORKAROUND: batch processing
         n_samples = len(next(iter(parameter_population_modules_dict.values())))
         ecg_population = None
         
         for i in range(0, n_samples, batch_size):
             batch_dict = {k: v[i:i+batch_size] for k, v in parameter_population_modules_dict.items()}
-            batch_ecg = self.simulate_population(parameter_population_modules_dict=batch_dict)
+            lat_batch, vm_batch = self.electrophysiology_model.simulate_electrophysiology_population(
+                parameter_population_modules_dict=batch_dict)
+            batch_ecg = self.ecg_model.calculate_ecg_population(lat_population=lat_batch, vm_population=vm_batch)
             
             if ecg_population is None:
                 ecg_population = batch_ecg
@@ -90,6 +90,10 @@ class SimulateECG(SimulateEP):
                     
                 ecg_population = np.concatenate((ecg_population, batch_ecg), axis=0)
                 
+        return ecg_population
+    
+    def visualise_simulation_population(self, discrepancy_population, parameter_population_modules_dict):
+        ecg_population = self.simulate_population(parameter_population_modules_dict=parameter_population_modules_dict)
         # TODO replace this function by the postporcessing visualisation of the ECG
         return self.ecg_model.visualise_ecg(discrepancy_population=discrepancy_population, ecg_population=ecg_population)
 
@@ -104,27 +108,30 @@ class SimulateECGwithLATmax(SimulateEP):
             parameter_particle_modules_dict=parameter_particle_modules_dict)
         ecg_simulation = self.ecg_model.calculate_ecg(lat=lat_simulation, vm=vm_simulation)
         return (ecg_simulation, np.amax(lat_simulation))
-
-    def simulate_population(self, parameter_population_modules_dict):
-        lat_population, vm_population = self.electrophysiology_model.simulate_electrophysiology_population(
-            parameter_population_modules_dict=parameter_population_modules_dict)
-        ecg_population = self.ecg_model.calculate_ecg_population(lat_population=lat_population, vm_population=vm_population)
-        return (ecg_population, np.amax(lat_population, axis=1))
-
-    def visualise_simulation_population(self, discrepancy_population, parameter_population_modules_dict):
-        #ORIGINAL CODE: crash for large pupulation beacause of memory issues
-        # (ecg_population, _) = self.simulate_population(parameter_population_modules_dict=parameter_population_modules_dict)
-        # # TODO replace this function by the postporcessing visualisation of the ECG
-        #WORKAROUND: batch processing
+    
+    # ORIGINAL FUNCTION: crash for large pupulation beacause of memory issues
+    # def simulate_population(self, parameter_population_modules_dict):
+    #     lat_population, vm_population = self.electrophysiology_model.simulate_electrophysiology_population(
+    #         parameter_population_modules_dict=parameter_population_modules_dict)
+    #     ecg_population = self.ecg_model.calculate_ecg_population(lat_population=lat_population, vm_population=vm_population)
+    #     return (ecg_population, np.amax(lat_population, axis=1))
+    
+    #--WORKAROUND: batch processing
+    def simulate_population(self, parameter_population_modules_dict):        
         n_samples = len(next(iter(parameter_population_modules_dict.values())))
         ecg_population = None
+        max_lat_population = None
         
         for i in range(0, n_samples, batch_size):
             batch_dict = {k: v[i:i+batch_size] for k, v in parameter_population_modules_dict.items()}
-            (batch_ecg, _) = self.simulate_population(parameter_population_modules_dict=batch_dict)
+            lat_batch, vm_batch = self.electrophysiology_model.simulate_electrophysiology_population(
+                parameter_population_modules_dict=batch_dict)
+            batch_ecg = self.ecg_model.calculate_ecg_population(lat_population=lat_batch, vm_population=vm_batch)
+            batch_max_lat = np.amax(lat_batch, axis=1)
             
             if ecg_population is None:
                 ecg_population = batch_ecg
+                max_lat_population = batch_max_lat
             else:
                 t_curr = ecg_population.shape[2]
                 t_batch = batch_ecg.shape[2]
@@ -134,7 +141,12 @@ class SimulateECGwithLATmax(SimulateEP):
                     batch_ecg = np.pad(batch_ecg, ((0, 0), (0, 0), (0, t_curr - t_batch)), mode='edge')
                     
                 ecg_population = np.concatenate((ecg_population, batch_ecg), axis=0)
+                max_lat_population = np.concatenate((max_lat_population, batch_max_lat), axis=0)
                 
+        return (ecg_population, max_lat_population)
+    def visualise_simulation_population(self, discrepancy_population, parameter_population_modules_dict):
+        (ecg_population, _) = self.simulate_population(parameter_population_modules_dict=parameter_population_modules_dict)
+        # # TODO replace this function by the postporcessing visualisation of the ECG
         return self.ecg_model.visualise_ecg(discrepancy_population=discrepancy_population, ecg_population=ecg_population)
 
 

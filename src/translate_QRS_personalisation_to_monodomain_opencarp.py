@@ -569,22 +569,26 @@ def translate_QRS_pers_to_opencarp(anatomy_subject_name, ecg_subject_name, **kwa
         # Save inferred Purkinje system as .vtk file
         # PURKINJE VTK
         lv_pk_edge, rv_pk_edge = geometry.get_lv_rv_selected_purkinje_edge(root_node_meta_index=root_node_meta_index)
+        print("lv_pk_edge",lv_pk_edge)
+        print("rv_pk_edge",rv_pk_edge)
         node_xyz = geometry.get_node_xyz()
         # mapping to fine mesh
         lv_pk_edge_mapped_fine = unprocessed_node_mapping_index[lv_pk_edge]
         rv_pk_edge_mapped_fine = unprocessed_node_mapping_index[rv_pk_edge]
         # LV
-        write_purkinje_vtk(edge_list=lv_pk_edge,
+        if(lv_pk_edge.size > 0):
+            write_purkinje_vtk(edge_list=lv_pk_edge,
                            filename=anatomy_subject_name + '_' + iteration_str_tag + '_' + inference_resolution + '_LV_Purkinje', node_xyz=node_xyz,
                            verbose=verbose, visualisation_dir=for_monodomain_coarse)
-        write_purkinje_vtk(edge_list=lv_pk_edge_mapped_fine,
+            write_purkinje_vtk(edge_list=lv_pk_edge_mapped_fine,
                            filename=anatomy_subject_name + '_' + iteration_str_tag + '_' + monodomain_resolution + '_LV_Purkinje', node_xyz=fine_nodes_xyz_um,
                            verbose=verbose, visualisation_dir=for_monodomain_fine)
         # RV
-        write_purkinje_vtk(edge_list=rv_pk_edge,
+        if(rv_pk_edge.size > 0):
+            write_purkinje_vtk(edge_list=rv_pk_edge,
                            filename=anatomy_subject_name + '_' + iteration_str_tag + '_' + inference_resolution + '_RV_Purkinje', node_xyz=node_xyz,
                            verbose=verbose, visualisation_dir=for_monodomain_coarse)
-        write_purkinje_vtk(edge_list=rv_pk_edge_mapped_fine,
+            write_purkinje_vtk(edge_list=rv_pk_edge_mapped_fine,
                            filename=anatomy_subject_name + '_' + iteration_str_tag + '_' + monodomain_resolution + '_RV_Purkinje', node_xyz=fine_nodes_xyz_um,
                            verbose=verbose, visualisation_dir=for_monodomain_fine)
         print('Saved Purkinje as .vtk files')

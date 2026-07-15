@@ -1,0 +1,23 @@
+services:
+  cdt-framework:
+    image: fedeo/cdt-framework:jupyter
+    container_name: cdt-framework
+    restart: unless-stopped
+    shm_size: "20gb"
+    ports:
+      - "8800:8888"
+    volumes:
+      - /data/Cardiac-Digital-Twin:/data/Cardiac-Digital-Twin
+      - /mnt/cardiac-data:/mnt/cardiac-data
+      - /mnt/data-vm2:/mnt/data-vm2
+    environment:
+      # variabili per l'entrypoint
+      - CDT_FRAMEWORK_PATH=/data/Cardiac-Digital-Twin
+      - VM1_DATA_PATH=/mnt/cardiac-data
+      - VM2_DATA_PATH=/mnt/data-vm2
+      #- OMP_NUM_THREADS=4
+      #- JOBLIB_TEMP_FOLDER=/dev/shm
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1

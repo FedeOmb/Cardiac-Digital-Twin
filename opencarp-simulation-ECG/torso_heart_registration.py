@@ -99,15 +99,18 @@ def get_long_axis_from_ab(biv_mesh):
     print(f"  Base:  {base_center.round(0)}")
     return long_axis
 
-def draw_registration_result(source, target, transformation):
+def draw_registration_result(source, target, transformation, inline = True):
     source_temp = copy.deepcopy(source)
     target_temp = copy.deepcopy(target)
     source_temp.paint_uniform_color([1, 0.706, 0])
     target_temp.paint_uniform_color([0, 0.651, 0.929])
     source_temp.transform(transformation)
+    if inline:
+        o3d.visualization.draw_plotly([source_temp, target_temp], width=1280, height=720)
+    else:
+        o3d.visualization.draw_geometries([source_temp, target_temp], width=1280, height=720)
     
-    o3d.visualization.draw_geometries([source_temp, target_temp], width=1280, height=720)
-    
+
 def pv_surface_to_o3d(pv_surface):
     #calcolo normali superficie con pyvista
     surf_with_normals = pv_surface.compute_normals(
@@ -198,53 +201,34 @@ def export_mesh_vtk42(mesh, filename):
     writer.Write()
     print("mesh esportata in VTK 4.2: ", filename)
 
-if __name__ == "__main__":
-    PATH_CARDIAC_MESH = os.path.join(".", "503kaggle500_meshes", "503kaggle500um_tagged.vtk")
-    PATH_TORSO_MESH = os.path.join(".", "KCL_torso1", "KCL_torso1.vtk")
-    voxel_size = 3000  # in um 
 
-    torso = pv.read(PATH_TORSO_MESH)
+def compute_registration_transform(case_name, input_meshes_folder, input_torso_folder, cardiac_mesh_name, ssm_heart_from_torso_name, voxel_size = 3):
+    PATH_CARDIAC_MESH = os.path.join(input_meshes_folder, cardiac_mesh_name)
+    PATH_SSMHEART_FROM_TORSO = os.path.join(input_torso_folder, ssm_heart_from_torso_name)
 
-    print(torso.cell_data.keys())   # [elemTag]
-    tags = torso.cell_data["elemTag"]   # array numpy shape (n_cells,)
-
-    pts = np.array(torso.points)        # shape (n_pts, 3)
+    ssm_heart_mesh = pv.read(PATH_SSMHEART_FROM_TORSO)
+    ssm_heart_pts = np.array(ssm_heart_mesh.points)        # shape (n_pts, 3)
 
     biv_mesh = pv.read(PATH_CARDIAC_MESH)
-    biv_mesh_tags = biv_mesh.cell_data["elemTag"]
+    #biv_mesh_tags = biv_mesh.cell_data["elemTag"]
     biv_mesh_pts  = np.array(biv_mesh.points)
     biv_surface = biv_mesh.extract_surface()
     biv_mesh_surface_pts = np.array(biv_surface.points)
 
     # Estrae solo gli elementi cardiaci (34=RV, 35=LV)
-    heart_mask = np.isin(tags, [34, 35])
-    heart_mesh = torso.extract_cells(np.where(heart_mask)[0])
     # Estrae superficie del cuore (per registrazione ICP)
-    heart_from_torso_surface = heart_mesh.extract_surface() 
-    heart_from_torso_surface.save("heart_from_torso_surface.vtk")
-
-    long_axis_from_biv = get_long_axis_from_ab(biv_surface)
-
-    heart_from_torso_clipped = clip_mesh_given_axis(heart_mesh, long_axis_from_biv, percentile=70)
-
-    # Estrae superficie del cuore (per registrazione ICP)
-    heart_from_torso_clipped_surf = heart_from_torso_clipped.extract_surface() 
-    heart_from_torso_clipped_surf.save("heart_from_torso_surface_clipped.vtk.vtk")
-
-    # Torso senza cuore (per la sostituzione)
-    torso_no_cardiac = torso.extract_cells(np.where(~heart_mask)[0])
-    #torso_no_cardiac.save("torso_no_biv_mesh.vtk", binary=False)
-    export_mesh_vtk42(torso_no_cardiac, "torso_no_biv_mesh.vtk")
+    ssmheart_from_torso_surface = ssm_heart_mesh.extract_surface() 
+    #heart_from_torso_surface.save("heart_from_torso_surface.vtk")
 
     source_pcd = pv_surface_to_o3d(biv_surface)
-    target_pcd = pv_surface_to_o3d(heart_from_torso_clipped_surf)
+    target_pcd = pv_surface_to_o3d(ssmheart_from_torso_surface)
 
     T_global_ransac = global_registration_fpfh(source_pcd, target_pcd, voxel_size)
     draw_registration_result(source_pcd, target_pcd, T_global_ransac)
     #T_init_from_pca = coarse_alignment(biv_mesh_surface_pts, heart_from_torso_surface_pts)
     biv_after_ransac = biv_mesh.copy().transform(T_global_ransac)
-    #biv_after_ransac.save("503kaggle500_after_ransac.vtk") 
-    export_mesh_vtk42(biv_after_ransac, "503kaggle500_after_ransac.vtk")
+    biv_after_ransac.save( os.path.join(input_meshes_folder, f"{case_name}_aligned_after_ransac.vtk")) 
+    #export_mesh_vtk42(biv_after_ransac, os.path.join(input_folder, "sb4101_aligned_after_ransac.vtk"))
 
     normals = np.asarray(source_pcd.normals)
     print("Num Normali:", normals.shape[0])
@@ -252,24 +236,49 @@ if __name__ == "__main__":
     print("norma media:", np.linalg.norm(normals, axis=1).mean())
 
     # ICP point-to-plane
-    
     print("Local registration using ICP...")
     result = o3d.pipelines.registration.registration_icp(
         source_pcd, target_pcd,
-        max_correspondence_distance=voxel_size * 0.8,
+        max_correspondence_distance=voxel_size * 0.5,
         init=T_global_ransac,
         estimation_method=o3d.pipelines.registration.TransformationEstimationPointToPlane(),
         criteria=o3d.pipelines.registration.ICPConvergenceCriteria(max_iteration=2000)
     )
 
     T_final = result.transformation
+    reg_matrix_path = os.path.join(input_meshes_folder, f"{case_name}_icp_transform.npy")
+    np.save(reg_matrix_path, T_final)
+    print("registration matrix saved at:",reg_matrix_path)
     print(f"ICP fitness: {result.fitness:.4f}, RMSE: {result.inlier_rmse:.3f}")
     draw_registration_result(source_pcd, target_pcd, T_final)
 
+    
     # Applica trasformazione al biventricolo
-    biv_registered = biv_mesh.copy().transform(T_final)
+    #biv_registered = biv_mesh.copy().transform(T_final)
     #biv_registered.save("503kaggle500_reg_icp.vtk", binary=False) 
-    export_mesh_vtk42(biv_registered, "503kaggle500_reg_icp.vtk")
+    #export_mesh_vtk42(biv_registered, os.path.join(input_folder, "sb4101_aligned_after_icp.vtk"))
     # Unisci torso (senza cuore) + biv registrato
     #merged = torso_no_cardiac.merge(biv_registered)
     #merged.save("torso_heart_merged.vtk")
+
+    return T_final
+
+def apply_tranform_to_meshes(input_folder, output_folder,transform_matrix, meshes_filenames,suffix=None):
+    #transform_file = os.path.join(input_folder, f"{case_name}_icp_transform.npy")
+    #T = np.load(str(transform_file))
+    T = transform_matrix
+    for mesh_file in meshes_filenames:
+        input_path = os.path.join(input_folder, mesh_file)
+        if suffix is not None:
+            output_path = os.path.join(output_folder, mesh_file.replace(".vtk", "_reg.vtk").replace(".vtu", "_reg.vtu").replace(".vtp", "_reg.vtp"))
+        else:
+            output_path = os.path.join(output_folder,mesh_file)
+
+        print(f"Processing {input_path} -> {output_path}")
+        mesh = pv.read(input_path)
+        pts = mesh.points
+        if pts is None or pts.size == 0:
+            print(f"Mesh {input_path} has no points to transform. Skipping.")
+            continue
+        mesh_registred = mesh.copy().transform(T)
+        mesh_registred.save(output_path)

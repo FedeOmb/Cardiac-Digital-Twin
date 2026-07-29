@@ -357,14 +357,14 @@ qrs_window_ms = 150.0
 nb_leads = 8
 qrs_onset = 0
 scaling_mode = 'two_groups' # 'global', 'two_groups', 'per_lead'
-sim_folder = os.path.join(".", "sb3901","test_pseudobidomain_torord_sb3901_norm6_fast4x_realprep")
-casename = 'sb3901'
-sim_ecg_igb_filename = casename + '_phie_recovery_norm6.igb'
+casename = 'sb4201'
+sim_folder = os.path.join(".", "sb4201_reg","test_mono_torord_sb4201reg_norm6_CVcampsv2_fast4x_purkinje400_prep0")
+sim_ecg_igb_filename = casename + '_phie_recovery.igb'
 sim_ecg_igb_path = os.path.join(sim_folder, sim_ecg_igb_filename)
-sim_ecg_filename = casename + '_phierec_ascii_norm6_prep_fast.txt'
+sim_ecg_filename = casename + '_phierec_ascii.txt'
 sim_ecg_path = os.path.join(sim_folder, sim_ecg_filename)
 ptb_casename = "patient131"
-ptb_filename ="s0273lre"
+ptb_filename = "s0273lre"
 ptb_record_path=os.path.join('..', '..','ptb-diagnostic-ecg-database-1.0.0', ptb_casename, ptb_filename)  # Path SENZA estensione, es. './ptb_ecg_records/s0010_re'
 ptb_target_len_ms = 600.0
 ptb_qrs_pre_ms = 120.0
@@ -399,7 +399,7 @@ sim_freq = 1000.0 / np.mean(np.diff(simulated_t_ms)) if len(simulated_t_ms) > 1 
 print('simulated_ecgs_8leads.shape ', simulated_ecgs_8leads.shape)
 print('simulation_frequency ', sim_freq)
 #max_len_qrs = 200 * 4
-
+print(f"Simulated ECG frequency: {sim_freq:.2f} Hz")
 print('Importing PTB ECG with wfdb...')
 reference_t_ms_full, reference_ecg_8_full, reference_fs, reference_sig_names = import_ptb_ecg_8leads(ptb_record_path)
 print(f'PTB ECG shape: {reference_ecg_8_full.shape}, fs = {reference_fs:.2f} Hz')

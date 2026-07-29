@@ -3,12 +3,10 @@
 # The normalisation strategy is the same as in ecg_functions.py.
 import numpy as np
 from scipy import signal
-import matplotlib
 import os
 import csv
-matplotlib.use('Agg')
-import matplotlib.pyplot as plt
 import subprocess
+import matplotlib.pyplot as plt
 import wfdb
 #plt.switch_backend('Agg')# backend non-interattivo per ambiente headless
 # Helper functions from ecg_functions.py:
@@ -184,7 +182,7 @@ def import_simulated_ecg_12leads_raw(filename, monoalg_activation_offset):
     return t, ecgs
 
 def _normalise_sig_name(name):
-    return name.strip().upper().replace('AVR', 'AVR').replace('AVL', 'AVL').replace('AVF', 'AVF')
+    return name.strip().upper().replace('AVR', 'aVR').replace('AVL', 'aVL').replace('AVF', 'aVF')
 
 def import_ptb_ecg_8leads(record_path): # input: path al record PTB senza estensione
 
@@ -360,27 +358,28 @@ def unfold_ecg_matrix(data, nb_leads):
 def visualise_ecgs(reference_ecg, simulated_ecgs, simulated_t_ms, lead_names, casename, ref_t_ms=None, ylim=None, out_png=None):
     nb_leads = len(lead_names)
     if nb_leads == 12:
-        fig, axes = plt.subplots(2, 6, figsize=(20, 15), sharex=False)
+        fig, axes = plt.subplots(3, 4, figsize=(30, 20), sharex=False)
     else:
         fig, axes = plt.subplots(2, 4, figsize=(20, 10), sharex=False)
     axes = axes.ravel()
 
-    if ref_t_ms is None:
+    if ref_t_ms is None and reference_ecg is not None:
         ref_t_ms = np.arange(reference_ecg.shape[1])
 
     for i in range(nb_leads):
-        axes[i].plot(ref_t_ms, reference_ecg[i, :], label='Clinical PTB', color='limegreen', linewidth=2.5)
-        axes[i].plot(simulated_t_ms, simulated_ecgs[i, :], label='Simulation scaled', color='black', linewidth=1.2)
-        axes[i].set_title(lead_names[i])
-        axes[i].set_xlabel('Time [ms]')
-        axes[i].set_ylabel('mV')
-        axes[i].grid(True, alpha=0.3)
+        if reference_ecg is not None:
+            axes[i].plot(ref_t_ms, reference_ecg[i, :], label='Clinical PTB', color='limegreen', linewidth=2.5)
+        axes[i].plot(simulated_t_ms, simulated_ecgs[i, :], label='Simulation scaled', color='black', linewidth=2.0)
+        axes[i].set_title(lead_names[i], fontsize=20)
+        axes[i].set_xlabel('Time [ms]', fontsize=14)
+        axes[i].set_ylabel('mV', fontsize=14)
+        axes[i].grid(True)
         if ylim is not None:
             axes[i].set_ylim(ylim)
 
-    axes[-1].legend(loc='best')
-    fig.suptitle(casename)
-    fig.tight_layout()
+    axes[-1].legend(loc='best', fontsize=14)
+    fig.tight_layout(rect=[0, 0, 1, 0.96])
+    fig.suptitle(casename, fontsize=16)
     if out_png:
         fig.savefig(out_png, dpi=200, bbox_inches='tight')
     plt.show()
@@ -407,197 +406,194 @@ def save_ecg_csv_per_row(filepath, t_ms, ecg, lead_names):
 
 ###################################################################################################################
 ## Main script
-filtering = True
-normalise = True
-zero_align = True
-frequency = 1000
-high_freq_cut = 150
-low_freq_cut = 0.5
-max_len_ecg = 500
-max_len_qrs = 150
-qrs_window_ms = 150.0
-nb_leads = 12
-qrs_onset = 0
-scaling_mode = 'two_groups' # 'global', 'two_groups', 'per_lead'
-sim_folder = os.path.join(".", "sb3901","test_pseudobidomain_torord_sb3901_norm6_fast4x_realprep")
-casename = 'sb3901'
-sim_ecg_igb_filename = casename + '_phie_recovery_norm6.igb'
-sim_ecg_igb_path = os.path.join(sim_folder, sim_ecg_igb_filename)
-sim_ecg_filename = casename + '_phierec_ascii_norm6_prep_fast.txt'
-sim_ecg_path = os.path.join(sim_folder, sim_ecg_filename)
-ptb_casename = "patient131"
-ptb_filename ="s0273lre"
-ptb_record_path=os.path.join('..', '..','ptb-diagnostic-ecg-database-1.0.0', ptb_casename, ptb_filename)  # Path SENZA estensione, es. './ptb_ecg_records/s0010_re'
-ptb_target_len_ms = 600.0
-ptb_qrs_pre_ms = 120.0
-# Preprocess the clinical data
-#print('Preprocessing clinical ECGs')
-#clinical_data_filename_path = '/mnt/scratch/jenny/'+casename+'_clinical_full_ecg.csv'
-#reference_ecg = np.genfromtxt(clinical_data_filename_path, delimiter=',')
-#reference_ecg = __preprocess_ecg_without_normalise(original_ecg=reference_ecg, filtering=filtering, zero_align=zero_align,
-#                                                   frequency=frequency, low_freq_cut=low_freq_cut, high_freq_cut=high_freq_cut)
-#max_qrs_end = qrs_onset + max_len_qrs
-#reference_lead_is_positive = __set_reference_lead_is_positive(max_qrs_end=max_qrs_end, reference_ecg=reference_ecg)
-#reference_ecg = preprocess_ecg(original_ecg=reference_ecg, reference_ecg=reference_ecg, filtering=filtering, zero_align=zero_align,
-#                                frequency=frequency, low_freq_cut=low_freq_cut, high_freq_cut=high_freq_cut, max_len_qrs=max_len_qrs,
-#                               qrs_onset=qrs_onset, reference_lead_is_positive=reference_lead_is_positive)
+if __name__ == "__main__":
+    import matplotlib
+    import matplotlib.pyplot as plt
+    plt.switch_backend('Agg')
+    filtering = True
+    normalise = True
+    zero_align = True
+    frequency = 1000
+    high_freq_cut = 150
+    low_freq_cut = 0.5
+    max_len_ecg = 500
+    max_len_qrs = 200
+    qrs_window_ms = 150.0
+    nb_leads = 12
+    qrs_onset = 0
+    scaling_mode = 'two_groups' # 'global', 'two_groups', 'per_lead'
+    sim_folder = os.path.join(".", "sb4301","test_mono_torord_sb4301_norm11_CVcampsv2_fast4x_grad10abtm_purkinje300_realprep")
+    casename = 'sb4301'
+    sim_ecg_igb_filename = casename + '_phie_recovery.igb'
+    sim_ecg_igb_path = os.path.join(sim_folder, sim_ecg_igb_filename)
+    sim_ecg_filename = casename + '_phierec_ascii_norm11.txt'
+    sim_ecg_path = os.path.join(sim_folder, sim_ecg_filename)
+    ptb_casename = "patient131" #"patient269"         #
+    ptb_filename = "s0273lre"  #"s0508_re"                     #
+    ptb_record_path=os.path.join('..', '..','ptb-diagnostic-ecg-database-1.0.0', ptb_casename, ptb_filename)  # Path SENZA estensione, es. './ptb_ecg_records/s0010_re'
+    ptb_target_len_ms = 500.0
+    ptb_qrs_pre_ms = 120.0
 
-# Read in simulated ECGs
-print('Importing and preprocessing simulated ECG')
-cmd_convert_igb_txt =[
-    'opencarp-docker',
-    'igbextract', '-l', "0-9", "-o","asciiTm", "-O",
-    sim_ecg_path,
-    sim_ecg_igb_path
-] 
+    # Read in simulated ECGs
+    print('Importing and preprocessing simulated ECG')
+    cmd_convert_igb_txt =[
+        'opencarp-docker',
+        'igbextract', '-l', "0-9", "-o","asciiTm", "-O",
+        sim_ecg_path,
+        sim_ecg_igb_path
+    ] 
 
-print("Running command:", " ".join(cmd_convert_igb_txt))
-subprocess.run(cmd_convert_igb_txt, check=True)
+    print("Running command:", " ".join(cmd_convert_igb_txt))
+    subprocess.run(cmd_convert_igb_txt, check=True)
 
-simulated_t_ms, simulated_ecgs_12leads = import_simulated_ecg_12leads_raw(filename=sim_ecg_path, monoalg_activation_offset=0)
-#simulation_frequency = simulated_ecgs_12leads.shape[1]
-sim_freq = 1000.0 / np.mean(np.diff(simulated_t_ms)) if len(simulated_t_ms) > 1 else 1000.0
+    simulated_t_ms, simulated_ecgs_12leads = import_simulated_ecg_12leads_raw(filename=sim_ecg_path, monoalg_activation_offset=0)
+    #simulation_frequency = simulated_ecgs_12leads.shape[1]
+    sim_freq = 1000.0 / np.mean(np.diff(simulated_t_ms)) if len(simulated_t_ms) > 1 else 1000.0
 
-print('simulated_ecgs_12leads.shape ', simulated_ecgs_12leads.shape)
-print('simulation_frequency ', sim_freq)
-#max_len_qrs = 200 * 4
+    print('simulated_ecgs_12leads.shape ', simulated_ecgs_12leads.shape)
+    print('simulation_frequency ', sim_freq)
+    #max_len_qrs = 200 * 4
 
-print('Importing PTB ECG with wfdb...')
-reference_t_ms_full, reference_ecg_12_full, reference_fs, reference_sig_names = import_ptb_ecg_12leads(ptb_record_path)
-print(f'PTB ECG shape: {reference_ecg_12_full.shape}, fs = {reference_fs:.2f} Hz')
-print('Available PTB signals:', reference_sig_names)
+    print('Importing PTB ECG with wfdb...')
+    reference_t_ms_full, reference_ecg_12_full, reference_fs, reference_sig_names = import_ptb_ecg_12leads(ptb_record_path)
+    print(f'PTB ECG shape: {reference_ecg_12_full.shape}, fs = {reference_fs:.2f} Hz')
+    print('Available PTB signals:', reference_sig_names)
+    # Plot together
+    print('Visualising ECGs together')
+    #visualise_ecgs(nb_leads=nb_leads, reference_ecg=simulated_ecgs_12leads, simulated_ecgs=simulated_ecgs_norm, simulated_t=simulated_t,
+    #               lead_names=['I', 'II', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6'], casename=casename)
+    #
+    # reference_ecg_12_full = resample_ecg(reference_ecg_12_full, original_fs=reference_fs, target_fs=sim_freq)
+    # reference_t_ms = np.arange(reference_ecg_12_full.shape[1]) * 1000.0 / sim_freq
+    # reference_fs = sim_freq
 
-#processed_simulated_ecgs = __preprocess_ecg_without_normalise(original_ecg=simulated_ecgs_12leads, filtering=filtering, zero_align=zero_align,
-#                                frequency=simulation_frequency, low_freq_cut=low_freq_cut, high_freq_cut=high_freq_cut)
-#processed_simulated_ecgs = preprocess_ecg(original_ecg=simulated_ecgs_12leads, reference_ecg=reference_ecg, filtering=filtering, zero_align=zero_align,
-#                                frequency=simulation_frequency, low_freq_cut=low_freq_cut, high_freq_cut=high_freq_cut, max_len_qrs=max_len_qrs,
-#                               qrs_onset=qrs_onset, reference_lead_is_positive=reference_lead_is_positive)
-# Normalizza rispetto al picco globale del QRS (finestra 0-150 ms)
-#qrs_window = int(150)  # campioni (con freq=1000 Hz → 150 ms)
-#qrs_segment = simulated_ecgs_12leads[:, :qrs_window]
-#norm_factor = np.max(np.abs(qrs_segment))
-#simulated_ecgs_norm = simulated_ecgs_12leads / norm_factor
-#print(f"Fattore di normalizzazione: {norm_factor:.4f} mV")
+    reference_ecg_12_full = preprocess_ecg_without_normalise(
+        original_ecg=reference_ecg_12_full,
+        filtering=filtering,
+        zero_align=zero_align,
+        frequency=reference_fs,
+        high_freq_cut=high_freq_cut,
+        low_freq_cut=low_freq_cut,
+    )
 
-# Normalizza ciascuna derivazione al proprio picco (per vedere morfologia)
-#simulated_ecgs_norm_perlead = simulated_ecgs_12leads.copy()
-#for i in range(12):
-#    peak = np.max(np.abs(simulated_ecgs_norm_perlead[i, :qrs_window]))
-#    if peak > 1e-6:  # evita divisione per zero
-#        simulated_ecgs_norm_perlead[i, :] /= peak
+    simulated_ecgs_12 = preprocess_ecg_without_normalise(
+        original_ecg=simulated_ecgs_12leads,
+        filtering=filtering,
+        zero_align=zero_align,
+        frequency=sim_freq,
+        high_freq_cut=high_freq_cut,
+        low_freq_cut=low_freq_cut,
+    )
+    reference_beat, reference_t_ms, reference_qrs_anchor, central_peak, all_peaks = select_central_ptb_beat(
+        reference_ecg_12_full,
+        fs=reference_fs,
+        target_len_ms=ptb_target_len_ms,
+        qrs_pre_ms=ptb_qrs_pre_ms,
+    )
+    print(f'Numero di picchi R trovati nel PTB: {len(all_peaks)}')
+    print(f'Picco centrale selezionato al campione: {central_peak}')
+    print(f'Beat PTB estratto shape: {reference_beat.shape}')
+    if abs(reference_fs - sim_freq) > 1e-9:
+        reference_beat = resample_ecg(reference_beat, original_fs=reference_fs, target_fs=sim_freq)
+        reference_t_ms = np.arange(reference_beat.shape[1]) * 1000.0 / sim_freq
+        reference_qrs_anchor = int(round(reference_qrs_anchor * sim_freq / reference_fs))
+        reference_fs = sim_freq
 
-# Plot together
-print('Visualising ECGs together')
-#visualise_ecgs(nb_leads=nb_leads, reference_ecg=simulated_ecgs_12leads, simulated_ecgs=simulated_ecgs_norm, simulated_t=simulated_t,
-#               lead_names=['I', 'II', 'V1', 'V2', 'V3', 'V4', 'V5', 'V6'], casename=casename)
-#
-# reference_ecg_12_full = resample_ecg(reference_ecg_12_full, original_fs=reference_fs, target_fs=sim_freq)
-# reference_t_ms = np.arange(reference_ecg_12_full.shape[1]) * 1000.0 / sim_freq
-# reference_fs = sim_freq
+    n = min(reference_beat.shape[1], simulated_ecgs_12.shape[1])
+    reference_beat = reference_beat[:, :n]
+    reference_t_ms = reference_t_ms[:n]
+    simulated_ecgs_12 = simulated_ecgs_12[:, :n]
+    simulated_t_ms = simulated_t_ms[:n]
 
-reference_ecg_12_full = preprocess_ecg_without_normalise(
-    original_ecg=reference_ecg_12_full,
-    filtering=filtering,
-    zero_align=zero_align,
-    frequency=reference_fs,
-    high_freq_cut=high_freq_cut,
-    low_freq_cut=low_freq_cut,
-)
+    sim_qrs_anchor = np.argmax(np.mean(np.abs(simulated_ecgs_12), axis=0))
+    reference_beat, reference_t_ms, simulated_ecgs_12, simulated_t_ms = align_qrs_anchor(
+        reference_beat,
+        reference_t_ms,
+        reference_qrs_anchor,
+        simulated_ecgs_12,
+        simulated_t_ms,
+        sim_qrs_anchor,
+        fs=sim_freq,
+    )
+    scaled_simulated_ecgs_12, scale_factors_12, ref_amp_12, sim_amp_12 = scale_simulated_to_reference(
+        reference_ecg=reference_beat,
+        simulated_ecg=simulated_ecgs_12,
+        fs=sim_freq,
+        qrs_onset_idx=min(int(sim_qrs_anchor), reference_beat.shape[1] - 1),
+        qrs_window_ms=qrs_window_ms,
+        mode=scaling_mode,
+    )
 
-simulated_ecgs_12 = preprocess_ecg_without_normalise(
-    original_ecg=simulated_ecgs_12leads,
-    filtering=filtering,
-    zero_align=zero_align,
-    frequency=sim_freq,
-    high_freq_cut=high_freq_cut,
-    low_freq_cut=low_freq_cut,
-)
-reference_beat, reference_t_ms, reference_qrs_anchor, central_peak, all_peaks = select_central_ptb_beat(
-    reference_ecg_12_full,
-    fs=reference_fs,
-    target_len_ms=ptb_target_len_ms,
-    qrs_pre_ms=ptb_qrs_pre_ms,
-)
-print(f'Numero di picchi R trovati nel PTB: {len(all_peaks)}')
-print(f'Picco centrale selezionato al campione: {central_peak}')
-print(f'Beat PTB estratto shape: {reference_beat.shape}')
-if abs(reference_fs - sim_freq) > 1e-9:
-    reference_beat = resample_ecg(reference_beat, original_fs=reference_fs, target_fs=sim_freq)
-    reference_t_ms = np.arange(reference_beat.shape[1]) * 1000.0 / sim_freq
-    reference_qrs_anchor = int(round(reference_qrs_anchor * sim_freq / reference_fs))
-    reference_fs = sim_freq
+    print_scaling_report(scale_factors_12, ref_amp_12, sim_amp_12, scaling_mode, LEAD_NAMES_12)
 
-n = min(reference_beat.shape[1], simulated_ecgs_12.shape[1])
-reference_beat = reference_beat[:, :n]
-reference_t_ms = reference_t_ms[:n]
-simulated_ecgs_12 = simulated_ecgs_12[:, :n]
-simulated_t_ms = simulated_t_ms[:n]
+    # Save and plot 12 leads
+    clinical_12_csv = os.path.join('.', ptb_casename + '_ptb_clinical_beat_12leads.csv')
+    scaled_12_csv = os.path.join(sim_folder, casename + '_scaled_simulated_ecg_12leads.csv')
+    out_12_png = os.path.join(sim_folder, f'{casename}_scaled_to_{ptb_casename}_{scaling_mode}_12leads.png')
 
-sim_qrs_anchor = np.argmax(np.mean(np.abs(simulated_ecgs_12), axis=0))
-reference_beat, reference_t_ms, simulated_ecgs_12, simulated_t_ms = align_qrs_anchor(
-    reference_beat,
-    reference_t_ms,
-    reference_qrs_anchor,
-    simulated_ecgs_12,
-    simulated_t_ms,
-    sim_qrs_anchor,
-    fs=sim_freq,
-)
-scaled_simulated_ecgs_12, scale_factors_12, ref_amp_12, sim_amp_12 = scale_simulated_to_reference(
-    reference_ecg=reference_beat,
-    simulated_ecg=simulated_ecgs_12,
-    fs=sim_freq,
-    qrs_onset_idx=min(int(sim_qrs_anchor), reference_beat.shape[1] - 1),
-    qrs_window_ms=qrs_window_ms,
-    mode=scaling_mode,
-)
+    save_ecg_csv(clinical_12_csv, reference_t_ms, reference_beat, LEAD_NAMES_12)
+    save_ecg_csv_per_row(scaled_12_csv, simulated_t_ms, scaled_simulated_ecgs_12, LEAD_NAMES_12)
+    save_ecg_csv_per_row(clinical_12_csv, reference_t_ms, reference_beat, LEAD_NAMES_12)
 
-print_scaling_report(scale_factors_12, ref_amp_12, sim_amp_12, scaling_mode, LEAD_NAMES_12)
+    print(f'Saved clinical beat 12 leads CSV: {clinical_12_csv}')
+    print(f'Saved scaled simulated ECG 12 leads CSV: {scaled_12_csv}')
+    visualise_ecgs(
+        reference_ecg=reference_beat,
+        simulated_ecgs=scaled_simulated_ecgs_12,
+        simulated_t_ms=simulated_t_ms,
+        ref_t_ms=reference_t_ms,
+        lead_names=LEAD_NAMES_12,
+        casename=f'{casename} | PTB vs scaled simulation ({scaling_mode}) 12 leads',
+        ylim=None,
+        out_png=out_12_png,
+    )
+    out_12_png = os.path.join(sim_folder, f'{casename}_scaled_only_12leads.png')
+    visualise_ecgs(
+        reference_ecg=None,
+        simulated_ecgs=scaled_simulated_ecgs_12,
+        simulated_t_ms=simulated_t_ms,
+        ref_t_ms=None,
+        lead_names=LEAD_NAMES_12,
+        casename=f'{casename} | scaled simulation)',
+        ylim=None,
+        out_png=out_12_png,
+    )
 
-# Save and plot 12 leads
-clinical_12_csv = os.path.join('.', ptb_casename + '_ptb_clinical_beat_12leads.csv')
-scaled_12_csv = os.path.join(sim_folder, casename + '_scaled_simulated_ecg_12leads.csv')
-out_12_png = os.path.join(sim_folder, f'{casename}_norm1_scaled_to_{ptb_casename}_{scaling_mode}_12leads.png')
+    # Extract and save 8 leads
+    indices_8_leads = [LEAD_NAMES_12.index(l) for l in LEAD_NAMES_8]
+    reference_beat_8 = reference_beat[indices_8_leads, :]
+    scaled_simulated_ecgs_8 = scaled_simulated_ecgs_12[indices_8_leads, :]
 
-save_ecg_csv(clinical_12_csv, reference_t_ms, reference_beat, LEAD_NAMES_12)
-save_ecg_csv_per_row(scaled_12_csv, simulated_t_ms, scaled_simulated_ecgs_12, LEAD_NAMES_12)
-save_ecg_csv_per_row(clinical_12_csv, reference_t_ms, reference_beat, LEAD_NAMES_12)
+    clinical_csv = os.path.join('.', ptb_casename + '_ptb_clinical_beat.csv')
+    scaled_csv = os.path.join(sim_folder, casename + '_scaled_simulated_ecg.csv')
+    out_png = os.path.join(sim_folder, f'{casename}_scaled_to_{ptb_casename}_{scaling_mode}.png')
 
-print(f'Saved clinical beat 12 leads CSV: {clinical_12_csv}')
-print(f'Saved scaled simulated ECG 12 leads CSV: {scaled_12_csv}')
-visualise_ecgs(
-    reference_ecg=reference_beat,
-    simulated_ecgs=scaled_simulated_ecgs_12,
-    simulated_t_ms=simulated_t_ms,
-    ref_t_ms=reference_t_ms,
-    lead_names=LEAD_NAMES_12,
-    casename=f'{casename} | PTB vs scaled simulation ({scaling_mode}) 12 leads',
-    ylim=None,
-    out_png=out_12_png,
-)
+    save_ecg_csv(clinical_csv, reference_t_ms, reference_beat_8, LEAD_NAMES_8)
+    save_ecg_csv_per_row(scaled_csv, simulated_t_ms, scaled_simulated_ecgs_8, LEAD_NAMES_8)
+    save_ecg_csv_per_row(clinical_csv, reference_t_ms, reference_beat_8, LEAD_NAMES_8)
 
-# Extract and save 8 leads
-indices_8_leads = [LEAD_NAMES_12.index(l) for l in LEAD_NAMES_8]
-reference_beat_8 = reference_beat[indices_8_leads, :]
-scaled_simulated_ecgs_8 = scaled_simulated_ecgs_12[indices_8_leads, :]
-
-clinical_csv = os.path.join('.', ptb_casename + '_ptb_clinical_beat.csv')
-scaled_csv = os.path.join(sim_folder, casename + '_scaled_simulated_ecg.csv')
-out_png = os.path.join(sim_folder, f'{casename}_norm1_scaled_to_{ptb_casename}_{scaling_mode}.png')
-
-save_ecg_csv(clinical_csv, reference_t_ms, reference_beat_8, LEAD_NAMES_8)
-save_ecg_csv_per_row(scaled_csv, simulated_t_ms, scaled_simulated_ecgs_8, LEAD_NAMES_8)
-save_ecg_csv_per_row(clinical_csv, reference_t_ms, reference_beat_8, LEAD_NAMES_8)
-
-print(f'Saved clinical beat CSV: {clinical_csv}')
-print(f'Saved scaled simulated ECG CSV: {scaled_csv}')
-visualise_ecgs(
-    reference_ecg=reference_beat_8,
-    simulated_ecgs=scaled_simulated_ecgs_8,
-    simulated_t_ms=simulated_t_ms,
-    ref_t_ms=reference_t_ms,
-    lead_names=LEAD_NAMES_8,
-    casename=f'{casename} | PTB vs scaled simulation ({scaling_mode})',
-    ylim=None,
-    out_png=out_png,
-)
+    print(f'Saved clinical beat CSV: {clinical_csv}')
+    print(f'Saved scaled simulated ECG CSV: {scaled_csv}')
+    #save comparison between simulated scaled ECG vs PTB ECG
+    visualise_ecgs(
+        reference_ecg=reference_beat_8,
+        simulated_ecgs=scaled_simulated_ecgs_8,
+        simulated_t_ms=simulated_t_ms,
+        ref_t_ms=reference_t_ms,
+        lead_names=LEAD_NAMES_8,
+        casename=f'{casename} | PTB vs scaled simulation ({scaling_mode})',
+        ylim=None,
+        out_png=out_png,
+    )
+    #save only simulated scaled ECG
+    out_png = os.path.join(sim_folder, f'{casename}_scaled_only.png')
+    visualise_ecgs(
+        reference_ecg=None,
+        simulated_ecgs=scaled_simulated_ecgs_8,
+        simulated_t_ms=simulated_t_ms,
+        ref_t_ms=None,
+        lead_names=LEAD_NAMES_8,
+        casename=f'{casename} | scaled simulation)',
+        ylim=None,
+        out_png=out_png,
+    )

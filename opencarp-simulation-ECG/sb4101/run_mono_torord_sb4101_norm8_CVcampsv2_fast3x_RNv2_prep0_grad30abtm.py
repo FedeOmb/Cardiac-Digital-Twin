@@ -10,22 +10,22 @@ TOMEK_LIB = '../tomek-model/Tomek_editv3.so'
 def parser():
     parser = tools.standard_parser()
     parser.add_argument('--meshname',
-                        default='./sb3901_meshes/sb3901_500um_taggedv2_fastendo',
+                        default='./sb4101_meshes/sb4101_500um_tagged_fastendo',
                         help='Percorso base della mesh per openCARP')
     parser.add_argument('--vtx-file',
-                        default='./sb3901_rootnodes/sb3901_fine500um_candidate_root_nodes.vtx',
+                        default='./sb4101_rootnodes_v2/sb4101_fine500um_candidate_root_nodes.vtx',
                         help='File contenente gli indici dei nodi root (candidate_root_nodes.vtx)')
     parser.add_argument('--times-file',
-                        default='./sb3901_rootnodes/sb3901_candidate_root_nodes_times.csv',
+                        default='./sb4101_rootnodes_v2/sb4101_candidate_root_nodes_times.csv',
                         help='File CSV contenente i tempi di attivazione (candidate_root_nodes_times.csv)')
     parser.add_argument('--tend',
-                        type=float, default=600.0,
+                        type=float, default=500.0,
                         help='Durata della simulazione in ms')
     parser.add_argument('--inputdir',
                         default='.',
                         help='Directory di input')                        
     parser.add_argument('--outdir',
-                        default='./test_monodomain_torord_sb3901_norm2_fast_latcalc',
+                        default='./test_mono_torord_sb4101_norm8_CVcampsv2_fast3x_RNv2_prep0_grad30abtm',
                         help='Directory di output (simID)')
     return parser
 
@@ -60,7 +60,7 @@ def run(args, job):
     # ==========================================
     # 2. Generazione dei file .vtx per gli stimoli
     # ==========================================
-    vtx_dir = os.path.join(args.outdir, 'sb3901_rootnodes_vtx')
+    vtx_dir = os.path.join(args.outdir, 'sb4101_rootnodes_vtx')
     os.makedirs(vtx_dir, exist_ok=True)
     PTS_PATH = args.meshname+'.pts'
     stim_cmds = ['-num_stim', len(nodes)]
@@ -80,7 +80,7 @@ def run(args, job):
             f'-stim[{i}].ptcl.duration', 4.0, # 4ms da paper camps
             f'-stim[{i}].ptcl.npls', 1,
             f'-stim[{i}].ptcl.start', float(t),
-            f'-stim[{i}].pulse.strength', 50,  # 50uA/cm2 convertito da paper camps 53 pA/pF x 100 pF/cm2
+            f'-stim[{i}].pulse.strength', 53,  # 50uA/cm2 convertito da paper camps 53 pA/pF x 100 pF/cm2
             f'-stim[{i}].crct.type', 0,
         ]
 
@@ -102,17 +102,17 @@ def run(args, job):
         '-mass_lumping', 1,
        # '-pstrat', 1,
         '-output_level', 5,
-        '-phie_rec_ptf', os.path.join(args.inputdir, 'sb3901_meshes', 'sb3901_electrodesum'),
-        '-phie_recovery_file', 'sb3901_phie_recovery_norm2_prep_fast',
+        '-phie_rec_ptf', os.path.join(args.inputdir, 'sb4101_meshes', 'sb4101_electrodes_um'),
+        '-phie_recovery_file', 'sb4101_phie_recovery',
     ]
 
-    # cmd += [
-    #  '-prepacing_beats',   250,
-    #  '-prepacing_bcl',     1000.0,
-    #  '-prepacing_stimdur', 4.0,    # coerente con il tuo protocollo tissutale
-    #  '-prepacing_stimstr', 60.0,   # unità µA/µF, default  per single-cell
-    #  '-prepacing_lats', os.path.join(args.inputdir, 'sb3901_meshes', 'sb3901_latmap_zero.dat'),
-    # ]
+    cmd += [
+      '-prepacing_beats',   800,
+      '-prepacing_bcl',     1000.0,
+      '-prepacing_stimdur', 4.0,    # coerente con il tuo protocollo tissutale
+      '-prepacing_stimstr', 60.0,   # unità µA/µF, default  per single-cell
+      '-prepacing_lats', os.path.join(args.inputdir, 'sb4101_meshes', 'sb4101_latmap_zero.dat'),
+    ]
 # Aggiungi queste righe per chiedere a openCARP di calcolare i LAT
     cmd += [
         '-num_LATs', 1,
@@ -136,16 +136,16 @@ def run(args, job):
         '-gregion[0].ID[0]', 1,
         '-gregion[0].ID[1]', 2,
         '-gregion[0].ID[2]', 3,
-        '-gregion[0].g_il', 0.2615, #unità misura S/m calibrati con tunecv per CV 0.65 m/s
-        '-gregion[0].g_it', 0.1093, # calibrata  per CV 0.36 m/s
-        '-gregion[0].g_in', 0.1661, # calibrata  per CV 0.48 m/s
+        '-gregion[0].g_il', 0.3813, #unità misura S/m calibrati con tunecv per CV 0.65 m/s
+        '-gregion[0].g_it', 0.1153, # calibrata  per CV 0.36 m/s
+        '-gregion[0].g_in', 0.2524, # calibrata  per CV 0.48 m/s
 
         '-gregion[1].name', 'FastEndo',
         '-gregion[1].num_IDs', 1,
         '-gregion[1].ID[0]', 4,
-        '-gregion[1].g_il', 0.2615 * 4.0,
-        '-gregion[1].g_it', 0.1093 * 4.0, 
-        '-gregion[1].g_in', 0.1661 * 4.0,
+        '-gregion[1].g_il', 0.3813 * 3.0,
+        '-gregion[1].g_it', 0.1153 * 3.0, 
+        '-gregion[1].g_in', 0.2524 * 3.0,
         #'-gregion[1].g_mult', 5.0,
     ]
 
@@ -165,17 +165,17 @@ def run(args, job):
         '-imp_region[1].num_IDs', 1,
         '-imp_region[1].ID[0]', 2,      #tag mid miocardio 2
         '-imp_region[1].im', 'Tomek_editv3',
-        '-imp_region[1].im_param', 'flags=EPI',
+        '-imp_region[1].im_param', 'flags=MCELL',
 
         '-imp_region[2].name', 'Epicardio',
         '-imp_region[2].num_IDs', 1,
         '-imp_region[2].ID[0]', 1,      #tag epicardio 1
         '-imp_region[2].im', 'Tomek_editv3',
         '-imp_region[2].im_param', 'flags=EPI',
-        #'-num_adjustments', 1,   
-        #'-adjustment[0].variable', 'Tomek_edit.GKs_b',
-        #'-adjustment[0].file', './sb3901_meshes/gks_tomek_gradient.adj',
-        #'-adjustment[0].dump', 1,
+        '-num_adjustments', 1,   
+        '-adjustment[0].variable', 'Tomek_editv3.GKs_b',
+        '-adjustment[0].file', './sb4101_meshes/sb4101_gks_gradient30abtm.adj',
+        '-adjustment[0].dump', 1,
     ]
     # Phys Regions (Dominio Intracellulare Globale)
     cmd += [

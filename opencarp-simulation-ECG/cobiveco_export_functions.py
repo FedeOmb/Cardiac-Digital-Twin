@@ -361,12 +361,11 @@ if __name__ == "__main__":
     output_dir = os.path.join(geometric_data_dir, subject_name, subject_name + '_' + target_resolution)
     vtp_filename = subject_name+'_1500cm.vtp'
     vtp_path = os.path.join(input_dir, vtp_filename)
-   # save_endo_nodes_to_csv(subject_name, geometric_data_dir, target_resolution, vtu_filename, lv_tag=3, rv_tag=2, tag_array_name='class')
 
     TAG_LV_ENDO = 3  # Valore per Endocardio LV
     TAG_RV_ENDO = 4  # Valore per Endocardio RV
     TAG_ARRAY_NAME = 'class'
-'''
+
     extract_ids_from_tagged_vtp(
         vtu_path=vtu_path,
         vtp_path=vtp_path,
@@ -382,4 +381,4 @@ if __name__ == "__main__":
         target_tag_value=TAG_RV_ENDO,
         output_csv=os.path.join(output_dir, subject_name + '_' + target_resolution + '_boundarynodefield' + '_rvendo' + '.csv')
     )
-'''
+

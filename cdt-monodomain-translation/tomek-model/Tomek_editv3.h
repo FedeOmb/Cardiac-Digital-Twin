@@ -19,67 +19,96 @@
 
 /*
 *
-
+*  Authors: Jakub Tomek, Alfonso Bueno-Orovio, Elisa Passini, Xin Zhou, Ana Minchole, Oliver Britton, Chiara Bartolucci, Stefano Severi, Alvin Shrier, Laszlo Virag, Andras Varro, Blanca Rodriguez
+*  Year: 2019
+*  Title: Development, calibration, and validation of a novel human ventricular myocyte model in health, disease, and drug block
+*  Journal: eLife
+*  DOI: 10.7554/eLife.48890
+*  Comment: 
 *
 */
         
 //// HEADER GUARD ///////////////////////////
 // If automatically generated, keep above
 // comment as first line in file.
-#ifndef __TORORD_FKATP_ENDO_MID_H__
-#define __TORORD_FKATP_ENDO_MID_H__
+#ifndef __TOMEK_EDITV3_H__
+#define __TOMEK_EDITV3_H__
 //// HEADER GUARD ///////////////////////////
 // DO NOT EDIT THIS SOURCE CODE FILE
 // ANY CHANGES TO THIS FILE WILL BE OVERWRITTEN!!!!
 
 #include "ION_IF.h"
 
-#if !(defined(TORORD_FKATP_ENDO_MID_CPU_GENERATED)    || defined(TORORD_FKATP_ENDO_MID_MLIR_CPU_GENERATED)    || defined(TORORD_FKATP_ENDO_MID_MLIR_ROCM_GENERATED)    || defined(TORORD_FKATP_ENDO_MID_MLIR_CUDA_GENERATED))
+#if !(defined(TOMEK_EDITV3_CPU_GENERATED)    || defined(TOMEK_EDITV3_MLIR_CPU_GENERATED)    || defined(TOMEK_EDITV3_MLIR_ROCM_GENERATED)    || defined(TOMEK_EDITV3_MLIR_CUDA_GENERATED))
 #ifdef MLIR_CPU_GENERATED
-#define TORORD_FKATP_ENDO_MID_MLIR_CPU_GENERATED
+#define TOMEK_EDITV3_MLIR_CPU_GENERATED
 #endif
 
 #ifdef MLIR_ROCM_GENERATED
-#define TORORD_FKATP_ENDO_MID_MLIR_ROCM_GENERATED
+#define TOMEK_EDITV3_MLIR_ROCM_GENERATED
 #endif
 
 #ifdef MLIR_CUDA_GENERATED
-#define TORORD_FKATP_ENDO_MID_MLIR_CUDA_GENERATED
+#define TOMEK_EDITV3_MLIR_CUDA_GENERATED
 #endif
 #endif
 
 #ifdef CPU_GENERATED
-#define TORORD_FKATP_ENDO_MID_CPU_GENERATED
+#define TOMEK_EDITV3_CPU_GENERATED
 #endif
 
 namespace limpet {
 
-#define ToRORd_fkatp_endo_mid_REQDAT Vm_DATA_FLAG
-#define ToRORd_fkatp_endo_mid_MODDAT Iion_DATA_FLAG
+#define Tomek_editv3_REQDAT Vm_DATA_FLAG
+#define Tomek_editv3_MODDAT Iion_DATA_FLAG
 
-struct ToRORd_fkatp_endo_mid_Params {
+struct Tomek_editv3_Params {
+    GlobalData_t CaMKo;
+    GlobalData_t Cajsr_half;
+    GlobalData_t GK1_b;
+    GlobalData_t GKr_b;
+    GlobalData_t GKs_b;
+    GlobalData_t GNaL_b;
+    GlobalData_t Gncx_b;
+    GlobalData_t Gto_b;
+    GlobalData_t Jrel_b;
+    GlobalData_t Jup_b;
+    GlobalData_t PNaK_b;
+    GlobalData_t thL;
+    GlobalData_t tjCa;
+    
+    // UNMODIFIABLE BELOW HERE
+    GlobalData_t celltype;
+    char* flags;
 
 };
+static const char* Tomek_editv3_flags = "ENDO|EPI|MCELL";
 
-struct ToRORd_fkatp_endo_mid_state {
+
+struct Tomek_editv3_state {
     GlobalData_t C1;
     GlobalData_t C2;
     GlobalData_t C3;
     GlobalData_t CaMKt;
+    GlobalData_t Cai;
+    GlobalData_t Cajsr;
+    GlobalData_t Cansr;
+    GlobalData_t Cass;
+    GlobalData_t GKs_b;
     GlobalData_t I;
     GlobalData_t Jrel_np;
     GlobalData_t Jrel_p;
+    GlobalData_t Ki;
+    GlobalData_t Kss;
+    GlobalData_t Nai;
+    GlobalData_t Nass;
     GlobalData_t O;
     GlobalData_t a;
     GlobalData_t ap;
-    GlobalData_t cai;
-    GlobalData_t cajsr;
-    GlobalData_t cansr;
-    GlobalData_t cass;
     GlobalData_t d;
-    GlobalData_t fcaf;
-    GlobalData_t fcafp;
-    GlobalData_t fcas;
+    GlobalData_t fCaf;
+    GlobalData_t fCafp;
+    GlobalData_t fCas;
     GlobalData_t ff;
     GlobalData_t ffp;
     GlobalData_t fs;
@@ -92,71 +121,24 @@ struct ToRORd_fkatp_endo_mid_state {
     GlobalData_t iS;
     GlobalData_t iSp;
     GlobalData_t j;
-    GlobalData_t jca;
+    GlobalData_t jCa;
     GlobalData_t jp;
-    GlobalData_t ki;
-    GlobalData_t kss;
     GlobalData_t m;
     GlobalData_t mL;
-    GlobalData_t nai;
-    GlobalData_t nass;
-    GlobalData_t nca_i;
-    GlobalData_t nca_ss;
+    GlobalData_t nCa_i;
+    GlobalData_t nCa_ss;
     GlobalData_t xs1;
     GlobalData_t xs2;
 
 };
 
-    struct ToRORd_fkatp_endo_mid_Regional_Constants_cpu {
-                    
-    char dummy;
-
-    };
-
-    struct ToRORd_fkatp_endo_mid_Nodal_Req_cpu {
-    
-    GlobalData_t v;
-
-    };
-
-    struct ToRORd_fkatp_endo_mid_Private_cpu {
-      using nodal_req_type = ToRORd_fkatp_endo_mid_Nodal_Req_cpu;
-      using regional_constants_type = ToRORd_fkatp_endo_mid_Regional_Constants_cpu;
-      IonIfBase *IF;
-      int   node_number;
-      void* cvode_mem;
-      void* sunctx_ptr;
-      bool  trace_init;
-      regional_constants_type rc;
-      nodal_req_type nr;
-    };
-    
-
-//Printing out the Rosenbrock declarations
-extern "C" {
-
-void ToRORd_fkatp_endo_mid_rosenbrock_f_cpu(float*, float*, void*);
-
-void ToRORd_fkatp_endo_mid_rosenbrock_jacobian_cpu(float**, float*, void*, int);
-
-void rbStepX ( float *X,
-                void (*calcDX) (float*,  float*, void*),
-                void (*calcJ)  (float**, float*, void*, int ),
-                void *params, float h, int N );
-}
-
-class ToRORd_fkatp_endo_midIonType : public IonType {
+class Tomek_editv3IonType : public IonType {
 public:
-    using IonIfDerived = IonIf<ToRORd_fkatp_endo_midIonType>;
-    using params_type = ToRORd_fkatp_endo_mid_Params;
-    using state_type = ToRORd_fkatp_endo_mid_state;
+    using IonIfDerived = IonIf<Tomek_editv3IonType>;
+    using params_type = Tomek_editv3_Params;
+    using state_type = Tomek_editv3_state;
 
-    using private_type = ToRORd_fkatp_endo_mid_Private_cpu;
-    #ifdef TORORD_FKATP_ENDO_MID_MLIR_CPU_GENERATED
-    using private_type_vector = ToRORd_fkatp_endo_mid_Private_mlir_cpu;
-    #endif
-
-    ToRORd_fkatp_endo_midIonType(bool plugin);
+    Tomek_editv3IonType(bool plugin);
 
     size_t params_size() const override;
 
@@ -206,18 +188,18 @@ public:
 // This needs to be extern C in order to be linked correctly with the MLIR code
 extern "C" {
 
-//void compute_ToRORd_fkatp_endo_mid(int, int, IonIfBase&, GlobalData_t**);
-#ifdef TORORD_FKATP_ENDO_MID_CPU_GENERATED
-void compute_ToRORd_fkatp_endo_mid_cpu(int, int, IonIfBase&, GlobalData_t**);
+//void compute_Tomek_editv3(int, int, IonIfBase&, GlobalData_t**);
+#ifdef TOMEK_EDITV3_CPU_GENERATED
+void compute_Tomek_editv3_cpu(int, int, IonIfBase&, GlobalData_t**);
 #endif
-#ifdef TORORD_FKATP_ENDO_MID_MLIR_CPU_GENERATED
-void compute_ToRORd_fkatp_endo_mid_mlir_cpu(int, int, IonIfBase&, GlobalData_t**);
+#ifdef TOMEK_EDITV3_MLIR_CPU_GENERATED
+void compute_Tomek_editv3_mlir_cpu(int, int, IonIfBase&, GlobalData_t**);
 #endif
-#ifdef TORORD_FKATP_ENDO_MID_MLIR_ROCM_GENERATED
-void compute_ToRORd_fkatp_endo_mid_mlir_gpu_rocm(int, int, IonIfBase&, GlobalData_t**);
+#ifdef TOMEK_EDITV3_MLIR_ROCM_GENERATED
+void compute_Tomek_editv3_mlir_gpu_rocm(int, int, IonIfBase&, GlobalData_t**);
 #endif
-#ifdef TORORD_FKATP_ENDO_MID_MLIR_CUDA_GENERATED
-void compute_ToRORd_fkatp_endo_mid_mlir_gpu_cuda(int, int, IonIfBase&, GlobalData_t**);
+#ifdef TOMEK_EDITV3_MLIR_CUDA_GENERATED
+void compute_Tomek_editv3_mlir_gpu_cuda(int, int, IonIfBase&, GlobalData_t**);
 #endif
 
 }

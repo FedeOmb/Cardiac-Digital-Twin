@@ -752,18 +752,29 @@ class PurkinjeSystemVC(DjikstraConductionSystemVC):
     def get_lv_rv_selected_purkinje_edge(self, root_node_meta_index):
         """This function assumes that the root nodes are always assembled as lv-rv"""
         # Get purkinje sub-tree
+        print("root_node_meta_index ",root_node_meta_index)
+        print("lv_nb_root_node", self.nb_lv_root_node)
         lv_index = np.nonzero(root_node_meta_index[:self.nb_lv_root_node])[0]
+        print("lv_index ",lv_index)
         lv_pk_path_to_lv_root_node = index_list(list=self.lv_pk_path_to_candidate_lv_root_node,
                                                 index=lv_index)
+        print("lv_pk_path_to_lv_root_node ",lv_pk_path_to_lv_root_node)
         # print('root_node_meta_index[self.nb_lv_root_node:] ', root_node_meta_bool_index[self.nb_lv_root_node:])
         rv_index = np.nonzero(root_node_meta_index[self.nb_lv_root_node:])[0]
+        print("rv_index ",lv_index)
         rv_pk_path_to_rv_root_node = index_list(list=self.rv_pk_path_to_candidate_rv_root_node,
                                                 index=rv_index)
         # From path to edge
-        # print('lv_pk_path_to_lv_root_node ', lv_pk_path_to_lv_root_node)
-        lv_pk_edge = get_edge_from_path_list(path_list=lv_pk_path_to_lv_root_node)
-        # print('rv_pk_path_to_rv_root_node ', rv_pk_path_to_rv_root_node)
-        rv_pk_edge = get_edge_from_path_list(path_list=rv_pk_path_to_rv_root_node)
+        print('rv_pk_path_to_lv_root_node ', rv_pk_path_to_rv_root_node)
+        if(len(lv_pk_path_to_lv_root_node) > 0):
+            lv_pk_edge = get_edge_from_path_list(path_list=lv_pk_path_to_lv_root_node)
+        else:
+            lv_pk_edge = np.empty((0, 2), dtype=np.int32)
+            # print('rv_pk_path_to_rv_root_node ', rv_pk_path_to_rv_root_node)
+        if(len(rv_pk_path_to_rv_root_node) > 0):
+            rv_pk_edge = get_edge_from_path_list(path_list=rv_pk_path_to_rv_root_node)
+        else:
+            rv_pk_edge = np.empty((0, 2), dtype=np.int32)
         # pk_edge = np.concatenate((lv_pk_edge, rv_pk_edge), axis=0)
         # return np.unique(pk_edge, axis=0)
         return lv_pk_edge, rv_pk_edge

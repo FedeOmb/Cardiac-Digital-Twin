@@ -968,13 +968,13 @@ def F_cobiveco_scar_3d(mesh, node_rnd, scar_rad, peri_rad, scar_center_tv):
     mesh['xyzIds'] = 1 * xyzscar + 2 * xyzperi
     mesh['triIds'] = 1 * triscar + 2 * triperi
 
-
+'''
 # TODO: From Lei: Check if there is a newer version available
 def generate_scar():
     import os
     import numpy as np
 
-    foldname = 'E:\2022_ECG_inference\dataset_MI_inference\data_cobiveco_mesh\\'
+    foldname = "E:\2022_ECG_inference\dataset_MI_inference\data_cobiveco_mesh\\"
     foldname_new = foldname.replace('data_cobiveco_mesh', 'data_cobiveco_scar')
 
     a = [f.name for f in os.scandir(foldname) if f.name.startswith('1')]
@@ -1019,7 +1019,7 @@ def generate_scar():
                 MI_type = 'A4'
                 cobiveco_coord = [1, 0, 4 / 7, 2 / 12]
                 # scar_center = np.
-
+'''
 
 def get_edges_for_node_indexes(node_index, edge):
     # Select edges that only include node_index.

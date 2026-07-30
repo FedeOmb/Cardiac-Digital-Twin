@@ -530,9 +530,12 @@ def translate_QRS_pers_to_opencarp(anatomy_subject_name, ecg_subject_name, **kwa
     # Interpolate nodefield from coarse to fine
     fine_nodes_xyz_um = raw_geometry_point_cloud.get_node_xyz()
     fine_nodes_xyz_cm = fine_nodes_xyz_um * 1e-4  #scaling fine coordinates from um to cm for mapping
-
-    unprocessed_node_mapping_index = map_indexes(points_to_map_xyz=fine_nodes_xyz_cm,
-                                                 reference_points_xyz=geometry.get_node_xyz())
+    #mapping for root nodes
+    coarse_to_fine_node_mapping_index = map_indexes(points_to_map_xyz=geometry.get_node_xyz(),
+                                                reference_points_xyz=fine_nodes_xyz_cm)
+    #map for biomarkers
+    fine_to_coarse_node_mapping_index = map_indexes(points_to_map_xyz=fine_nodes_xyz_cm,
+                                                reference_points_xyz=geometry.get_node_xyz())
     # ####################################################################################################################
     # Step 16: Iterate for all particles chosen to represent the uncertainty of the inference.
     print('16: Iterate for all particles chosen to represent the uncertainty of the inference.')
@@ -558,7 +561,7 @@ def translate_QRS_pers_to_opencarp(anatomy_subject_name, ecg_subject_name, **kwa
         # Save biomarkers to allow translation to MonoAlg3D and Alya
         print('Saving biomarkers for uncertainty_i ', uncertainty_i)
         node_biomarker = remap_pandas_from_row_index(df=unprocessed_node_biomarker,
-                                                     row_index=unprocessed_node_mapping_index)
+                                                     row_index=fine_to_coarse_node_mapping_index)
         save_pandas(df=node_biomarker, filename=uncertainty_biomarker_result_file_name)
         print('Saved: ', uncertainty_biomarker_result_file_name)
         # PURKINJE
@@ -573,8 +576,8 @@ def translate_QRS_pers_to_opencarp(anatomy_subject_name, ecg_subject_name, **kwa
         print("rv_pk_edge",rv_pk_edge)
         node_xyz = geometry.get_node_xyz()
         # mapping to fine mesh
-        lv_pk_edge_mapped_fine = unprocessed_node_mapping_index[lv_pk_edge]
-        rv_pk_edge_mapped_fine = unprocessed_node_mapping_index[rv_pk_edge]
+        lv_pk_edge_mapped_fine = coarse_to_fine_node_mapping_index[lv_pk_edge]
+        rv_pk_edge_mapped_fine = coarse_to_fine_node_mapping_index[rv_pk_edge]
         # LV
         if(lv_pk_edge.size > 0):
             write_purkinje_vtk(edge_list=lv_pk_edge,
@@ -599,8 +602,8 @@ def translate_QRS_pers_to_opencarp(anatomy_subject_name, ecg_subject_name, **kwa
             root_node_meta_index=root_node_meta_index)
         print('lv_selected_root_node_index on coarse mesh', lv_selected_root_node_index)
         print('rv_selected_root_node_index on coarse mesh', rv_selected_root_node_index)
-        lv_selected_root_node_index_fine = unprocessed_node_mapping_index[lv_selected_root_node_index]
-        rv_selected_root_node_index_fine = unprocessed_node_mapping_index[rv_selected_root_node_index]
+        lv_selected_root_node_index_fine = coarse_to_fine_node_mapping_index[lv_selected_root_node_index]
+        rv_selected_root_node_index_fine = coarse_to_fine_node_mapping_index[rv_selected_root_node_index]
         print('lv_selected_root_node_index on fine mesh', lv_selected_root_node_index_fine)
         print('rv_selected_root_node_index on fine mesh', rv_selected_root_node_index_fine)        
         root_node_field_name_list = ['x', 'y', 'z', 'd', 't'] + vc_name_list

@@ -74,9 +74,9 @@ if __name__ == '__main__':
     ####################################################################################################################
     # Step 1: Define paths and other environment variables.
     # General settings:
-    inference_resolution = 'coarse'
-    for_monodomain_translation_resolution = 'hex500'
-    monodomain_simulation_resolution = 'hex500'
+    inference_resolution = 'coarse1500cm'
+    for_monodomain_translation_resolution = 'fine500um'
+    monodomain_simulation_resolution = 'fine500um'
     verbose = True
     # Input Paths:
     data_dir = path_dict["data_path"]
@@ -93,6 +93,7 @@ if __name__ == '__main__':
         heart_rate = 48
     elif anatomy_subject_name == 'DTI032':  # Subject 3
         heart_rate = 74
+    heart_rate = 74
     cycle_length = get_cycle_length(heart_rate=heart_rate)
     cycle_length_str = str(int(cycle_length))
     ep_model_twave_name = 'GKs5_GKr0.5_tjca60_CL_' + cycle_length_str
@@ -108,7 +109,7 @@ if __name__ == '__main__':
     results_dir_part_twave = results_dir_part + 'twave_' + gradient_ion_channel_str + '_' + ep_model_twave_name + '/'
     assert os.path.exists(results_dir_part_twave)  # Path should already exist from running the Twave inference
     # Use date to name the result folder to preserve some history of results
-    current_month_text = 'Jun'#datetime.now().strftime('%h')  # e.g., Feb
+    current_month_text = datetime.now().strftime('%h')  # e.g., Feb
     current_year_full = datetime.now().strftime('%Y')  # e.g., 2024
     date_str = current_month_text + '_' + current_year_full
     results_dir_twave = results_dir_part_twave + date_str + '_fixed_filter/'

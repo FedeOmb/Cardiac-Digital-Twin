@@ -136,11 +136,9 @@ def translate_Twave_pers_to_opencarp(anatomy_subject_name, ecg_subject_name, **k
     parameter_result_file_name = results_dir_twave + anatomy_subject_name + '_' + inference_resolution + '_' + result_tag + '_parameter_population.csv'
     # Output Paths:
     # Uncertainty Translation to Monodomain
-    for_monodomain_dir = results_dir_twave + 'for_translation_to_monodomain_recalculate/'
+    for_monodomain_dir = results_dir_twave + 'for_translation_to_monodomain/'
     if not os.path.exists(for_monodomain_dir):
         os.mkdir(for_monodomain_dir)
-    for_monodomain_biomarker_result_file_name_start = for_monodomain_dir + anatomy_subject_name + '_' \
-                                                        + monodomain_resolution + '_nodefield_' + result_tag + '-biomarker_'
     #for_monodomain_biomarker_result_file_name_end = '.csv'
     for_monodomain_parameter_population_file_name = for_monodomain_dir + anatomy_subject_name + '_' \
                                                     + inference_resolution + '_' + result_tag + '_selected_parameter_population.csv'
@@ -675,7 +673,7 @@ def translate_Twave_pers_to_opencarp(anatomy_subject_name, ecg_subject_name, **k
                                                 + get_nan_value()
     # if True:
     #     for uncertainty_i in range(uncertainty_parameter_population.shape[0]):
-    threadsNum = multiprocessing.cpu_count()
+    threadsNum = min(4, multiprocessing.cpu_count())
     with pymp.Parallel(min(threadsNum, uncertainty_parameter_population.shape[0])) as p1:
         for uncertainty_i in p1.range(uncertainty_parameter_population.shape[0]):
             p1.print('uncertainty_i ', uncertainty_i)
@@ -688,6 +686,9 @@ def translate_Twave_pers_to_opencarp(anatomy_subject_name, ecg_subject_name, **k
             current_translation_dir = translation_dir_tag + iteration_str_tag + '/'
             if not os.path.exists(current_translation_dir):
                 os.mkdir(current_translation_dir)
+
+            for_monodomain_biomarker_result_file_name_start = current_translation_dir + anatomy_subject_name + '_' \
+                                                        + monodomain_resolution + '_nodefield_' + result_tag + '-biomarker_'
 
             # BIOMARKERS
             # Calculate the effect of uncertainty in the biomarkers and save them
@@ -758,6 +759,9 @@ def translate_Twave_pers_to_opencarp(anatomy_subject_name, ecg_subject_name, **k
 
                 # SAVE LAT and REPOL comparison
                 # Save non-time depenedent fields for comparison
+                current_translation_dir_ensight = current_translation_dir + 'ensight' + '/'
+                if not os.path.exists(current_translation_dir_ensight):
+                    os.makedirs(current_translation_dir_ensight)
                 eikonal_field_tag = 'RE_'
                 write_geometry_to_ensight_with_fields(geometry=geometry, node_field_list=[
                     unprocessed_node_biomarker[activation_time_map_biomarker_name],
@@ -778,13 +782,13 @@ def translate_Twave_pers_to_opencarp(anatomy_subject_name, ecg_subject_name, **k
                 ],
                 subject_name=anatomy_subject_name + '_' + inference_resolution + '_TRANSLATION',
                 verbose=verbose,
-                visualisation_dir=current_translation_dir)
+                visualisation_dir=current_translation_dir_ensight)
 
                 # VM translation
                 unprocessed_node_vm = uncertainty_population_vm[uncertainty_i, :, :]
                 ## Correct the VMs using the new LAT start - This will enable generating aligned ECGs and REPOLs
                 unprocessed_node_vm = unprocessed_node_vm[:, earliest_activation_time:]
-                export_ensight_timeseries_case(dir=current_translation_dir,
+                export_ensight_timeseries_case(dir=current_translation_dir_ensight,
                                                 casename=anatomy_subject_name + '_' + inference_resolution + '_simulation',
                                                 dataname_list=['vm'],
                                                 vm_list=[unprocessed_node_vm], dt=1. / frequency,

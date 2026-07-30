@@ -735,16 +735,25 @@ def get_keys_from_pandas(df):
 def get_pandas_from_value(df, key, value):
     return df.loc[df[key] == value]
 
+#OLD FUNCTION: memory inefficient
+# def remap_pandas_from_row_index(df, row_index):
+#     new_df_list = []
+#     # Populate pandas dataframe
+#     for new_index in range(0, row_index.shape[0]):
+#         row_df = initialise_pandas_dataframe(get_pandas_from_value(df=df, key=get_row_id_name(), value=row_index[new_index]))
+#         row_df[get_row_id_name()] = new_index
+#         new_df_list.append(row_df)
+#     return pd.concat(new_df_list, ignore_index=True)
 
+#NEW FUNCTION using pandas vetorial indexing
 def remap_pandas_from_row_index(df, row_index):
-    new_df_list = []
-    # Populate pandas dataframe
-    for new_index in range(0, row_index.shape[0]):
-        row_df = initialise_pandas_dataframe(get_pandas_from_value(df=df, key=get_row_id_name(), value=row_index[new_index]))
-        row_df[get_row_id_name()] = new_index
-        new_df_list.append(row_df)
-    return pd.concat(new_df_list, ignore_index=True)
-
+    mapped_df = df.iloc[row_index].copy()
+    mapped_df = mapped_df.reset_index(drop=True)
+    
+    row_id_name = get_row_id_name()
+    mapped_df[row_id_name] = np.arange(len(mapped_df))
+    
+    return mapped_df
 
 def remove_nan_and_make_list_of_array(mat):
     list_of_array = []
@@ -771,8 +780,10 @@ def get_edge_from_path_list(path_list):
     edge_list = []
     for path in path_list:
         edge_list_part = get_edge_list_from_path(path)
-        if not(edge_list_part.size == 0):     # Check if array is NOT empty
+        if edge_list_part.size != 0:
             edge_list.append(edge_list_part)
+    if len(edge_list) == 0:     #fix per evitare che un
+        return np.empty((0, 2), dtype=int)
     edge = np.concatenate(edge_list, axis=0)
     return np.unique(edge, axis=0)
 

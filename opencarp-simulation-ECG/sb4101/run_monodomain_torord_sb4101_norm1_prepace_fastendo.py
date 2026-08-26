@@ -215,7 +215,7 @@ def run(args, job):
 
     # Aggiunta configurazione Stimoli Dinamici all'esecuzione
     cmd += stim_cmds
-
+    cmd += ['-ginkgo_exec', 'cuda']
     # 4. Esecuzione simulazione openCARP
     job.carp(cmd)
 

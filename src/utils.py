@@ -476,7 +476,7 @@ vc_range_error_tolerance = 0.001
 vc_ab_name = 'ab'
 vc_ranges[vc_ab_name] = [0., 1.]
 # apex-to-base - cut at base (Cobiveco) - apex=0, base=1., flat-basal-plane<=1, valves<0 - No valves
-vc_ab_cut_name = 'ab_cut'
+vc_ab_cut_name = 'ab'
 vc_ranges[vc_ab_cut_name] = [0., 1.]
 # posterior-to-anterior (Projection) - posterior=0, anterior=1
 vc_aprt_name = 'aprt'

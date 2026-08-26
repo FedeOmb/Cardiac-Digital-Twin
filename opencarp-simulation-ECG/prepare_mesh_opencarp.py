@@ -22,9 +22,12 @@ if __name__ == "__main__":
 
     # Esempio di scaling (se necessario)
     geometric_data_dir = os.path.join('..',"cardiac-data","meta_data","geometric_data")
-    subject_name = 'sb4201'
+    subject_name = 'sb3101'
+    folder_suffix = ''
+    subject_folder_name = subject_name + folder_suffix
+    subject_dir = os.path.join(geometric_data_dir, subject_folder_name)
    # input_filename = 'sb301_coarse1500_cmcoord.vtu'
-    sim_folder = os.path.join(".", subject_name)
+    sim_folder = os.path.join(".", subject_folder_name)
     sim_meshes_folder = os.path.join(sim_folder, subject_name+'_meshes')
     sim_rn_folder = os.path.join(sim_folder, subject_name+'_rootnodes')
 
@@ -36,15 +39,15 @@ if __name__ == "__main__":
         os.makedirs(sim_rn_folder)
     TAG_LV_ENDO = 3  # Valore per Endocardio LV
     TAG_RV_ENDO = 4  # Valore per Endocardio RV
-    TAG_ARRAY_NAME = 'class'        
-    input_dir = os.path.join(geometric_data_dir, subject_name)
+    TAG_ARRAY_NAME = 'class'
+    input_dir = os.path.join(subject_dir, 'cardiac_meshes_reg')
    # input_path = input_dir + input_filename
     input_vtk_filename = subject_name + '_500um_fibers.vtk'
     input_vtk_path = os.path.join(input_dir, input_vtk_filename)
     input_vtp_filename = subject_name + '_500um.vtp'
     input_vtp_path = os.path.join(input_dir, input_vtp_filename)
     #scale_mesh_mantaining_point_data(input_path, scaled_out_path, scale=10000)
-    tagged_filename_noext = subject_name + '_500um_taggedv2_fastendo'
+    tagged_filename_noext = subject_name + '_500um_tagged_fastendo_reg'
     tagged_out_vtk_path = os.path.join(input_dir, tagged_filename_noext+'.vtk')
     #tag_vol_region_from_tm(input_vtk_path, tagged_out_vtk_path)
     #scaled_out_vtp_filename = 'sb3901_500um.vtp'
@@ -78,7 +81,7 @@ if __name__ == "__main__":
    # scale_vtksurfmesh(torso_input_path, torso_scaled_out_path, scale=1000)
 
     electrodes_input_filename = subject_name + '_ECG_ELECTRODESmm.vtk'
-    electrodes_input_path = os.path.join(input_dir, electrodes_input_filename)
+    electrodes_input_path = os.path.join(subject_dir, "torso_meshes", electrodes_input_filename)
     electrodes_output_filename = subject_name + '_electrodes_um.pts'
     electrodes_output_path = os.path.join(sim_meshes_folder, electrodes_output_filename)
     vtk_poly_to_pts(electrodes_input_path, electrodes_output_path, scale=1000)

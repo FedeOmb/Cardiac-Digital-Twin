@@ -107,7 +107,7 @@ def generate_dummy_fiber_files(subject_name, geometric_data_dir, resolution):
         np.savetxt(electrode_path, np.array([[0.0, 0.0, 0.0]]), delimiter=',')
 
 
-def generate_purkinje_network(subject_name, geometric_data_dir, resolution, lv_inter_node_dist=2.5, rv_inter_node_dist=2.5, output_dir_name="putkinje"):
+def generate_purkinje_network(subject_name, geometric_data_dir, resolution, lv_inter_node_dist=2.5, rv_inter_node_dist=2.5, purkinje_speed = 0.2, output_dir_name="purkinje"):
 
     output_dir = os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{resolution}", f"{output_dir_name}/")
     print(f"Output directory: {output_dir}")
@@ -133,7 +133,7 @@ def generate_purkinje_network(subject_name, geometric_data_dir, resolution, lv_i
                                    subject_name=subject_name, vc_name_list=vc_name_list, verbose=verbose)
 
     # 2. Genera la Rete di Purkinje (Candidate Network)
-    purkinje_speed = 0.3 #cm/ms
+    purkinje_speed = purkinje_speed #cm/ms
     approx_djikstra_purkinje_max_path_len = 200
     lv_inter_root_node_distance = lv_inter_node_dist 
     rv_inter_root_node_distance = rv_inter_node_dist 
@@ -346,8 +346,8 @@ if __name__ == "__main__":
     data_dir = path_dict["data_path"]
     geometric_data_dir = data_dir + 'geometric_data/'
 
-    subject_name = 'sb3101'
-    output_dir = 'purkinje300'
+    subject_name = 'sb3901'
+    output_dir = 'purkinjev2'
     coarse_resolution = 'coarse1500cm'
     fine_resolution = 'fine500um'
 
@@ -356,7 +356,7 @@ if __name__ == "__main__":
     activation_times_lv_selected, activation_times_rv_selected,
     activation_times_lv_candidates, activation_times_rv_candidates) = generate_purkinje_network(
                                                     subject_name=subject_name, geometric_data_dir=geometric_data_dir, resolution=coarse_resolution, 
-                                                    lv_inter_node_dist=2.5, rv_inter_node_dist=2.5, output_dir_name=output_dir)
+                                                    lv_inter_node_dist=2.5, rv_inter_node_dist=2.5, purkinje_speed=0.2,output_dir_name=output_dir)
     
     # Mappatura su fine
     if os.path.exists(os.path.join(geometric_data_dir, subject_name, f"{subject_name}_{fine_resolution}")):

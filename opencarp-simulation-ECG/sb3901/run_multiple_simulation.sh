@@ -1,9 +1,8 @@
 #!/bin/bash
 
 SIMS=(    
-    "run_mono_torord_sb3901_norm5_CVmincole_fast4x_realprep_nomid_grad10abtm.py"
-    "run_mono_torord_sb3901_norm5_CVmincole_fast4x_realprep_nomid_grad30abtm.py"
-    "run_mono_torord_sb3901_norm5_CVmincole_fast4x_realprep_nomid_grad50abtm.py"
+    "run_mono_torord_sb3901_LBBB_fast4x_prep0.py"
+    "run_mono_torord_sb3901_RBBB_fast4x_prep0.py"
 )
 
 for sim in "${SIMS[@]}"; do
